@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package com.kuvalkin.gophkeeper.proto.sync.v1;
+option go_package = "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1;v1";
+
+service SyncService {
+  rpc GetUpdates(GetUpdatesRequest) returns (stream GetUpdatesResponse);
+  rpc UpdateEntry(stream UpdateEntryRequest) returns (UpdateEntryResponse);
+  rpc DeleteEntry(DeleteEntryRequest) returns (DeleteEntryResponse);
+  rpc DownloadEntry(DownloadEntryRequest) returns (stream DownloadEntryResponse);
+}
+
+message GetUpdatesRequest {
+  sint64 last_version = 1;
+}
+
+message GetUpdatesResponse {
+  sint64 new_version = 1;
+  repeated Entry entries = 2;
+
+  message Entry {
+    string key = 1;
+    sint64 version = 2;
+  }
+}
+
+message UpdateEntryRequest {
+  string key = 1;
+  sint64 last_version = 2;
+  bytes content = 3;
+}
+
+message UpdateEntryResponse {
+  sint64 new_version = 1;
+}
+
+message DeleteEntryRequest {
+  string key = 1;
+}
+
+message DeleteEntryResponse {
+  sint64 new_version = 1;
+}
+
+message DownloadEntryRequest {
+  string key = 1;
+  sint64 version = 2;
+}
+
+message DownloadEntryResponse {
+  bytes content = 1;
+}
