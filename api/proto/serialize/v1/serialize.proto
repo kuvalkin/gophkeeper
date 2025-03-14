@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.kuvalkin.gophkeeper.proto.serialize.v1;
+option go_package = "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1;v1";
+
+message Login {
+  string login = 1;
+  string password = 2;
+}
+
+message BankCard {
+  string number = 1;
+
+  ExpirationDate expiration_date = 2;
+  message ExpirationDate {
+    sint32 year = 1;
+    sint32 month = 2;
+  }
+
+  string holder_name = 3;
+  string cvv = 4;
+}
