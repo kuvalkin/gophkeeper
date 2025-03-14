@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package com.kuvalkin.gophkeeper.proto.sync.v1;
-option go_package = "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1;v1";
+option go_package = "internal/proto/sync/v1;v1";
 
 service SyncService {
   rpc GetUpdates(GetUpdatesRequest) returns (stream GetUpdatesResponse);
