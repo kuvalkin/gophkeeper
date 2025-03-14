@@ -8,6 +8,9 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"go.uber.org/zap"
+
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 //go:embed migrations/*.sql
@@ -30,6 +33,10 @@ func InitDB(ctx context.Context, dsn string) (*sql.DB, error) {
 func Migrate(ctx context.Context, db *sql.DB) error {
 	goose.SetBaseFS(embedMigrations)
 
+	goose.SetLogger(&gooseLogger{
+		log: log.Logger().Named("migrations"),
+	})
+
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("could not set dialect: %w", err)
 	}
@@ -39,4 +46,16 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+type gooseLogger struct {
+	log *zap.SugaredLogger
+}
+
+func (g *gooseLogger) Fatalf(format string, v ...interface{}) {
+	g.log.Fatalf(format, v...)
+}
+
+func (g *gooseLogger) Printf(format string, args ...interface{}) {
+	g.log.Infof(format, args...)
 }
