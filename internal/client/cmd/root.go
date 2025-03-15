@@ -8,8 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/prompts"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 	"github.com/kuvalkin/gophkeeper/internal/client/transport"
+	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 )
 
@@ -45,10 +46,10 @@ func NewRootCommand() *cobra.Command {
 
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// todo start tui
-			return nil
-		},
+		// todo start tui
+		//RunE: func(cmd *cobra.Command, args []string) error {
+		//	return nil
+		//},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			return transport.CloseConnection()
 		},
@@ -95,8 +96,12 @@ func newRegisterCommand(conf *viper.Viper) *cobra.Command {
 				return fmt.Errorf("error registering user: %w", err)
 			}
 
-			// todo store securely
-			fmt.Println(s.Token)
+			err = keyring.Set("token", s.Token)
+			if err != nil {
+				return fmt.Errorf("error saving token: %w", err)
+			}
+
+			cmd.Println("Registered successfully!")
 
 			return nil
 		},
