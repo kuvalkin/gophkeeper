@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bufbuild/protovalidate-go"
 	authInterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	protovalidateInterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -25,22 +27,28 @@ type Services struct {
 	User user.Service
 }
 
-func NewServer(services Services) *grpc.Server {
+func NewServer(services Services) (*grpc.Server, error) {
 	interceptorLogger := newLogger(log.Logger())
-
 	logOptions := []logging.Option{
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 	}
 
 	authFunc := newAuthFunc(services.User)
 
+	validator, err := protovalidate.New()
+	if err != nil {
+		return nil, fmt.Errorf("cant create validator: %w", err)
+	}
+
 	srv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			protovalidateInterceptor.UnaryServerInterceptor(validator),
 			authInterceptor.UnaryServerInterceptor(authFunc),
 			logging.UnaryServerInterceptor(interceptorLogger, logOptions...),
 			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
+			protovalidateInterceptor.StreamServerInterceptor(validator),
 			authInterceptor.StreamServerInterceptor(authFunc),
 			logging.StreamServerInterceptor(interceptorLogger, logOptions...),
 			recovery.StreamServerInterceptor(),
@@ -50,7 +58,7 @@ func NewServer(services Services) *grpc.Server {
 	pbAuth.RegisterAuthServiceServer(srv, auth.New(services.User))
 	pbSync.RegisterSyncServiceServer(srv, sync.New())
 
-	return srv
+	return srv, nil
 }
 
 func newLogger(l *zap.SugaredLogger) logging.Logger {

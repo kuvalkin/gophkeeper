@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	userStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/config"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/database"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport"
@@ -41,8 +43,13 @@ func main() {
 		log.Logger().Fatalw("failed to initialize database", "error", err)
 	}
 
+	services, err := initServices(ctx, *conf, db)
+	if err != nil {
+		log.Logger().Fatalw("failed to initialize services", "error", err)
+	}
+
 	// todo s3?
-	serve(ctx, *conf, db)
+	serve(ctx, *conf, services)
 
 	// if we are here, the server has been stopped
 	log.Logger().Info("server shutdown complete")
@@ -70,7 +77,21 @@ func initDB(ctx context.Context, cnf config.Config) (*sql.DB, error) {
 	return db, nil
 }
 
-func serve(ctx context.Context, conf config.Config, db *sql.DB) {
+func initServices(_ context.Context, cnf config.Config, db *sql.DB) (transport.Services, error) {
+	return transport.Services{
+		User: user.NewService(
+			userStorage.NewDatabaseRepository(db, cnf.DatabaseTimeout),
+			user.Options{
+				// todo
+				TokenSecret:           []byte("todo"),
+				PasswordSalt:          "todo",
+				TokenExpirationPeriod: cnf.TokenExpirationPeriod,
+			},
+		),
+	}, nil
+}
+
+func serve(ctx context.Context, conf config.Config, services transport.Services) {
 	addr := conf.Address
 
 	listener, err := net.Listen("tcp", addr)
@@ -79,7 +100,11 @@ func serve(ctx context.Context, conf config.Config, db *sql.DB) {
 		return
 	}
 
-	srv := transport.NewServer(db)
+	srv, err := transport.NewServer(services)
+	if err != nil {
+		log.Logger().Fatalw("failed to create gRPC server", "error", err)
+		return
+	}
 
 	go func() {
 		log.Logger().Infow("starting gRPC server", "address", addr)

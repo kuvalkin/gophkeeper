@@ -7,7 +7,6 @@ import (
 )
 
 var ErrInvalidLogin = errors.New("invalid login")
-var ErrInvalidPassword = errors.New("password is too short")
 var ErrLoginTaken = errors.New("user with this login already exists")
 var ErrInvalidPair = errors.New("login/password pair is invalid")
 var ErrInvalidToken = errors.New("invalid token")
@@ -27,7 +26,6 @@ type Service interface {
 type Options struct {
 	TokenSecret           []byte
 	PasswordSalt          string
-	MinPasswordLength     int
 	TokenExpirationPeriod time.Duration
 }
 

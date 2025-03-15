@@ -16,31 +16,23 @@ import (
 
 var signingMethod = jwt.SigningMethodHS256
 
-func NewService(repo Repository, options *Options) (Service, error) {
-	if options == nil {
-		return nil, errors.New("no options provided")
-	}
-
+func NewService(repo Repository, options Options) Service {
 	return &service{
 		repo:    repo,
 		options: options,
 		logger:  log.Logger().Named("userService"),
-	}, nil
+	}
 }
 
 type service struct {
 	repo    Repository
-	options *Options
+	options Options
 	logger  *zap.SugaredLogger
 }
 
 func (s *service) Register(ctx context.Context, login string, password string) error {
 	if login == "" {
 		return ErrInvalidLogin
-	}
-
-	if len(password) < s.options.MinPasswordLength {
-		return ErrInvalidPassword
 	}
 
 	hash := s.hashPassword(password)

@@ -17,8 +17,7 @@ cmd/client/client
 cmd/server/main
 cmd/server/server
 
-# Dependency directories (remove the comment below to include it)
-vendor/
+/api/proto/vendor/**/.git
 
 # IDEs directories
 .idea

@@ -15,7 +15,6 @@ type Config struct {
 	Address               string `env:"ADDRESS"`
 	DatabaseDSN           string `env:"DATABASE_DSN"`
 	DatabaseTimeout       time.Duration
-	MinPasswordLength     int
 	TokenExpirationPeriod time.Duration
 }
 
@@ -25,7 +24,6 @@ func Resolve() (*Config, error) {
 		DatabaseDSN: "",
 		// hardcoded for now
 		DatabaseTimeout:       5 * time.Second,
-		MinPasswordLength:     12,
 		TokenExpirationPeriod: time.Hour * 24 * 30,
 	}
 

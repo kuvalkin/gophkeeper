@@ -28,7 +28,6 @@ func (s *server) AuthFuncOverride(ctx context.Context, _ string) (context.Contex
 }
 
 func (s *server) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	// todo validate password length with proto validate
 	err := s.userService.Register(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, user.ErrLoginTaken) {
