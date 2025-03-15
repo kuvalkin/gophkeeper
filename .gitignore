@@ -17,6 +17,9 @@ cmd/client/client
 cmd/server/main
 cmd/server/server
 
+# Config files
+config.yaml
+
 /api/proto/vendor/**/.git
 
 # IDEs directories
