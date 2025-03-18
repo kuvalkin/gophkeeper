@@ -11,33 +11,29 @@ import (
 	"google.golang.org/grpc/status"
 
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
-	"github.com/kuvalkin/gophkeeper/internal/support/tx"
 )
 
-func NewService(
+func New(
 	crypt Crypt,
 	client pbSync.SyncServiceClient,
-	txProvider tx.Provider,
 	metaRepo MetadataRepository,
 	blobRepo BlobRepository,
-) *MyService {
+) (*MyService, error) {
 	return &MyService{
-		crypt:      crypt,
-		client:     client,
-		txProvider: txProvider,
-		metaRepo:   metaRepo,
-		blobRepo:   blobRepo,
-		chunkSize:  1024 * 1024, // 1MB, todo get from config
-	}
+		crypt:     crypt,
+		client:    client,
+		metaRepo:  metaRepo,
+		blobRepo:  blobRepo,
+		chunkSize: 1024 * 1024, // 1MB, todo get from config
+	}, nil
 }
 
 type MyService struct {
-	crypt      Crypt
-	client     pbSync.SyncServiceClient
-	txProvider tx.Provider
-	metaRepo   MetadataRepository
-	blobRepo   BlobRepository
-	chunkSize  int64
+	crypt     Crypt
+	client    pbSync.SyncServiceClient
+	metaRepo  MetadataRepository
+	blobRepo  BlobRepository
+	chunkSize int64
 }
 
 func (s *MyService) Set(ctx context.Context, key string, name string, entry Entry, onConflict func(errMsg string) bool) error {
