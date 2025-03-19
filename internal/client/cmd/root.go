@@ -7,6 +7,8 @@ import (
 	"github.com/apparentlymart/go-userdirs/userdirs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 var buildDate string
@@ -21,7 +23,35 @@ func NewRootCommand(container Container) *cobra.Command {
 		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
 		Use:     "gkeep",
 		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely both locally and in the cloud",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			verbose, err := cmd.Flags().GetBool("verbose")
+			if err != nil {
+				return fmt.Errorf("error getting verbose flag: %w", err)
+			}
+
+			if verbose {
+				err = log.InitLogger()
+				if err != nil {
+					return fmt.Errorf("error initializing logger: %w", err)
+				}
+			}
+
+			return nil
+		},
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			verbose, err := cmd.Flags().GetBool("verbose")
+			if err != nil {
+				return fmt.Errorf("error getting verbose flag: %w", err)
+			}
+
+			if verbose {
+				_ = log.Logger().Sync()
+			}
+
+			return nil
+		},
 	}
+	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output. Useful for debugging")
 
 	rootCmd.AddCommand(newSecretCommand())
 	rootCmd.AddCommand(newRegisterCommand(container))
@@ -65,4 +95,6 @@ func defaultConfig(conf *viper.Viper, dirs *userdirs.Dirs) {
 
 	conf.SetDefault("storage.sqlite.path", dirs.NewDataPath("metadata.sqlite"))
 	conf.SetDefault("storage.blobs.path", dirs.NewDataPath("blobs"))
+
+	conf.SetDefault("log.path", "")
 }

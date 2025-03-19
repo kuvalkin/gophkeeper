@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
+	"path"
 	"sync"
 
 	"github.com/spf13/viper"
@@ -80,7 +82,13 @@ func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, erro
 			return
 		}
 
-		blobRepo, err := entryStorage.NewFileBlobRepository(c.conf.GetString("storage.blob.path"))
+		err = c.ensureDirExists(c.conf.GetString("storage.blobs.path"))
+		if err != nil {
+			outErr = fmt.Errorf("cant ensure blobs directory exists: %w", err)
+			return
+		}
+
+		blobRepo, err := entryStorage.NewFileBlobRepository(c.conf.GetString("storage.blobs.path"))
 		if err != nil {
 			outErr = fmt.Errorf("cant create blob repository: %w", err)
 			return
@@ -107,6 +115,10 @@ func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, erro
 	})
 
 	return c.entryService, outErr
+}
+
+func (c *Container) ensureDirExists(path string) error {
+	return os.MkdirAll(path, 0700)
 }
 
 func (c *Container) GetAuthService(ctx context.Context) (cmd.RegisterService, error) {
@@ -180,6 +192,12 @@ func (c *Container) getDB(ctx context.Context) (*sql.DB, error) {
 	var err error
 
 	c.initDB.Do(func() {
+		err = c.ensureDirExists(path.Dir(c.conf.GetString("storage.sqlite.path")))
+		if err != nil {
+			err = fmt.Errorf("cant ensure directory exists: %w", err)
+			return
+		}
+
 		c.db, err = database.InitDB(ctx, c.conf.GetString("storage.sqlite.path"))
 		if err != nil {
 			err = fmt.Errorf("cant init database: %w", err)

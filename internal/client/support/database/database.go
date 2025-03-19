@@ -6,22 +6,19 @@ import (
 	"embed"
 	"fmt"
 	"net/url"
-	"os"
-	"path"
 
 	"github.com/pressly/goose/v3"
+	"go.uber.org/zap"
 	_ "modernc.org/sqlite"
+
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
 func InitDB(ctx context.Context, filePath string) (*sql.DB, error) {
-	// todo may be move higher up?
-	err := os.MkdirAll(path.Dir(filePath), 0600)
-	if err != nil {
-		return nil, fmt.Errorf("could not create database directory: %w", err)
-	}
+	log.Logger().Named("db").Infow("connecting to database", "path", filePath)
 
 	u := &url.URL{
 		Scheme:   "file",
@@ -47,6 +44,10 @@ func InitDB(ctx context.Context, filePath string) (*sql.DB, error) {
 func Migrate(ctx context.Context, db *sql.DB) error {
 	goose.SetBaseFS(embedMigrations)
 
+	goose.SetLogger(&gooseLogger{
+		log: log.Logger().Named("migrations"),
+	})
+
 	if err := goose.SetDialect("sqlite"); err != nil {
 		return fmt.Errorf("could not set dialect: %w", err)
 	}
@@ -56,4 +57,16 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+type gooseLogger struct {
+	log *zap.SugaredLogger
+}
+
+func (g *gooseLogger) Fatalf(format string, v ...interface{}) {
+	g.log.Fatalf(format, v...)
+}
+
+func (g *gooseLogger) Printf(format string, args ...interface{}) {
+	g.log.Infof(format, args...)
 }
