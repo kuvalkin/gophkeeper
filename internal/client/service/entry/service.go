@@ -18,8 +18,8 @@ func New(
 	client pbSync.SyncServiceClient,
 	metaRepo MetadataRepository,
 	blobRepo BlobRepository,
-) (*MyService, error) {
-	return &MyService{
+) (*Service, error) {
+	return &Service{
 		crypt:     crypt,
 		client:    client,
 		metaRepo:  metaRepo,
@@ -28,7 +28,7 @@ func New(
 	}, nil
 }
 
-type MyService struct {
+type Service struct {
 	crypt     Crypt
 	client    pbSync.SyncServiceClient
 	metaRepo  MetadataRepository
@@ -36,7 +36,7 @@ type MyService struct {
 	chunkSize int64
 }
 
-func (s *MyService) Set(ctx context.Context, key string, name string, entry Entry, onConflict func(errMsg string) bool) error {
+func (s *Service) Set(ctx context.Context, key string, name string, entry Entry, onConflict func(errMsg string) bool) error {
 	size, err := s.saveEncryptedBlob(entry, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry and saving it locally: %w", err)
@@ -97,7 +97,7 @@ func (s *MyService) Set(ctx context.Context, key string, name string, entry Entr
 	return nil
 }
 
-func (s *MyService) saveEncryptedBlob(entry Entry, key string) (size int64, err error) {
+func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err error) {
 	bytesReader, err := entry.Bytes()
 	if err != nil {
 		return 0, fmt.Errorf("cant get entry bytes reader: %w", err)
@@ -141,7 +141,7 @@ func (s *MyService) saveEncryptedBlob(entry Entry, key string) (size int64, err 
 	return size, nil
 }
 
-func (s *MyService) onMetadataSendError(err error, onConflict func(errMsg string) bool) error {
+func (s *Service) onMetadataSendError(err error, onConflict func(errMsg string) bool) error {
 	st, ok := status.FromError(err)
 	if !ok || st.Code() != codes.AlreadyExists {
 		return fmt.Errorf("error sending metadata to the server: %w", err)
@@ -155,7 +155,7 @@ func (s *MyService) onMetadataSendError(err error, onConflict func(errMsg string
 	return fmt.Errorf("server said that entry already exists: %w", err)
 }
 
-func (s *MyService) uploadBlob(
+func (s *Service) uploadBlob(
 	blob io.Reader,
 	stream grpc.ClientStreamingClient[pbSync.UpdateEntryRequest, pbSync.UpdateEntryResponse],
 	size int64,
@@ -192,12 +192,12 @@ func (s *MyService) uploadBlob(
 	return nil
 }
 
-func (s *MyService) Get(ctx context.Context, name string, entry Entry) (bool, error) {
+func (s *Service) Get(ctx context.Context, name string, entry Entry) (bool, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *MyService) Delete(ctx context.Context, name string) error {
+func (s *Service) Delete(ctx context.Context, name string) error {
 	//TODO implement me
 	panic("implement me")
 }

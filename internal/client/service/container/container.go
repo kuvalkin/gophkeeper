@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
 	entryService "github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	authStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/auth"
@@ -20,12 +21,6 @@ import (
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 )
 
-// todo move somewhere else?
-type SecretStorage interface {
-	GetSecret(ctx context.Context) (string, bool, error)
-	SetSecret(ctx context.Context, secret string) error
-}
-
 func New(conf *viper.Viper) (*Container, error) {
 	c := &Container{
 		conf: conf,
@@ -34,10 +29,6 @@ func New(conf *viper.Viper) (*Container, error) {
 	return c, nil
 }
 
-// move here connection init from another package
-// implement io.Close so that root cmd can close all resources
-// make getters thread-safe
-
 type Container struct {
 	conf *viper.Viper
 
@@ -45,7 +36,7 @@ type Container struct {
 	connection     *grpc.ClientConn
 
 	initEntryService sync.Once
-	entryService     *entryService.MyService
+	entryService     *entryService.Service
 
 	initAuthService sync.Once
 	authService     *auth.Service
@@ -64,7 +55,7 @@ func (c *Container) Close() error {
 	return errors.Join(errs...)
 }
 
-func (c *Container) GetEntryService(ctx context.Context) (*entryService.MyService, error) {
+func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, error) {
 	var outErr error //todo will there be error on second pass?
 
 	c.initEntryService.Do(func() {
@@ -103,7 +94,7 @@ func (c *Container) GetEntryService(ctx context.Context) (*entryService.MyServic
 	return c.entryService, outErr
 }
 
-func (c *Container) GetAuthService(ctx context.Context) (*auth.Service, error) {
+func (c *Container) GetAuthService(ctx context.Context) (cmd.RegisterService, error) {
 	var outErr error
 
 	c.initAuthService.Do(func() {

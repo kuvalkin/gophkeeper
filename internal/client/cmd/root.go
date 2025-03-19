@@ -1,52 +1,31 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/apparentlymart/go-userdirs/userdirs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 )
 
 var buildDate string
 
-func NewRootCommand() *cobra.Command {
-	var conf *viper.Viper
-	// todo interface
-	var c *container.Container
+type Container interface {
+	GetEntryService(ctx context.Context) (EntryService, error)
+	GetAuthService(ctx context.Context) (RegisterService, error)
+}
 
+func NewRootCommand(container Container) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
 		Use:     "gkeep",
 		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely both locally and in the cloud",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			var err error
-			conf, err = initConfig()
-			if err != nil {
-				return fmt.Errorf("cant init config: %w", err)
-			}
-
-			c, err = container.New(conf)
-			if err != nil {
-				return fmt.Errorf("cant init application service container: %w", err)
-			}
-
-			return nil
-		},
-		// todo start tui
-		//RunE: func(cmd *cobra.Command, args []string) error {
-		//	return nil
-		//},
-		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			return c.Close()
-		},
 	}
 
-	rootCmd.AddCommand(newRegisterCommand(c))
+	rootCmd.AddCommand(newRegisterCommand(container))
 
-	set := newSetCommand(c)
+	set := newSetCommand(container)
 	// todo guard
 	//set.PersistentPreRunE = middleware.WithParentPersistentPreRunE(ensureFullSetup(set.PersistentPreRunE))
 
@@ -56,7 +35,7 @@ func NewRootCommand() *cobra.Command {
 	return rootCmd
 }
 
-func initConfig() (*viper.Viper, error) {
+func NewConfig() (*viper.Viper, error) {
 	conf := viper.New()
 
 	dirs := userdirs.ForApp("gophkeeper", "kuvalkin", "com.kuvalkin.gophkeeper")

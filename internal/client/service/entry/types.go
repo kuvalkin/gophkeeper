@@ -14,13 +14,6 @@ type Entry interface {
 	SetNotes(notes string) error
 }
 
-// should be moved to the caller side
-type Service interface {
-	Set(ctx context.Context, key string, name string, entry Entry, onConflict func(errMsg string) bool) error
-	Get(ctx context.Context, key string, entry Entry) (bool, error)
-	Delete(ctx context.Context, key string) error
-}
-
 type Crypt interface {
 	Encrypt(dst io.Writer) (io.WriteCloser, error)
 	Decrypt(src io.Reader) (io.Reader, error)

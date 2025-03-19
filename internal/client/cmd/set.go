@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -10,24 +11,30 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	entryService "github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	pbSerialize "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
 )
 
-func newSetCommand(c *container.Container) *cobra.Command {
+type EntryService interface {
+	Set(ctx context.Context, key string, name string, entry entryService.Entry, onConflict func(errMsg string) bool) error
+	Get(ctx context.Context, key string, entry entryService.Entry) (bool, error)
+	Delete(ctx context.Context, key string) error
+}
+
+func newSetCommand(container Container) *cobra.Command {
 	set := &cobra.Command{
 		Use:   "set",
 		Short: "Store value",
 		Long:  "Store new value and sync it to the cloud. Value is E2E encrypted",
 	}
 
-	set.AddCommand(newSetLoginCommand(c))
+	set.AddCommand(newSetLoginCommand(container))
 
 	return set
 }
 
-func newSetLoginCommand(c *container.Container) *cobra.Command {
+func newSetLoginCommand(container Container) *cobra.Command {
 	setLogin := &cobra.Command{
 		Use:   "login",
 		Short: "Store login and password",
@@ -61,7 +68,7 @@ func newSetLoginCommand(c *container.Container) *cobra.Command {
 				return fmt.Errorf("error asking password: %w", err)
 			}
 
-			service, err := c.GetEntryService(cmd.Context())
+			service, err := container.GetEntryService(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("error getting entry service: %w", err)
 			}

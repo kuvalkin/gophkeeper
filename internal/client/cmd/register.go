@@ -1,16 +1,20 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 )
 
-func newRegisterCommand(c *container.Container) *cobra.Command {
+type RegisterService interface {
+	Register(ctx context.Context, login string, password string) error
+}
+
+func newRegisterCommand(container Container) *cobra.Command {
 	register := &cobra.Command{
 		Use:   "register",
 		Short: "Register on server",
@@ -34,7 +38,7 @@ func newRegisterCommand(c *container.Container) *cobra.Command {
 				return fmt.Errorf("error asking password: %w", err)
 			}
 
-			service, err := c.GetAuthService(cmd.Context())
+			service, err := container.GetAuthService(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("cant get auth service: %w", err)
 			}
