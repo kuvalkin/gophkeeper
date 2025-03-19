@@ -14,11 +14,6 @@ type Entry interface {
 	SetNotes(notes string) error
 }
 
-type Crypt interface {
-	Encrypt(dst io.Writer) (io.WriteCloser, error)
-	Decrypt(src io.Reader) (io.Reader, error)
-}
-
 type MetadataRepository interface {
 	Set(ctx context.Context, tx tx.Tx, key string, name string, version int64) error
 	GetVersion(ctx context.Context, tx tx.Tx, key string) (int64, bool, error)

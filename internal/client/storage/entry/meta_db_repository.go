@@ -2,15 +2,19 @@ package entry
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/kuvalkin/gophkeeper/internal/support/tx"
 )
 
-func NewDatabaseMetadataRepository() (*DatabaseMetadataRepository, error) {
-
+func NewDatabaseMetadataRepository(db *sql.DB) (*DatabaseMetadataRepository, error) {
+	return &DatabaseMetadataRepository{
+		db: db,
+	}, nil
 }
 
 type DatabaseMetadataRepository struct {
+	db *sql.DB
 }
 
 func (d *DatabaseMetadataRepository) Set(ctx context.Context, tx tx.Tx, key string, name string, version int64) error {

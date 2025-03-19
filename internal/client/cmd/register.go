@@ -10,6 +10,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 )
 
+var ErrNoSecret = errors.New("secret not set")
+
 type RegisterService interface {
 	Register(ctx context.Context, login string, password string) error
 }

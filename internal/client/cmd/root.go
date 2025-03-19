@@ -23,6 +23,7 @@ func NewRootCommand(container Container) *cobra.Command {
 		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely both locally and in the cloud",
 	}
 
+	rootCmd.AddCommand(newSecretCommand())
 	rootCmd.AddCommand(newRegisterCommand(container))
 
 	set := newSetCommand(container)

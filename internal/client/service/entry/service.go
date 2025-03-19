@@ -10,11 +10,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/service"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 )
 
 func New(
-	crypt Crypt,
+	crypt service.Crypt,
 	client pbSync.SyncServiceClient,
 	metaRepo MetadataRepository,
 	blobRepo BlobRepository,
@@ -29,7 +30,7 @@ func New(
 }
 
 type Service struct {
-	crypt     Crypt
+	crypt     service.Crypt
 	client    pbSync.SyncServiceClient
 	metaRepo  MetadataRepository
 	blobRepo  BlobRepository

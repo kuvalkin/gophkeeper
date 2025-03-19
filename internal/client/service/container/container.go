@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"sync"
@@ -17,6 +18,8 @@ import (
 	authStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/auth"
 	entryStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/entry"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/database"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 )
@@ -40,6 +43,12 @@ type Container struct {
 
 	initAuthService sync.Once
 	authService     *auth.Service
+
+	initDB sync.Once
+	db     *sql.DB
+
+	initCrypter sync.Once
+	crypter     *crypt.AgeCrypter
 }
 
 // not goroutine safe!
@@ -59,25 +68,31 @@ func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, erro
 	var outErr error //todo will there be error on second pass?
 
 	c.initEntryService.Do(func() {
+		db, err := c.getDB(ctx)
+		if err != nil {
+			outErr = fmt.Errorf("cant get db: %w", err)
+			return
+		}
+
+		metadataRepo, err := entryStorage.NewDatabaseMetadataRepository(db)
+		if err != nil {
+			outErr = fmt.Errorf("cant create metadata repository: %w", err)
+			return
+		}
+
+		blobRepo, err := entryStorage.NewFileBlobRepository(c.conf.GetString("storage.blob.path"))
+		if err != nil {
+			outErr = fmt.Errorf("cant create blob repository: %w", err)
+			return
+		}
+
 		conn, err := c.getConnection()
 		if err != nil {
 			outErr = fmt.Errorf("cant get grpc connection: %w", err)
 			return
 		}
 
-		metadataRepo, err := entryStorage.NewDatabaseMetadataRepository()
-		if err != nil {
-			outErr = fmt.Errorf("cant create metadata repository: %w", err)
-			return
-		}
-
-		blobRepo, err := entryStorage.NewFileBlobRepository()
-		if err != nil {
-			outErr = fmt.Errorf("cant create blob repository: %w", err)
-			return
-		}
-
-		crypter, err := crypt.NewAgeCrypter()
+		crypter, err := c.getCrypter()
 		if err != nil {
 			outErr = fmt.Errorf("cant create crypter: %w", err)
 			return
@@ -98,21 +113,34 @@ func (c *Container) GetAuthService(ctx context.Context) (cmd.RegisterService, er
 	var outErr error
 
 	c.initAuthService.Do(func() {
+		db, err := c.getDB(ctx)
+		if err != nil {
+			outErr = fmt.Errorf("cant get db: %w", err)
+			return
+		}
+
+		repo, err := authStorage.NewDatabaseRepository(db)
+		if err != nil {
+			outErr = fmt.Errorf("cant create auth repository: %w", err)
+			return
+		}
+
 		conn, err := c.getConnection()
 		if err != nil {
 			outErr = fmt.Errorf("cant get grpc connection: %w", err)
 			return
 		}
 
-		repo, err := authStorage.NewDatabaseRepository()
+		crypter, err := c.getCrypter()
 		if err != nil {
-			outErr = fmt.Errorf("cant create auth repository: %w", err)
+			outErr = fmt.Errorf("cant get crypter: %w", err)
 			return
 		}
 
 		c.authService, outErr = auth.New(
 			pbAuth.NewAuthServiceClient(conn),
 			repo,
+			crypter,
 		)
 	})
 
@@ -146,4 +174,51 @@ func (c *Container) newConnection() (*grpc.ClientConn, error) {
 	}
 
 	return conn, nil
+}
+
+func (c *Container) getDB(ctx context.Context) (*sql.DB, error) {
+	var err error
+
+	c.initDB.Do(func() {
+		c.db, err = database.InitDB(ctx, c.conf.GetString("storage.sqlite.path"))
+		if err != nil {
+			err = fmt.Errorf("cant init database: %w", err)
+
+			return
+		}
+
+		err = database.Migrate(ctx, c.db)
+		if err != nil {
+			err = fmt.Errorf("cant migrate database: %w", err)
+
+			return
+		}
+	})
+
+	return c.db, err
+}
+
+func (c *Container) getCrypter() (*crypt.AgeCrypter, error) {
+	var outErr error
+
+	c.initCrypter.Do(func() {
+		secret, ok, err := keyring.Get("secret")
+		if err != nil {
+			outErr = fmt.Errorf("cant get secret from keyring: %w", err)
+			return
+		}
+
+		if !ok {
+			outErr = cmd.ErrNoSecret
+			return
+		}
+
+		c.crypter, err = crypt.NewAgeCrypter(secret)
+		if err != nil {
+			outErr = fmt.Errorf("cant create crypter: %w", err)
+			return
+		}
+	})
+
+	return c.crypter, outErr
 }
