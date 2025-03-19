@@ -22,6 +22,10 @@ type EntryService interface {
 	Delete(ctx context.Context, key string) error
 }
 
+type TokenService interface {
+	SetToken(ctx context.Context) (context.Context, error)
+}
+
 func newSetCommand(container Container) *cobra.Command {
 	set := &cobra.Command{
 		Use:   "set",
@@ -73,11 +77,21 @@ func newSetLoginCommand(container Container) *cobra.Command {
 				return fmt.Errorf("error getting entry service: %w", err)
 			}
 
+			tokenService, err := container.GetTokenService(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("error getting token service: %w", err)
+			}
+
+			ctxWithToken, err := tokenService.SetToken(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("error setting token: %w", err)
+			}
+
 			cmd.Println("Storing login...")
 
 			// todo extract name conversion
 			// todo provide feedback as service runs
-			err = service.Set(cmd.Context(), fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry, nil)
+			err = service.Set(ctxWithToken, fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry, nil)
 			if err != nil {
 				return fmt.Errorf("error setting login: %w", err)
 			}

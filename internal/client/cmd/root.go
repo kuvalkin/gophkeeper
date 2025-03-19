@@ -15,7 +15,8 @@ var buildDate string
 
 type Container interface {
 	GetEntryService(ctx context.Context) (EntryService, error)
-	GetAuthService(ctx context.Context) (RegisterService, error)
+	GetRegisterService(ctx context.Context) (RegisterService, error)
+	GetTokenService(ctx context.Context) (TokenService, error)
 }
 
 func NewRootCommand(container Container) *cobra.Command {

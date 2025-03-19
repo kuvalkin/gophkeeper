@@ -15,7 +15,7 @@ type Entry interface {
 }
 
 type MetadataRepository interface {
-	Set(ctx context.Context, tx tx.Tx, key string, name string, version int64) error
+	Set(ctx context.Context, tx tx.Tx, key string, name string, notes []byte, version int64) error
 	GetVersion(ctx context.Context, tx tx.Tx, key string) (int64, bool, error)
 	MarkAsDownloaded(ctx context.Context, tx tx.Tx, key string) error
 	MarkAsDeleted(ctx context.Context, tx tx.Tx, key string) error

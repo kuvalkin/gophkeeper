@@ -40,7 +40,7 @@ func newRegisterCommand(container Container) *cobra.Command {
 				return fmt.Errorf("error asking password: %w", err)
 			}
 
-			service, err := container.GetAuthService(cmd.Context())
+			service, err := container.GetRegisterService(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("cant get auth service: %w", err)
 			}

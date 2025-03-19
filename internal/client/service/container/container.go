@@ -121,7 +121,15 @@ func (c *Container) ensureDirExists(path string) error {
 	return os.MkdirAll(path, 0700)
 }
 
-func (c *Container) GetAuthService(ctx context.Context) (cmd.RegisterService, error) {
+func (c *Container) GetTokenService(ctx context.Context) (cmd.TokenService, error) {
+	return c.getAuthService(ctx)
+}
+
+func (c *Container) GetRegisterService(ctx context.Context) (cmd.RegisterService, error) {
+	return c.getAuthService(ctx)
+}
+
+func (c *Container) getAuthService(ctx context.Context) (*auth.Service, error) {
 	var outErr error
 
 	c.initAuthService.Do(func() {

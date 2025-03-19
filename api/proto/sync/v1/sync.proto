@@ -21,13 +21,15 @@ message GetUpdatesResponse {
   message Entry {
     string key = 1;
     sint64 version = 2;
+    bytes notes = 3;
   }
 }
 
 message UpdateEntryRequest {
   string key = 1;
   sint64 last_version = 2;
-  bytes content = 3;
+  bytes notes = 3;
+  bytes content = 4;
 }
 
 message UpdateEntryResponse {

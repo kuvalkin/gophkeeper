@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -43,6 +44,11 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 		return fmt.Errorf("error encrypting entry and saving it locally: %w", err)
 	}
 
+	notes, err := s.encryptNotes(entry.Notes())
+	if err != nil {
+		return fmt.Errorf("error encrypting notes: %w", err)
+	}
+
 	lastKnownVersion, ok, err := s.metaRepo.GetVersion(ctx, nil, key)
 	if err != nil {
 		return fmt.Errorf("error getting last known entry version from local db: %w", err)
@@ -71,6 +77,7 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 	err = stream.Send(&pbSync.UpdateEntryRequest{
 		Key:         key,
 		LastVersion: lastKnownVersion,
+		Notes:       notes,
 	})
 	if err != nil {
 		err = s.onMetadataSendError(err, onConflict)
@@ -90,7 +97,7 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 	}
 
 	// todo transaction?
-	err = s.metaRepo.Set(ctx, nil, key, name, response.NewVersion)
+	err = s.metaRepo.Set(ctx, nil, key, name, notes, response.NewVersion)
 	if err != nil {
 		return fmt.Errorf("error saving localy uploaded entry metadata: %w", err)
 	}
@@ -191,6 +198,28 @@ func (s *Service) uploadBlob(
 	// todo event upload finish
 
 	return nil
+}
+
+func (s *Service) encryptNotes(notes string) ([]byte, error) {
+	var buf bytes.Buffer
+	encryptWriter, err := s.crypt.Encrypt(&buf)
+	if err != nil {
+		return nil, fmt.Errorf("could not create encrypt writer: %w", err)
+	}
+
+	_, err = io.WriteString(encryptWriter, notes)
+	if err != nil {
+		_ = encryptWriter.Close()
+
+		return nil, fmt.Errorf("could not write notes to encrypt writer: %w", err)
+	}
+
+	err = encryptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close encrypt writer: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (s *Service) Get(ctx context.Context, name string, entry Entry) (bool, error) {
