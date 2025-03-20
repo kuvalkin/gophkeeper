@@ -14,6 +14,7 @@ import (
 
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
+	sync2 "github.com/kuvalkin/gophkeeper/internal/server/service/sync"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	auth2 "github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
@@ -23,6 +24,7 @@ import (
 
 type Services struct {
 	User user.Service
+	Sync sync2.Service
 }
 
 func NewServer(services Services) (*grpc.Server, error) {
@@ -54,7 +56,7 @@ func NewServer(services Services) (*grpc.Server, error) {
 	)
 
 	pbAuth.RegisterAuthServiceServer(srv, auth.New(services.User))
-	pbSync.RegisterSyncServiceServer(srv, sync.New())
+	pbSync.RegisterSyncServiceServer(srv, sync.New(services.Sync))
 
 	return srv, nil
 }

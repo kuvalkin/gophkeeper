@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -14,19 +13,15 @@ import (
 )
 
 type dbRepo struct {
-	db      *sql.DB
-	timeout time.Duration
+	db *sql.DB
 }
 
-func NewDatabaseRepository(db *sql.DB, timeout time.Duration) user.Repository {
-	return &dbRepo{db: db, timeout: timeout}
+func NewDatabaseRepository(db *sql.DB) user.Repository {
+	return &dbRepo{db: db}
 }
 
 func (d *dbRepo) Add(ctx context.Context, login string, passwordHash string) error {
-	localCtx, cancel := context.WithTimeout(ctx, d.timeout)
-	defer cancel()
-
-	_, err := d.db.ExecContext(localCtx, "INSERT INTO users (login, password_hash) VALUES ($1, $2)", login, passwordHash)
+	_, err := d.db.ExecContext(ctx, "INSERT INTO users (login, password_hash) VALUES ($1, $2)", login, passwordHash)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return user.ErrLoginNotUnique
@@ -39,10 +34,7 @@ func (d *dbRepo) Add(ctx context.Context, login string, passwordHash string) err
 }
 
 func (d *dbRepo) Find(ctx context.Context, login string) (string, string, bool, error) {
-	localCtx, cancel := context.WithTimeout(ctx, d.timeout)
-	defer cancel()
-
-	row := d.db.QueryRowContext(localCtx, "SELECT id, password_hash FROM users WHERE login = $1", login)
+	row := d.db.QueryRowContext(ctx, "SELECT id, password_hash FROM users WHERE login = $1", login)
 
 	var userID string
 	var hash string

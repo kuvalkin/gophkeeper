@@ -7,31 +7,37 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
 
-func New() (*MyService, error) {
-	return &MyService{}, nil
+func New(metaRepo MetadataRepository, blobRepo BlobRepository, txProvider transaction.Provider) *ServiceImpl {
+	return &ServiceImpl{
+		metaRepo:   metaRepo,
+		blobRepo:   blobRepo,
+		txProvider: txProvider,
+		log:        log.Logger().Named("sync-service"),
+	}
 }
 
-type MyService struct {
+type ServiceImpl struct {
 	txProvider transaction.Provider
 	log        *zap.SugaredLogger
 	metaRepo   MetadataRepository
 	blobRepo   BlobRepository
 }
 
-func (m *MyService) UpdateEntry(ctx context.Context, userID string, md Metadata, lastKnownVersion int64, force bool) (*io.PipeWriter, error, <-chan UpdateEntryResult) {
-	llog := m.log.WithLazy("userID", userID, "key", md.Key, "lastKnownVersion", lastKnownVersion)
+func (s *ServiceImpl) UpdateEntry(ctx context.Context, userID string, md Metadata, lastKnownVersion int64, force bool) (*io.PipeWriter, error, <-chan UpdateEntryResult) {
+	llog := s.log.WithLazy("userID", userID, "key", md.Key, "lastKnownVersion", lastKnownVersion)
 
-	tx, err := m.txProvider.BeginTx(ctx)
+	tx, err := s.txProvider.BeginTx(ctx)
 	if err != nil {
 		llog.Errorw("cant begin tx", "err", err)
 
 		return nil, ErrInternal, nil
 	}
 
-	version, err := m.metaRepo.GetAndLock(ctx, tx, userID, md.Key)
+	version, exists, err := s.metaRepo.GetVersion(ctx, tx, userID, md.Key)
 	if err != nil {
 		llog.Errorw("cant get version and lock", "err", err)
 
@@ -41,6 +47,9 @@ func (m *MyService) UpdateEntry(ctx context.Context, userID string, md Metadata,
 		}
 
 		return nil, ErrInternal, nil
+	}
+	if !exists {
+		version = 0
 	}
 
 	if version != lastKnownVersion && !force {
@@ -61,7 +70,7 @@ func (m *MyService) UpdateEntry(ctx context.Context, userID string, md Metadata,
 			}
 		}()
 
-		err = m.blobRepo.CopyFrom(ctx, fmt.Sprintf("%s/%s", userID, md.Key), pr)
+		err = s.blobRepo.CopyFrom(ctx, fmt.Sprintf("%s/%s", userID, md.Key), pr)
 		if err != nil {
 			llog.Errorw("cant copy from", "err", err)
 
@@ -69,7 +78,7 @@ func (m *MyService) UpdateEntry(ctx context.Context, userID string, md Metadata,
 			return
 		}
 
-		newVersion, err := m.metaRepo.SetAndUnlock(ctx, tx, userID, md.Key, md.Name, md.Notes)
+		newVersion, err := s.metaRepo.Set(ctx, tx, userID, md.Key, md.Name, md.Notes)
 		if err != nil {
 			llog.Errorw("cant set and unlock", "err", err)
 

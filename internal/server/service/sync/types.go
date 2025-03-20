@@ -22,15 +22,14 @@ type UpdateEntryResult struct {
 var ErrInternal = errors.New("internal error")
 var ErrVersionMismatch = errors.New("newer version exists")
 
-// todo move
 type Service interface {
 	// put bytes to writer and close it when you done, wait for result in chan
 	UpdateEntry(ctx context.Context, userID string, md Metadata, lastKnownVersion int64, force bool) (*io.PipeWriter, error, <-chan UpdateEntryResult)
 }
 
 type MetadataRepository interface {
-	GetAndLock(ctx context.Context, tx transaction.Tx, userID string, key string) (version int64, err error)
-	SetAndUnlock(ctx context.Context, tx transaction.Tx, userID string, key string, name string, notes []byte) (version int64, err error)
+	GetVersion(ctx context.Context, tx transaction.Tx, userID string, key string) (version int64, exists bool, err error)
+	Set(ctx context.Context, tx transaction.Tx, userID string, key string, name string, notes []byte) (version int64, err error)
 }
 
 type BlobRepository interface {
