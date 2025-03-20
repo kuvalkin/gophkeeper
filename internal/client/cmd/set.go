@@ -16,8 +16,10 @@ import (
 	pbSerialize "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
 )
 
+var ErrVersionMismatch = errors.New("server has never version of the entry")
+
 type EntryService interface {
-	Set(ctx context.Context, key string, name string, entry entryService.Entry, onConflict func(errMsg string) bool) error
+	Set(ctx context.Context, key string, name string, entry entryService.Entry, force bool) error
 	Get(ctx context.Context, key string, entry entryService.Entry) (bool, error)
 	Delete(ctx context.Context, key string) error
 }
@@ -91,7 +93,7 @@ func newSetLoginCommand(container Container) *cobra.Command {
 
 			// todo extract name conversion
 			// todo provide feedback as service runs
-			err = service.Set(ctxWithToken, fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry, nil)
+			err = service.Set(ctxWithToken, fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry, false)
 			if err != nil {
 				return fmt.Errorf("error setting login: %w", err)
 			}

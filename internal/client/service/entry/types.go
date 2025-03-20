@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/kuvalkin/gophkeeper/internal/support/tx"
+	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
 
 type Entry interface {
@@ -15,10 +15,10 @@ type Entry interface {
 }
 
 type MetadataRepository interface {
-	Set(ctx context.Context, tx tx.Tx, key string, name string, notes []byte, version int64) error
-	GetVersion(ctx context.Context, tx tx.Tx, key string) (int64, bool, error)
-	MarkAsDownloaded(ctx context.Context, tx tx.Tx, key string) error
-	MarkAsDeleted(ctx context.Context, tx tx.Tx, key string) error
+	Set(ctx context.Context, tx transaction.Tx, key string, name string, notes []byte, version int64) error
+	GetVersion(ctx context.Context, tx transaction.Tx, key string) (int64, bool, error)
+	MarkAsDownloaded(ctx context.Context, tx transaction.Tx, key string) error
+	MarkAsDeleted(ctx context.Context, tx transaction.Tx, key string) error
 }
 
 type BlobRepository interface {

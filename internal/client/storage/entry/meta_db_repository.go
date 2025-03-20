@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kuvalkin/gophkeeper/internal/support/tx"
+	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
 
 func NewDatabaseMetadataRepository(db *sql.DB) (*DatabaseMetadataRepository, error) {
@@ -19,7 +19,7 @@ type DatabaseMetadataRepository struct {
 	db *sql.DB
 }
 
-func (d *DatabaseMetadataRepository) Set(ctx context.Context, tx tx.Tx, key string, name string, notes []byte, version int64) error {
+func (d *DatabaseMetadataRepository) Set(ctx context.Context, tx transaction.Tx, key string, name string, notes []byte, version int64) error {
 	_, err := d.db.ExecContext(
 		ctx,
 		"INSERT INTO entries (key, name, notes, version) VALUES (?, ?, ?, ?) ON CONFLICT (key) DO UPDATE SET name = excluded.name, notes = excluded.notes, version = excluded.version",
@@ -36,7 +36,7 @@ func (d *DatabaseMetadataRepository) Set(ctx context.Context, tx tx.Tx, key stri
 	return nil
 }
 
-func (d *DatabaseMetadataRepository) GetVersion(ctx context.Context, tx tx.Tx, key string) (int64, bool, error) {
+func (d *DatabaseMetadataRepository) GetVersion(ctx context.Context, tx transaction.Tx, key string) (int64, bool, error) {
 	var version int64
 	err := d.db.QueryRowContext(ctx, "SELECT version FROM entries WHERE key = ?", key).Scan(&version)
 	if err != nil {
@@ -50,7 +50,7 @@ func (d *DatabaseMetadataRepository) GetVersion(ctx context.Context, tx tx.Tx, k
 	return version, true, nil
 }
 
-func (d *DatabaseMetadataRepository) MarkAsDownloaded(ctx context.Context, tx tx.Tx, key string) error {
+func (d *DatabaseMetadataRepository) MarkAsDownloaded(ctx context.Context, tx transaction.Tx, key string) error {
 	_, err := d.db.ExecContext(ctx, "UPDATE entries SET is_downloaded = true WHERE key = ?", key)
 	if err != nil {
 		return fmt.Errorf("query error: %w", err)
@@ -59,7 +59,7 @@ func (d *DatabaseMetadataRepository) MarkAsDownloaded(ctx context.Context, tx tx
 	return nil
 }
 
-func (d *DatabaseMetadataRepository) MarkAsDeleted(ctx context.Context, tx tx.Tx, key string) error {
+func (d *DatabaseMetadataRepository) MarkAsDeleted(ctx context.Context, tx transaction.Tx, key string) error {
 	_, err := d.db.ExecContext(ctx, "UPDATE entries SET is_deleted = true WHERE key = ?", key)
 	if err != nil {
 		return fmt.Errorf("query error: %w", err)

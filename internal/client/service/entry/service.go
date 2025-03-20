@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	"github.com/kuvalkin/gophkeeper/internal/client/service"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 )
@@ -38,7 +39,7 @@ type Service struct {
 	chunkSize int64
 }
 
-func (s *Service) Set(ctx context.Context, key string, name string, entry Entry, onConflict func(errMsg string) bool) error {
+func (s *Service) Set(ctx context.Context, key string, name string, entry Entry, force bool) error {
 	size, err := s.saveEncryptedBlob(entry, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry and saving it locally: %w", err)
@@ -66,7 +67,6 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 	}
 	defer reader.Close()
 
-	//todo set auth
 	stream, err := s.client.UpdateEntry(ctx)
 	if err != nil {
 		return fmt.Errorf("cant start streaming encrypted blob to server: %w", err)
@@ -76,14 +76,17 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 	// send metadata first
 	err = stream.Send(&pbSync.UpdateEntryRequest{
 		Key:         key,
-		LastVersion: lastKnownVersion,
+		Name:        name,
 		Notes:       notes,
+		LastVersion: lastKnownVersion,
+		Force:       force,
 	})
 	if err != nil {
-		err = s.onMetadataSendError(err, onConflict)
-		if err != nil {
-			return err
+		if statErr, ok := status.FromError(err); ok && statErr.Code() == codes.FailedPrecondition {
+			return cmd.ErrVersionMismatch
 		}
+
+		return fmt.Errorf("error sending metadata to the server: %w", err)
 	}
 
 	err = s.uploadBlob(reader, stream, size)
@@ -147,20 +150,6 @@ func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err er
 
 	// but note that defers can also return errors
 	return size, nil
-}
-
-func (s *Service) onMetadataSendError(err error, onConflict func(errMsg string) bool) error {
-	st, ok := status.FromError(err)
-	if !ok || st.Code() != codes.AlreadyExists {
-		return fmt.Errorf("error sending metadata to the server: %w", err)
-	}
-
-	if onConflict != nil && onConflict(st.Message()) {
-		// we've decided to continue
-		return nil
-	}
-
-	return fmt.Errorf("server said that entry already exists: %w", err)
 }
 
 func (s *Service) uploadBlob(

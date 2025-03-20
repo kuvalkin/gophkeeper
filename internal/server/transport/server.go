@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/bufbuild/protovalidate-go"
@@ -12,12 +11,11 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	auth2 "github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/sync"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
@@ -33,7 +31,7 @@ func NewServer(services Services) (*grpc.Server, error) {
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 	}
 
-	authFunc := newAuthFunc(services.User)
+	authFunc := auth2.NewAuthFunc(services.User)
 
 	validator, err := protovalidate.New()
 	if err != nil {
@@ -76,28 +74,4 @@ func newLogger(l *zap.SugaredLogger) logging.Logger {
 			panic(fmt.Sprintf("unknown level %v", lvl))
 		}
 	})
-}
-
-type tokenInfoKey struct{}
-
-func newAuthFunc(userService user.Service) func(ctx context.Context) (context.Context, error) {
-	return func(ctx context.Context) (context.Context, error) {
-		token, err := authInterceptor.AuthFromMD(ctx, "bearer")
-		if err != nil {
-			return nil, err
-		}
-
-		tokenInfo, err := userService.ParseToken(ctx, token)
-		if err != nil {
-			if errors.Is(err, user.ErrInvalidToken) {
-				return nil, status.Errorf(codes.Unauthenticated, "invalid auth token: %v", err)
-			}
-
-			return nil, status.Error(codes.Internal, "internal error")
-		}
-
-		ctx = logging.InjectFields(ctx, logging.Fields{"auth.userID", tokenInfo.UserID})
-
-		return context.WithValue(ctx, tokenInfoKey{}, tokenInfo), nil
-	}
 }
