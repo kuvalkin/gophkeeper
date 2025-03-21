@@ -41,9 +41,12 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry cmd.En
 		return fmt.Errorf("error encrypting entry: %w", err)
 	}
 
-	notes, err := s.encryptNotes(entry.Notes())
-	if err != nil {
-		return fmt.Errorf("error encrypting notes: %w", err)
+	var notes []byte
+	if entry.Notes() != "" {
+		notes, err = s.encryptNotes(entry.Notes())
+		if err != nil {
+			return fmt.Errorf("error encrypting notes: %w", err)
+		}
 	}
 
 	reader, ok, err := s.blobRepo.Reader(key)
