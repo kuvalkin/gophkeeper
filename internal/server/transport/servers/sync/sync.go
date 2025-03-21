@@ -61,9 +61,10 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 	}
 
 	defer reader.Close()
+
+	buf := make([]byte, 1024*1024) // todo from config
 	for {
-		buf := make([]byte, 1024*1024) // todo from config
-		_, err := reader.Read(buf)
+		n, err := reader.Read(buf)
 		if errors.Is(err, io.EOF) {
 			break
 		}
@@ -75,7 +76,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 		}
 
 		err = stream.Send(&pb.Entry{
-			Content: buf,
+			Content: buf[:n],
 		})
 		if err != nil {
 			llog.Errorw("cant send entry", "err", err)

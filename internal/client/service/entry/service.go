@@ -136,10 +136,8 @@ func (s *Service) uploadBlob(
 	stream grpc.ClientStreamingClient[pbSync.Entry, emptypb.Empty],
 ) error {
 	buffer := make([]byte, s.chunkSize)
-	bytesSent := 0
 
 	for {
-		// Read next chunk from file
 		n, err := blob.Read(buffer)
 		if errors.Is(err, io.EOF) {
 			break
@@ -148,15 +146,12 @@ func (s *Service) uploadBlob(
 			return fmt.Errorf("error reading encrypted blob chunk: %w", err)
 		}
 
-		// Send chunk
 		err = stream.Send(&pbSync.Entry{
-			Content: buffer,
+			Content: buffer[:n],
 		})
 		if err != nil {
 			return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
 		}
-
-		bytesSent += n
 	}
 
 	return nil
