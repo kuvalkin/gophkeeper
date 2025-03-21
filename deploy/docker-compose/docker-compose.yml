@@ -1,0 +1,37 @@
+services:
+  server:
+    build:
+      dockerfile: ./build/server/docker/Dockerfile
+      context: ../..
+    environment:
+      DATABASE_DSN: "host=postgres port=5432 user=${POSTGRES_USER} password=${POSTGRES_PASSWORD} dbname=${POSTGRES_DB} sslmode=disable"
+      BLOB_PATH: "/data/blob"
+    volumes:
+      - ./data/blob:/data/blob
+    ports:
+      - ${PORT}:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ../../cmd/server
+        - action: rebuild
+          path: ../../internal
+
+  postgres:
+      image: postgres:17
+      environment:
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      volumes:
+        - ./data/pg:/var/lib/postgresql/data
+      ports:
+        - ${POSTGRES_PORT}:5432
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+        interval: 10s
+        timeout: 5s
+        retries: 5

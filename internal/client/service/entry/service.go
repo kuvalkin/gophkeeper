@@ -14,13 +14,14 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	"github.com/kuvalkin/gophkeeper/internal/client/service"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
+	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
 func New(
 	crypt service.Crypt,
 	client pbSync.SyncServiceClient,
 	metaRepo MetadataRepository,
-	blobRepo BlobRepository,
+	blobRepo blob.Repository,
 ) (*Service, error) {
 	return &Service{
 		crypt:     crypt,
@@ -35,7 +36,7 @@ type Service struct {
 	crypt     service.Crypt
 	client    pbSync.SyncServiceClient
 	metaRepo  MetadataRepository
-	blobRepo  BlobRepository
+	blobRepo  blob.Repository
 	chunkSize int64
 }
 

@@ -14,6 +14,11 @@ type Metadata struct {
 	Notes []byte
 }
 
+type UpdateEntryChunk struct {
+	Content []byte
+	Err     error
+}
+
 type UpdateEntryResult struct {
 	Err        error
 	NewVersion int64
@@ -23,8 +28,7 @@ var ErrInternal = errors.New("internal error")
 var ErrVersionMismatch = errors.New("newer version exists")
 
 type Service interface {
-	// put bytes to writer and close it when you done, wait for result in chan
-	UpdateEntry(ctx context.Context, userID string, md Metadata, lastKnownVersion int64, force bool) (*io.PipeWriter, error, <-chan UpdateEntryResult)
+	UpdateEntry(ctx context.Context, userID string, md Metadata, lastKnownVersion int64, force bool) (chan<- UpdateEntryChunk, <-chan UpdateEntryResult, error)
 }
 
 type MetadataRepository interface {

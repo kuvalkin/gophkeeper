@@ -1,4 +1,4 @@
-package entry
+package blob
 
 import (
 	"fmt"
@@ -11,11 +11,11 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
-func NewFileBlobRepository(path string) (*FileBlobRepository, error) {
+func NewFileBlobRepository(path string) *FileBlobRepository {
 	return &FileBlobRepository{
 		path: path,
 		log:  log.Logger().Named("blobs"),
-	}, nil
+	}
 }
 
 type FileBlobRepository struct {
@@ -23,7 +23,7 @@ type FileBlobRepository struct {
 	log  *zap.SugaredLogger
 }
 
-func (f *FileBlobRepository) Writer(key string) (io.WriteCloser, error) {
+func (f *FileBlobRepository) Writer(key string) (ErrWriteCloser, error) {
 	fullPath := path.Join(f.path, key)
 	f.log.Debugw("opening for write", "path", fullPath)
 
@@ -32,7 +32,7 @@ func (f *FileBlobRepository) Writer(key string) (io.WriteCloser, error) {
 		return nil, fmt.Errorf("cant open file: %w", err)
 	}
 
-	return file, nil
+	return &FileWriteErrCloser{file: file}, nil
 }
 
 func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
@@ -48,4 +48,32 @@ func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
 	}
 
 	return file, true, nil
+}
+
+type FileWriteErrCloser struct {
+	file *os.File
+}
+
+func (f *FileWriteErrCloser) Write(p []byte) (n int, err error) {
+	return f.file.Write(p)
+}
+
+func (f *FileWriteErrCloser) Close() error {
+	return f.file.Close()
+}
+
+func (f *FileWriteErrCloser) CloseWithError(err error) error {
+	log.Logger().Named("blobs").Debugw("closing with error", "err", err)
+
+	err = f.file.Close()
+	if err != nil {
+		return fmt.Errorf("cant close file: %w", err)
+	}
+
+	err = os.Remove(f.file.Name())
+	if err != nil {
+		return fmt.Errorf("cant remove file: %w", err)
+	}
+
+	return nil
 }

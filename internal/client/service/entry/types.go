@@ -20,8 +20,3 @@ type MetadataRepository interface {
 	MarkAsDownloaded(ctx context.Context, tx transaction.Tx, key string) error
 	MarkAsDeleted(ctx context.Context, tx transaction.Tx, key string) error
 }
-
-type BlobRepository interface {
-	Writer(key string) (io.WriteCloser, error)
-	Reader(key string) (io.ReadCloser, bool, error)
-}

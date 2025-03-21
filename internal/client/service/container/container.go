@@ -24,6 +24,7 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
+	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
 func New(conf *viper.Viper) (*Container, error) {
@@ -88,12 +89,6 @@ func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, erro
 			return
 		}
 
-		blobRepo, err := entryStorage.NewFileBlobRepository(c.conf.GetString("storage.blobs.path"))
-		if err != nil {
-			outErr = fmt.Errorf("cant create blob repository: %w", err)
-			return
-		}
-
 		conn, err := c.getConnection()
 		if err != nil {
 			outErr = fmt.Errorf("cant get grpc connection: %w", err)
@@ -110,7 +105,7 @@ func (c *Container) GetEntryService(ctx context.Context) (cmd.EntryService, erro
 			crypter,
 			pbSync.NewSyncServiceClient(conn),
 			metadataRepo,
-			blobRepo,
+			blob.NewFileBlobRepository(c.conf.GetString("storage.blobs.path")),
 		)
 	})
 

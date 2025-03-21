@@ -9,8 +9,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
@@ -19,6 +17,7 @@ import (
 	userStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/database"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport"
+	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
@@ -49,18 +48,7 @@ func main() {
 		log.Logger().Fatalw("failed to initialize database", "error", err)
 	}
 
-	s3, err := minio.New(
-		config.GetString("S3_ENDPOINT"),
-		&minio.Options{
-			Creds:  credentials.NewStaticV4(config.GetString("S3_ACCESS_KEY"), config.GetString("S3_SECRET_KEY"), ""),
-			Secure: config.GetBool("S3_SECURE"),
-		},
-	)
-	if err != nil {
-		log.Logger().Fatalw("failed to initialize S3 client", "error", err)
-	}
-
-	services, err := initServices(ctx, config, db, s3)
+	services, err := initServices(ctx, config, db)
 	if err != nil {
 		log.Logger().Fatalw("failed to initialize services", "error", err)
 	}
@@ -87,7 +75,7 @@ func initDB(ctx context.Context, cnf *viper.Viper) (*sql.DB, error) {
 	return db, nil
 }
 
-func initServices(_ context.Context, cnf *viper.Viper, db *sql.DB, s3 *minio.Client) (transport.Services, error) {
+func initServices(_ context.Context, cnf *viper.Viper, db *sql.DB) (transport.Services, error) {
 	return transport.Services{
 		User: user.NewService(
 			userStorage.NewDatabaseRepository(db),
@@ -99,7 +87,7 @@ func initServices(_ context.Context, cnf *viper.Viper, db *sql.DB, s3 *minio.Cli
 		),
 		Sync: sync.New(
 			sync2.NewDatabaseMetadataRepository(),
-			sync2.NewS3BlobRepository(s3, cnf.GetString("S3_BUCKET")),
+			blob.NewFileBlobRepository(cnf.GetString("BLOB_PATH")),
 			transaction.NewDatabaseTransactionProvider(db),
 		),
 	}, nil

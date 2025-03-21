@@ -3,7 +3,9 @@ package sync
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -47,7 +49,7 @@ func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryReq
 	}
 
 	// todo maybe do smth similar with pipes and chans on client?
-	writer, err, resultChan := s.service.UpdateEntry(stream.Context(), tokenInfo.UserID, sync.Metadata{
+	uploadChan, resultChan, err := s.service.UpdateEntry(stream.Context(), tokenInfo.UserID, sync.Metadata{
 		Key:   request.Key,
 		Name:  request.Name,
 		Notes: request.Notes,
@@ -61,34 +63,43 @@ func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryReq
 		return status.Errorf(codes.Internal, "cant update entry: %v", err)
 	}
 
-	go func() {
-		defer writer.Close()
+	defer close(uploadChan)
+	isDone := false
 
-		for {
+	for {
+		select {
+		case <-stream.Context().Done():
+			return status.Error(codes.Canceled, "client closed connection")
+
+		case result := <-resultChan:
+			if result.Err != nil {
+				// todo handle different error types and provide aduquate status
+				return status.Errorf(codes.Internal, "cant update entry: %v", err)
+			}
+
+			return stream.SendAndClose(&pb.UpdateEntryResponse{NewVersion: result.NewVersion})
+
+		default:
+			if isDone {
+				time.Sleep(time.Millisecond)
+				continue
+			}
+
 			req, err := stream.Recv()
 			if errors.Is(err, io.EOF) {
-				return
+				isDone = true
+				continue
 			}
 
 			if err != nil {
-				writer.CloseWithError(err)
-				return
+				uploadChan <- sync.UpdateEntryChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
+				isDone = true
+				continue
 			}
 
-			if _, err := writer.Write(req.Content); err != nil {
-				writer.CloseWithError(err)
-				return
-			}
+			uploadChan <- sync.UpdateEntryChunk{Content: req.Content}
 		}
-	}()
-
-	result := <-resultChan
-	if result.Err != nil {
-		// todo handle different error types and provide aduquate status
-		return status.Errorf(codes.Internal, "cant update entry: %v", err)
 	}
-
-	return stream.SendAndClose(&pb.UpdateEntryResponse{NewVersion: result.NewVersion})
 }
 
 func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*pb.DeleteEntryResponse, error) {
