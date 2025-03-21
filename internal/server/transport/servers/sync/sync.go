@@ -32,7 +32,59 @@ type Server struct {
 }
 
 func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
-	panic("implement me")
+	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
+	if !ok {
+		return status.Error(codes.Unauthenticated, "no token info")
+	}
+
+	llog := s.log.WithLazy("userID", tokenInfo.UserID, "method", "GetEntry", "key", request.Key)
+
+	md, reader, ok, err := s.service.Get(stream.Context(), tokenInfo.UserID, request.Key)
+	if err != nil {
+		llog.Errorw("cant get entry", "err", err)
+
+		return status.Errorf(codes.Internal, "cant get entry: %v", err)
+	}
+	if !ok {
+		return status.Errorf(codes.NotFound, "entry not found")
+	}
+
+	err = stream.Send(&pb.Entry{
+		Key:   md.Key,
+		Name:  md.Name,
+		Notes: md.Notes,
+	})
+	if err != nil {
+		llog.Errorw("cant send metadata", "err", err)
+
+		return status.Error(codes.Internal, "cant send metadata")
+	}
+
+	defer reader.Close()
+	for {
+		buf := make([]byte, 1024*1024) // todo from config
+		_, err := reader.Read(buf)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			llog.Errorw("cant read entry", "err", err)
+
+			return status.Error(codes.Internal, "cant read entry")
+		}
+
+		err = stream.Send(&pb.Entry{
+			Content: buf,
+		})
+		if err != nil {
+			llog.Errorw("cant send entry", "err", err)
+
+			return status.Error(codes.Internal, "cant send entry")
+		}
+	}
+
+	return nil
 }
 
 func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Empty]) error {

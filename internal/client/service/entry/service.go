@@ -184,9 +184,94 @@ func (s *Service) encryptNotes(notes string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *Service) Get(ctx context.Context, name string, entry cmd.Entry) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (s *Service) Get(ctx context.Context, key string, entry cmd.Entry) (bool, error) {
+	stream, err := s.client.GetEntry(ctx, &pbSync.GetEntryRequest{Key: key})
+	if err != nil {
+		return false, fmt.Errorf("cant start downloading entry: %w", err)
+	}
+	defer stream.CloseSend()
+
+	resp, err := stream.Recv()
+	if err != nil {
+		return false, fmt.Errorf("error getting metadata: %w", err)
+	}
+
+	if resp.Notes != nil {
+		notes, err := s.decryptNotes(resp.Notes)
+		if err != nil {
+			return false, fmt.Errorf("error decrypting notes: %w", err)
+		}
+		err = entry.SetNotes(notes)
+		if err != nil {
+			return false, fmt.Errorf("error setting notes: %w", err)
+		}
+	}
+
+	content, err := s.downloadBlob(key, stream)
+	if err != nil {
+		return false, fmt.Errorf("error downloading entry: %w", err)
+	}
+
+	decr, err := s.crypt.Decrypt(content)
+	if err != nil {
+		return false, fmt.Errorf("could not create decrypt reader: %w", err)
+	}
+
+	err = entry.FromBytes(decr)
+	if err != nil {
+		return false, fmt.Errorf("could not read decrypted entry: %w", err)
+	}
+
+	return true, nil
+}
+
+func (s *Service) decryptNotes(encNotes []byte) (string, error) {
+	dec, err := s.crypt.Decrypt(bytes.NewReader(encNotes))
+	if err != nil {
+		return "", fmt.Errorf("could not create decrypt reader: %w", err)
+	}
+
+	notes, err := io.ReadAll(dec)
+	if err != nil {
+		return "", fmt.Errorf("could not read decrypted notes: %w", err)
+	}
+
+	return string(notes), nil
+}
+
+func (s *Service) downloadBlob(key string, stream grpc.ServerStreamingClient[pbSync.Entry]) (io.ReadCloser, error) {
+	dst, err := s.blobRepo.Writer(key)
+	if err != nil {
+		return nil, fmt.Errorf("cant create blob to temporary store entry: %w", err)
+	}
+	defer dst.Close()
+
+	for {
+		response, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error reading entry: %w", err)
+		}
+
+		_, err = dst.Write(response.Content)
+	}
+
+	err = dst.Close()
+	if err != nil {
+		return nil, fmt.Errorf("error closing temporary blob: %w", err)
+	}
+
+	reader, exists, err := s.blobRepo.Reader(key)
+	if err != nil {
+		return nil, fmt.Errorf("error initializing reader for the encrypted blob: %w", err)
+	}
+	if !exists {
+		return nil, errors.New("encrypted blob that we've just written wasn't found")
+	}
+
+	return reader, nil
 }
 
 func (s *Service) Delete(ctx context.Context, name string) error {

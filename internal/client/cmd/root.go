@@ -60,8 +60,8 @@ func NewRootCommand(container Container) *cobra.Command {
 	set := newSetCommand(container)
 	// todo guard
 	//set.PersistentPreRunE = middleware.WithParentPersistentPreRunE(ensureFullSetup(set.PersistentPreRunE))
-
 	rootCmd.AddCommand(set)
+	rootCmd.AddCommand(newGetCommand(container))
 
 	return rootCmd
 }

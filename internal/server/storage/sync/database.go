@@ -3,6 +3,7 @@ package sync
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
@@ -16,6 +17,27 @@ func NewDatabaseMetadataRepository(db *sql.DB) *DatabaseMetadataRepository {
 
 type DatabaseMetadataRepository struct {
 	db *sql.DB
+}
+
+func (d *DatabaseMetadataRepository) Get(ctx context.Context, userID string, key string) (sync.Metadata, bool, error) {
+	row := d.db.QueryRowContext(
+		ctx,
+		"SELECT key, name, notes FROM entries WHERE user_id = $1 AND key = $2",
+		userID,
+		key,
+	)
+
+	var md sync.Metadata
+	err := row.Scan(&md.Key, &md.Name, &md.Notes)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return sync.Metadata{}, false, nil
+		}
+
+		return sync.Metadata{}, false, fmt.Errorf("query error: %w", err)
+	}
+
+	return md, true, nil
 }
 
 func (d *DatabaseMetadataRepository) Set(ctx context.Context, userID string, md sync.Metadata) error {

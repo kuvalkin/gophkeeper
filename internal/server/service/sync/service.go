@@ -2,7 +2,9 @@ package sync
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 
 	"go.uber.org/zap"
 
@@ -79,4 +81,25 @@ func (s *ServiceImpl) UpdateEntry(ctx context.Context, userID string, md Metadat
 	}()
 
 	return uploadChan, resultChan, nil
+}
+
+func (s *ServiceImpl) Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error) {
+	md, ok, err := s.metaRepo.Get(ctx, userID, key)
+	if err != nil {
+		return Metadata{}, nil, false, fmt.Errorf("cant get metadata: %w", err)
+	}
+
+	if !ok {
+		return Metadata{}, nil, false, nil
+	}
+
+	rc, ok, err := s.blobRepo.Reader(fmt.Sprintf("%s/%s", userID, key))
+	if err != nil {
+		return Metadata{}, nil, false, fmt.Errorf("cant get blob reader: %w", err)
+	}
+	if !ok {
+		return Metadata{}, nil, false, errors.New("blob not found")
+	}
+
+	return md, rc, true, nil
 }
