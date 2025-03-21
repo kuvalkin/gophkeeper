@@ -32,7 +32,7 @@ func NewAuthFunc(userService user.Service) func(ctx context.Context) (context.Co
 
 		ctx = logging.InjectFields(ctx, logging.Fields{"auth.userID", tokenInfo.UserID})
 
-		return context.WithValue(ctx, tokenInfoKey{}, tokenInfo), nil
+		return context.WithValue(ctx, tokenInfoKey{}, *tokenInfo), nil
 	}
 }
 

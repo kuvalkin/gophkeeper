@@ -14,7 +14,7 @@ func New(metaRepo MetadataRepository, blobRepo blob.Repository) *ServiceImpl {
 	return &ServiceImpl{
 		metaRepo: metaRepo,
 		blobRepo: blobRepo,
-		log:      log.Logger().Named("sync-service"),
+		log:      log.Logger().Named("service.sync"),
 	}
 }
 
@@ -27,7 +27,7 @@ type ServiceImpl struct {
 func (s *ServiceImpl) UpdateEntry(ctx context.Context, userID string, md Metadata) (chan<- UploadChunk, <-chan UpdateEntryResult, error) {
 	llog := s.log.WithLazy("userID", userID, "key", md.Key)
 
-	dst, err := s.blobRepo.Writer(fmt.Sprintf("%s_%s", userID, md.Key))
+	dst, err := s.blobRepo.Writer(fmt.Sprintf("%s/%s", userID, md.Key))
 	if err != nil {
 		llog.Errorw("cant get writer", "err", err)
 
@@ -39,6 +39,8 @@ func (s *ServiceImpl) UpdateEntry(ctx context.Context, userID string, md Metadat
 
 	go func() {
 		defer close(resultChan)
+
+		llog.Debug("waiting for chunks")
 
 		for chunk := range uploadChan {
 			if chunk.Err != nil {
@@ -61,6 +63,8 @@ func (s *ServiceImpl) UpdateEntry(ctx context.Context, userID string, md Metadat
 				resultChan <- UpdateEntryResult{Err: ErrInternal}
 				return
 			}
+
+			llog.Debug("chunk written")
 		}
 
 		err = s.metaRepo.Set(ctx, userID, md)

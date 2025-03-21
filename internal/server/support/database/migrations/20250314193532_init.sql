@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS entries (
     user_id UUID REFERENCES users(id) ON DELETE RESTRICT,
     key TEXT NOT NULL,
     name TEXT NOT NULL,
-    notes TEXT DEFAULT NULL,
+    notes BYTEA DEFAULT NULL,
 
     PRIMARY KEY (user_id, key)
 );

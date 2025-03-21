@@ -37,10 +37,7 @@ func main() {
 		}
 	}()
 
-	config := viper.New()
-	config.AutomaticEnv()
-	config.SetDefault("ADDRESS", "localhost:8080")
-	config.SetDefault("TOKEN_EXPIRATION_PERIOD", "30d")
+	config := newConfig()
 
 	db, err := initDB(ctx, config)
 	if err != nil {
@@ -52,16 +49,35 @@ func main() {
 		log.Logger().Fatalw("failed to initialize services", "error", err)
 	}
 
-	serve(ctx, config.GetString("ADDRESS"), services)
+	serve(ctx, config.GetString("address"), services)
 
 	// if we are here, the server has been stopped
 	log.Logger().Info("server shutdown complete")
 }
 
-func initDB(ctx context.Context, cnf *viper.Viper) (*sql.DB, error) {
+func newConfig() *viper.Viper {
+	config := viper.New()
+
+	config.SetDefault("address", ":8080")
+	config.MustBindEnv("address", "ADDRESS")
+
+	config.MustBindEnv("token.secret", "TOKEN_SECRET")
+	config.SetDefault("token.expiration", "720h")
+	config.MustBindEnv("token.expiration", "TOKEN_EXPIRATION")
+
+	config.MustBindEnv("password.salt", "PASSWORD_SALT")
+
+	config.MustBindEnv("database.dsn", "DATABASE_DSN")
+
+	config.MustBindEnv("blob.path", "BLOB_PATH")
+
+	return config
+}
+
+func initDB(ctx context.Context, config *viper.Viper) (*sql.DB, error) {
 	log.Logger().Debug("connecting to DB")
 
-	db, err := database.InitDB(ctx, cnf.GetString("DATABASE_DSN"))
+	db, err := database.InitDB(ctx, config.GetString("database.dsn"))
 	if err != nil {
 		return nil, fmt.Errorf("init db failed: %w", err)
 	}
@@ -74,19 +90,19 @@ func initDB(ctx context.Context, cnf *viper.Viper) (*sql.DB, error) {
 	return db, nil
 }
 
-func initServices(_ context.Context, cnf *viper.Viper, db *sql.DB) (transport.Services, error) {
+func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport.Services, error) {
 	return transport.Services{
 		User: user.NewService(
 			userStorage.NewDatabaseRepository(db),
 			user.Options{
-				TokenSecret:           []byte(cnf.GetString("TOKEN_SECRET")),
-				PasswordSalt:          cnf.GetString("PASSWORD_SALT"),
-				TokenExpirationPeriod: cnf.GetDuration("TOKEN_EXPIRATION_PERIOD"),
+				TokenSecret:           []byte(config.GetString("token.secret")),
+				PasswordSalt:          config.GetString("password.salt"),
+				TokenExpirationPeriod: config.GetDuration("token.expiration"),
 			},
 		),
 		Sync: sync.New(
 			syncStorage.NewDatabaseMetadataRepository(db),
-			blob.NewFileBlobRepository(cnf.GetString("BLOB_PATH")),
+			blob.NewFileBlobRepository(config.GetString("blob.path")),
 		),
 	}, nil
 }

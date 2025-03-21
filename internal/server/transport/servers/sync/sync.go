@@ -21,7 +21,7 @@ import (
 func New(service sync.Service) *Server {
 	return &Server{
 		service: service,
-		log:     log.Logger().Named("sync-server"),
+		log:     log.Logger().Named("server.sync"),
 	}
 }
 
@@ -62,7 +62,18 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 		return status.Errorf(codes.Internal, "cant update entry: %v", err)
 	}
 
-	defer close(uploadChan)
+	llog = llog.WithLazy("key", request.Key)
+
+	llog.Debug("metadata received, preparing to receive chunks")
+
+	isUploadClosed := false
+	defer func() {
+		if !isUploadClosed {
+			close(uploadChan)
+			isUploadClosed = true
+		}
+	}()
+
 	isDone := false
 
 	for {
@@ -80,23 +91,44 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 
 		default:
 			if isDone {
-				time.Sleep(time.Millisecond)
+				llog.Debug("waiting for result")
+
+				// todo read steam from other goroutine, pipe in chan
+				time.Sleep(10 * time.Millisecond)
 				continue
 			}
 
+			llog.Debug("waiting for chunk")
+
 			req, err := stream.Recv()
 			if errors.Is(err, io.EOF) {
+				llog.Debug("uploaded ended, wait for result")
+
+				if !isUploadClosed {
+					close(uploadChan)
+					isUploadClosed = true
+				}
+
 				isDone = true
+
 				continue
 			}
 
 			if err != nil {
 				uploadChan <- sync.UploadChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
+
+				if !isUploadClosed {
+					close(uploadChan)
+					isUploadClosed = true
+				}
+
 				isDone = true
+
 				continue
 			}
 
 			uploadChan <- sync.UploadChunk{Content: req.Content}
+			llog.Debug("chunk uploaded")
 		}
 	}
 }

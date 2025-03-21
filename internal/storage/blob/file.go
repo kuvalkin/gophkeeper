@@ -23,11 +23,20 @@ type FileBlobRepository struct {
 	log  *zap.SugaredLogger
 }
 
+const dirPerms = os.FileMode(0700)
+const filePerms = os.FileMode(0600)
+
 func (f *FileBlobRepository) Writer(key string) (ErrWriteCloser, error) {
 	fullPath := path.Join(f.path, key)
+
+	err := os.MkdirAll(path.Dir(fullPath), dirPerms)
+	if err != nil {
+		return nil, fmt.Errorf("cant create directory: %w", err)
+	}
+
 	f.log.Debugw("opening for write", "path", fullPath)
 
-	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, filePerms)
 	if err != nil {
 		return nil, fmt.Errorf("cant open file: %w", err)
 	}
