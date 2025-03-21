@@ -11,17 +11,21 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/proto"
 
-	entryService "github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	pbSerialize "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
 )
 
-var ErrVersionMismatch = errors.New("server has never version of the entry")
-
 type EntryService interface {
-	Set(ctx context.Context, key string, name string, entry entryService.Entry, force bool) error
-	Get(ctx context.Context, key string, entry entryService.Entry) (bool, error)
+	Set(ctx context.Context, key string, name string, entry Entry) error
+	Get(ctx context.Context, key string, entry Entry) (bool, error)
 	Delete(ctx context.Context, key string) error
+}
+
+type Entry interface {
+	Bytes() (io.ReadCloser, error)
+	FromBytes(reader io.Reader) error
+	Notes() string
+	SetNotes(notes string) error
 }
 
 type TokenService interface {
@@ -93,7 +97,7 @@ func newSetLoginCommand(container Container) *cobra.Command {
 
 			// todo extract name conversion
 			// todo provide feedback as service runs
-			err = service.Set(ctxWithToken, fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry, false)
+			err = service.Set(ctxWithToken, fmt.Sprintf("%x", sha256.Sum256([]byte(name))), name, entry)
 			if err != nil {
 				return fmt.Errorf("error setting login: %w", err)
 			}

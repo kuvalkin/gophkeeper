@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -11,28 +10,32 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
-func New(service sync.Service) pb.SyncServiceServer {
-	return &server{}
+func New(service sync.Service) *Server {
+	return &Server{
+		service: service,
+		log:     log.Logger().Named("sync-server"),
+	}
 }
 
-type server struct {
+type Server struct {
 	pb.UnimplementedSyncServiceServer
 	service sync.Service
 	log     *zap.SugaredLogger
 }
 
-func (s *server) GetUpdates(request *pb.GetUpdatesRequest, g grpc.ServerStreamingServer[pb.GetUpdatesResponse]) error {
-	//TODO implement me
+func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
 	panic("implement me")
 }
 
-func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryRequest, pb.UpdateEntryResponse]) error {
+func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Empty]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
 		return status.Error(codes.Unauthenticated, "no token info")
@@ -53,12 +56,8 @@ func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryReq
 		Key:   request.Key,
 		Name:  request.Name,
 		Notes: request.Notes,
-	}, request.LastVersion, request.Force)
+	})
 	if err != nil {
-		if errors.Is(err, sync.ErrVersionMismatch) {
-			return status.Errorf(codes.FailedPrecondition, "version mismatch: %v", err)
-		}
-
 		// todo handle different error types and provide aduquate status
 		return status.Errorf(codes.Internal, "cant update entry: %v", err)
 	}
@@ -77,7 +76,7 @@ func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryReq
 				return status.Errorf(codes.Internal, "cant update entry: %v", err)
 			}
 
-			return stream.SendAndClose(&pb.UpdateEntryResponse{NewVersion: result.NewVersion})
+			return stream.SendAndClose(&emptypb.Empty{})
 
 		default:
 			if isDone {
@@ -92,22 +91,16 @@ func (s *server) UpdateEntry(stream grpc.ClientStreamingServer[pb.UpdateEntryReq
 			}
 
 			if err != nil {
-				uploadChan <- sync.UpdateEntryChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
+				uploadChan <- sync.UploadChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
 				isDone = true
 				continue
 			}
 
-			uploadChan <- sync.UpdateEntryChunk{Content: req.Content}
+			uploadChan <- sync.UploadChunk{Content: req.Content}
 		}
 	}
 }
 
-func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*pb.DeleteEntryResponse, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *server) DownloadEntry(request *pb.DownloadEntryRequest, g grpc.ServerStreamingServer[pb.DownloadEntryResponse]) error {
-	//TODO implement me
+func (s *Server) DeleteEntry(stream grpc.ClientStreamingServer[pb.DeleteEntryRequest, emptypb.Empty]) error {
 	panic("implement me")
 }

@@ -1,29 +1,24 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 )
 
-func New(client pbAuth.AuthServiceClient, repo Repository, crypt service.Crypt) (*Service, error) {
+func New(client pbAuth.AuthServiceClient, repo Repository) *Service {
 	return &Service{
 		client: client,
 		repo:   repo,
-		crypt:  crypt,
-	}, nil
+	}
 }
 
 type Service struct {
 	client pbAuth.AuthServiceClient
 	repo   Repository
-	crypt  service.Crypt
 }
 
 func (s *Service) Register(ctx context.Context, login string, password string) error {
@@ -34,12 +29,7 @@ func (s *Service) Register(ctx context.Context, login string, password string) e
 		return fmt.Errorf("error registering user: %w", err)
 	}
 
-	encryptedToken, err := s.encryptToken(response.Token)
-	if err != nil {
-		return fmt.Errorf("error encrypting token: %w", err)
-	}
-
-	err = s.repo.SetToken(ctx, encryptedToken)
+	err = s.repo.SetToken(ctx, response.Token)
 	if err != nil {
 		return fmt.Errorf("error saving token: %w", err)
 	}
@@ -48,17 +38,12 @@ func (s *Service) Register(ctx context.Context, login string, password string) e
 }
 
 func (s *Service) SetToken(ctx context.Context) (context.Context, error) {
-	encToken, ok, err := s.repo.GetToken(ctx)
+	token, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting token: %w", err)
 	}
 	if !ok {
 		return nil, fmt.Errorf("token not found")
-	}
-
-	token, err := s.decryptToken(encToken)
-	if err != nil {
-		return nil, fmt.Errorf("error decrypting token: %w", err)
 	}
 
 	md := metadata.Pairs(
@@ -67,40 +52,4 @@ func (s *Service) SetToken(ctx context.Context) (context.Context, error) {
 	)
 
 	return metadata.NewOutgoingContext(ctx, md), nil
-}
-
-func (s *Service) encryptToken(token string) ([]byte, error) {
-	var buf bytes.Buffer
-	encryptWriter, err := s.crypt.Encrypt(&buf)
-	if err != nil {
-		return nil, fmt.Errorf("could not create encrypt writer: %w", err)
-	}
-
-	_, err = io.WriteString(encryptWriter, token)
-	if err != nil {
-		_ = encryptWriter.Close()
-
-		return nil, fmt.Errorf("could not write token to encrypt writer: %w", err)
-	}
-
-	err = encryptWriter.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close encrypt writer: %w", err)
-	}
-
-	return buf.Bytes(), nil
-}
-
-func (s *Service) decryptToken(token []byte) (string, error) {
-	decryptReader, err := s.crypt.Decrypt(bytes.NewReader(token))
-	if err != nil {
-		return "", fmt.Errorf("could not create decrypt reader: %w", err)
-	}
-
-	decryptedToken, err := io.ReadAll(decryptReader)
-	if err != nil {
-		return "", fmt.Errorf("could not read decrypted token: %w", err)
-	}
-
-	return string(decryptedToken), nil
 }

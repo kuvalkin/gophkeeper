@@ -8,55 +8,42 @@ import (
 	"io"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
-	"github.com/kuvalkin/gophkeeper/internal/client/service"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
 func New(
-	crypt service.Crypt,
+	crypt Crypt,
 	client pbSync.SyncServiceClient,
-	metaRepo MetadataRepository,
 	blobRepo blob.Repository,
 ) (*Service, error) {
 	return &Service{
 		crypt:     crypt,
 		client:    client,
-		metaRepo:  metaRepo,
 		blobRepo:  blobRepo,
 		chunkSize: 1024 * 1024, // 1MB, todo get from config
 	}, nil
 }
 
 type Service struct {
-	crypt     service.Crypt
+	crypt     Crypt
 	client    pbSync.SyncServiceClient
-	metaRepo  MetadataRepository
 	blobRepo  blob.Repository
 	chunkSize int64
 }
 
-func (s *Service) Set(ctx context.Context, key string, name string, entry Entry, force bool) error {
-	size, err := s.saveEncryptedBlob(entry, key)
+func (s *Service) Set(ctx context.Context, key string, name string, entry cmd.Entry) error {
+	err := s.encryptBlob(entry, key)
 	if err != nil {
-		return fmt.Errorf("error encrypting entry and saving it locally: %w", err)
+		return fmt.Errorf("error encrypting entry: %w", err)
 	}
 
 	notes, err := s.encryptNotes(entry.Notes())
 	if err != nil {
 		return fmt.Errorf("error encrypting notes: %w", err)
-	}
-
-	lastKnownVersion, ok, err := s.metaRepo.GetVersion(ctx, nil, key)
-	if err != nil {
-		return fmt.Errorf("error getting last known entry version from local db: %w", err)
-	}
-	if !ok {
-		lastKnownVersion = 0
 	}
 
 	reader, ok, err := s.blobRepo.Reader(key)
@@ -75,44 +62,32 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry Entry,
 	defer stream.CloseSend()
 
 	// send metadata first
-	err = stream.Send(&pbSync.UpdateEntryRequest{
-		Key:         key,
-		Name:        name,
-		Notes:       notes,
-		LastVersion: lastKnownVersion,
-		Force:       force,
+	err = stream.Send(&pbSync.Entry{
+		Key:   key,
+		Name:  name,
+		Notes: notes,
 	})
 	if err != nil {
-		if statErr, ok := status.FromError(err); ok && statErr.Code() == codes.FailedPrecondition {
-			return cmd.ErrVersionMismatch
-		}
-
 		return fmt.Errorf("error sending metadata to the server: %w", err)
 	}
 
-	err = s.uploadBlob(reader, stream, size)
+	err = s.uploadBlob(reader, stream)
 	if err != nil {
 		return fmt.Errorf("error uploading encrypted blob to server: %w", err)
 	}
 
-	response, err := stream.CloseAndRecv()
+	_, err = stream.CloseAndRecv()
 	if err != nil {
 		return fmt.Errorf("error finishing upload process: %w", err)
-	}
-
-	// todo transaction?
-	err = s.metaRepo.Set(ctx, nil, key, name, notes, response.NewVersion)
-	if err != nil {
-		return fmt.Errorf("error saving localy uploaded entry metadata: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err error) {
+func (s *Service) encryptBlob(entry cmd.Entry, key string) (err error) {
 	bytesReader, err := entry.Bytes()
 	if err != nil {
-		return 0, fmt.Errorf("cant get entry bytes reader: %w", err)
+		return fmt.Errorf("cant get entry bytes reader: %w", err)
 	}
 	defer func() {
 		closeErr := bytesReader.Close()
@@ -123,7 +98,7 @@ func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err er
 
 	dst, err := s.blobRepo.Writer(key)
 	if err != nil {
-		return 0, fmt.Errorf("cant create blob to store entry: %w", err)
+		return fmt.Errorf("cant create blob to store entry: %w", err)
 	}
 	defer func() {
 		closeErr := dst.Close()
@@ -134,7 +109,7 @@ func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err er
 
 	encrypter, err := s.crypt.Encrypt(dst)
 	if err != nil {
-		return 0, fmt.Errorf("cant start encrypting entry: %w", err)
+		return fmt.Errorf("cant start encrypting entry: %w", err)
 	}
 	defer func() {
 		closeErr := encrypter.Close()
@@ -144,24 +119,21 @@ func (s *Service) saveEncryptedBlob(entry Entry, key string) (size int64, err er
 	}()
 
 	// todo cancel on ctx since encrypting can take a while
-	size, err = io.Copy(encrypter, bytesReader)
+	_, err = io.Copy(encrypter, bytesReader)
 	if err != nil {
-		return 0, fmt.Errorf("error writing to encrypted blob: %w", err)
+		return fmt.Errorf("error writing to encrypted blob: %w", err)
 	}
 
 	// but note that defers can also return errors
-	return size, nil
+	return nil
 }
 
 func (s *Service) uploadBlob(
 	blob io.Reader,
-	stream grpc.ClientStreamingClient[pbSync.UpdateEntryRequest, pbSync.UpdateEntryResponse],
-	size int64,
+	stream grpc.ClientStreamingClient[pbSync.Entry, emptypb.Empty],
 ) error {
 	buffer := make([]byte, s.chunkSize)
 	bytesSent := 0
-
-	// todo event upload start
 
 	for {
 		// Read next chunk from file
@@ -174,7 +146,7 @@ func (s *Service) uploadBlob(
 		}
 
 		// Send chunk
-		err = stream.Send(&pbSync.UpdateEntryRequest{
+		err = stream.Send(&pbSync.Entry{
 			Content: buffer,
 		})
 		if err != nil {
@@ -182,10 +154,7 @@ func (s *Service) uploadBlob(
 		}
 
 		bytesSent += n
-		// todo event upload progress bytesSent out of size
 	}
-
-	// todo event upload finish
 
 	return nil
 }
@@ -212,7 +181,7 @@ func (s *Service) encryptNotes(notes string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *Service) Get(ctx context.Context, name string, entry Entry) (bool, error) {
+func (s *Service) Get(ctx context.Context, name string, entry cmd.Entry) (bool, error) {
 	//TODO implement me
 	panic("implement me")
 }

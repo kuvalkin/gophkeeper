@@ -23,7 +23,7 @@ func NewRootCommand(container Container) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
 		Use:     "gkeep",
-		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely both locally and in the cloud",
+		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely in the cloud",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			verbose, err := cmd.Flags().GetBool("verbose")
 			if err != nil {
@@ -62,7 +62,6 @@ func NewRootCommand(container Container) *cobra.Command {
 	//set.PersistentPreRunE = middleware.WithParentPersistentPreRunE(ensureFullSetup(set.PersistentPreRunE))
 
 	rootCmd.AddCommand(set)
-	//todo vacuum command to delete blobs without metadata
 
 	return rootCmd
 }
@@ -72,7 +71,7 @@ func NewConfig() (*viper.Viper, error) {
 
 	dirs := userdirs.ForApp("gophkeeper", "kuvalkin", "com.kuvalkin.gophkeeper")
 
-	defaultConfig(conf, &dirs)
+	defaultConfig(conf)
 
 	// config.yaml, config.json, ....
 	conf.SetConfigName("config")
@@ -91,11 +90,6 @@ func NewConfig() (*viper.Viper, error) {
 	return conf, nil
 }
 
-func defaultConfig(conf *viper.Viper, dirs *userdirs.Dirs) {
+func defaultConfig(conf *viper.Viper) {
 	conf.SetDefault("server.insecure", false)
-
-	conf.SetDefault("storage.sqlite.path", dirs.NewDataPath("metadata.sqlite"))
-	conf.SetDefault("storage.blobs.path", dirs.NewDataPath("blobs"))
-
-	conf.SetDefault("log.path", "")
 }

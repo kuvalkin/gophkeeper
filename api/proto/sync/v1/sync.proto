@@ -3,55 +3,25 @@ syntax = "proto3";
 package com.kuvalkin.gophkeeper.proto.sync.v1;
 option go_package = "internal/proto/sync/v1;v1";
 
+import "google/protobuf/empty.proto";
+
 service SyncService {
-  rpc GetUpdates(GetUpdatesRequest) returns (stream GetUpdatesResponse);
-  rpc UpdateEntry(stream UpdateEntryRequest) returns (UpdateEntryResponse);
-  rpc DeleteEntry(DeleteEntryRequest) returns (DeleteEntryResponse);
-  rpc DownloadEntry(DownloadEntryRequest) returns (stream DownloadEntryResponse);
+  rpc GetEntry(GetEntryRequest) returns (stream Entry);
+  rpc UpdateEntry(stream Entry) returns (google.protobuf.Empty);
+  rpc DeleteEntry(stream DeleteEntryRequest) returns (google.protobuf.Empty);
 }
 
-message GetUpdatesRequest {
-  sint64 last_version = 1;
-}
-
-message GetUpdatesResponse {
-  sint64 new_version = 1;
-  repeated Entry entries = 2;
-
-  message Entry {
-    string key = 1;
-    sint64 version = 2;
-    string name = 3;
-    bytes notes = 4;
-  }
-}
-
-message UpdateEntryRequest {
+message GetEntryRequest {
   string key = 1;
-  sint64 last_version = 2;
-  string name = 3;
-  bytes notes = 4;
-  bool force = 5;
-  bytes content = 6;
 }
 
-message UpdateEntryResponse {
-  sint64 new_version = 1;
+message Entry {
+  string key = 1;
+  string name = 2;
+  bytes notes = 3;
+  bytes content = 4;
 }
 
 message DeleteEntryRequest {
   string key = 1;
-}
-
-message DeleteEntryResponse {
-  sint64 new_version = 1;
-}
-
-message DownloadEntryRequest {
-  string key = 1;
-  sint64 version = 2;
-}
-
-message DownloadEntryResponse {
-  bytes content = 1;
 }

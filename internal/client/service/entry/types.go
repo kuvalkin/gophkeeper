@@ -1,22 +1,10 @@
 package entry
 
 import (
-	"context"
 	"io"
-
-	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
 
-type Entry interface {
-	Bytes() (io.ReadCloser, error)
-	FromBytes(reader io.Reader) error
-	Notes() string
-	SetNotes(notes string) error
-}
-
-type MetadataRepository interface {
-	Set(ctx context.Context, tx transaction.Tx, key string, name string, notes []byte, version int64) error
-	GetVersion(ctx context.Context, tx transaction.Tx, key string) (int64, bool, error)
-	MarkAsDownloaded(ctx context.Context, tx transaction.Tx, key string) error
-	MarkAsDeleted(ctx context.Context, tx transaction.Tx, key string) error
+type Crypt interface {
+	Encrypt(dst io.Writer) (io.WriteCloser, error)
+	Decrypt(src io.Reader) (io.Reader, error)
 }

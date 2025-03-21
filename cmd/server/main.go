@@ -13,13 +13,12 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
-	sync2 "github.com/kuvalkin/gophkeeper/internal/server/storage/sync"
+	syncStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/sync"
 	userStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/database"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
-	"github.com/kuvalkin/gophkeeper/internal/support/transaction"
 )
 
 func main() {
@@ -86,9 +85,8 @@ func initServices(_ context.Context, cnf *viper.Viper, db *sql.DB) (transport.Se
 			},
 		),
 		Sync: sync.New(
-			sync2.NewDatabaseMetadataRepository(),
+			syncStorage.NewDatabaseMetadataRepository(db),
 			blob.NewFileBlobRepository(cnf.GetString("BLOB_PATH")),
-			transaction.NewDatabaseTransactionProvider(db),
 		),
 	}, nil
 }
