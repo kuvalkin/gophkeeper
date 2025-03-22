@@ -20,3 +20,7 @@ func (d *KeyringRepository) GetToken(_ context.Context) (string, bool, error) {
 func (d *KeyringRepository) SetToken(_ context.Context, token string) error {
 	return keyring.Set("token", token)
 }
+
+func (d *KeyringRepository) DeleteToken(_ context.Context) error {
+	return keyring.Delete("token")
+}

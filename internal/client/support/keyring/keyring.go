@@ -30,3 +30,12 @@ func Get(key string) (string, bool, error) {
 
 	return value, true, nil
 }
+
+func Delete(key string) error {
+	err := keyring.Delete(service, key)
+	if err != nil {
+		return fmt.Errorf("error deleting value from keyring: %w", err)
+	}
+
+	return nil
+}

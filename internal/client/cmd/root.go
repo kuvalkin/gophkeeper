@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd/middleware"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
@@ -49,7 +50,18 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output. Useful for debugging")
 
 	rootCmd.AddCommand(newSecretCommand())
-	rootCmd.AddCommand(newRegisterCommand(container))
+
+	notLoggedIn := middleware.NotLoggedIn(container)
+
+	register := newRegisterCommand(container)
+	register.PreRunE = notLoggedIn(register.PreRunE)
+	rootCmd.AddCommand(register)
+
+	login := newLoginCommand(container)
+	login.PreRunE = notLoggedIn(login.PreRunE)
+	rootCmd.AddCommand(login)
+
+	rootCmd.AddCommand(newLogoutCommand(container))
 
 	set := newSetCommand(container)
 	// todo guard

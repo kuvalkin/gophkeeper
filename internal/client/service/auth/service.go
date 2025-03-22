@@ -37,6 +37,39 @@ func (s *service) Register(ctx context.Context, login string, password string) e
 	return nil
 }
 
+func (s *service) Login(ctx context.Context, login string, password string) error {
+	response, err := s.client.Login(ctx, &pbAuth.LoginRequest{Login: login, Password: password})
+
+	if err != nil {
+		return fmt.Errorf("error logging in: %w", err)
+	}
+
+	err = s.repo.SetToken(ctx, response.Token)
+	if err != nil {
+		return fmt.Errorf("error saving token: %w", err)
+	}
+
+	return nil
+}
+
+func (s *service) IsLoggedIn(ctx context.Context) (bool, error) {
+	_, ok, err := s.repo.GetToken(ctx)
+	if err != nil {
+		return false, fmt.Errorf("error getting token: %w", err)
+	}
+
+	return ok, nil
+}
+
+func (s *service) Logout(ctx context.Context) error {
+	err := s.repo.DeleteToken(ctx)
+	if err != nil {
+		return fmt.Errorf("error deleting token: %w", err)
+	}
+
+	return nil
+}
+
 func (s *service) SetToken(ctx context.Context) (context.Context, error) {
 	token, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
