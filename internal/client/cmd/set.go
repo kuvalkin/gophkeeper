@@ -6,11 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 )
 
-func newSetCommand(container Container) *cobra.Command {
+func newSetCommand(container container.Container) *cobra.Command {
 	set := &cobra.Command{
 		Use:   "set",
 		Short: "Store value",
@@ -22,7 +23,7 @@ func newSetCommand(container Container) *cobra.Command {
 	return set
 }
 
-func newSetLoginCommand(container Container) *cobra.Command {
+func newSetLoginCommand(container container.Container) *cobra.Command {
 	setLogin := &cobra.Command{
 		Use:   "login",
 		Short: "Store login and password",
@@ -61,7 +62,7 @@ func newSetLoginCommand(container Container) *cobra.Command {
 				return fmt.Errorf("error getting entry service: %w", err)
 			}
 
-			tokenService, err := container.GetTokenService(cmd.Context())
+			tokenService, err := container.GetAuthService(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("error getting token service: %w", err)
 			}

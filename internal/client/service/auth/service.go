@@ -9,19 +9,19 @@ import (
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 )
 
-func New(client pbAuth.AuthServiceClient, repo Repository) *Service {
-	return &Service{
+func New(client pbAuth.AuthServiceClient, repo Repository) Service {
+	return &service{
 		client: client,
 		repo:   repo,
 	}
 }
 
-type Service struct {
+type service struct {
 	client pbAuth.AuthServiceClient
 	repo   Repository
 }
 
-func (s *Service) Register(ctx context.Context, login string, password string) error {
+func (s *service) Register(ctx context.Context, login string, password string) error {
 	response, err := s.client.Register(ctx, &pbAuth.RegisterRequest{Login: login, Password: password})
 
 	if err != nil {
@@ -37,7 +37,7 @@ func (s *Service) Register(ctx context.Context, login string, password string) e
 	return nil
 }
 
-func (s *Service) SetToken(ctx context.Context) (context.Context, error) {
+func (s *service) SetToken(ctx context.Context) (context.Context, error) {
 	token, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting token: %w", err)

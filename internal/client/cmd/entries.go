@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 
@@ -10,23 +9,6 @@ import (
 
 	pbSerialize "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
 )
-
-type EntryService interface {
-	Set(ctx context.Context, key string, name string, entry Entry) error
-	Get(ctx context.Context, key string, entry Entry) (bool, error)
-	Delete(ctx context.Context, key string) error
-}
-
-type Entry interface {
-	Bytes() (io.ReadCloser, error)
-	FromBytes(reader io.Reader) error
-	Notes() string
-	SetNotes(notes string) error
-}
-
-type TokenService interface {
-	SetToken(ctx context.Context) (context.Context, error)
-}
 
 type loginPasswordEntry struct {
 	login    string

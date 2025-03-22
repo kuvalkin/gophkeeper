@@ -1,25 +1,19 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/apparentlymart/go-userdirs/userdirs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 var buildDate string
 
-type Container interface {
-	GetEntryService(ctx context.Context) (EntryService, error)
-	GetRegisterService(ctx context.Context) (RegisterService, error)
-	GetTokenService(ctx context.Context) (TokenService, error)
-}
-
-func NewRootCommand(container Container) *cobra.Command {
+func NewRootCommand(container container.Container) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
 		Use:     "gkeep",

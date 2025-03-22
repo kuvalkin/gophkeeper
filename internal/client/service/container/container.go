@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 
@@ -12,9 +13,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
-	entryService "github.com/kuvalkin/gophkeeper/internal/client/service/entry"
+	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	authStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/auth"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
@@ -23,25 +23,31 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
-func New(conf *viper.Viper) (*Container, error) {
-	c := &Container{
+type Container interface {
+	io.Closer
+	GetEntryService(ctx context.Context) (entry.Service, error)
+	GetAuthService(ctx context.Context) (auth.Service, error)
+}
+
+func New(conf *viper.Viper) (Container, error) {
+	c := &container{
 		conf: conf,
 	}
 
 	return c, nil
 }
 
-type Container struct {
+type container struct {
 	conf *viper.Viper
 
 	initConnection sync.Once
 	connection     *grpc.ClientConn
 
 	initEntryService sync.Once
-	entryService     *entryService.Service
+	entryService     entry.Service
 
 	initAuthService sync.Once
-	authService     *auth.Service
+	authService     auth.Service
 
 	initCrypter sync.Once
 	crypter     *crypt.AgeCrypter
@@ -50,7 +56,7 @@ type Container struct {
 }
 
 // not goroutine safe!
-func (c *Container) Close() error {
+func (c *container) Close() error {
 	errs := make([]error, 0)
 
 	if c.tempDir != "" {
@@ -70,7 +76,7 @@ func (c *Container) Close() error {
 	return errors.Join(errs...)
 }
 
-func (c *Container) GetEntryService(_ context.Context) (cmd.EntryService, error) {
+func (c *container) GetEntryService(_ context.Context) (entry.Service, error) {
 	var outErr error //todo will there be error on second pass?
 
 	c.initEntryService.Do(func() {
@@ -92,7 +98,7 @@ func (c *Container) GetEntryService(_ context.Context) (cmd.EntryService, error)
 			return
 		}
 
-		c.entryService, outErr = entryService.New(
+		c.entryService, outErr = entry.New(
 			crypter,
 			pbSync.NewSyncServiceClient(conn),
 			blob.NewFileBlobRepository(c.tempDir),
@@ -102,15 +108,7 @@ func (c *Container) GetEntryService(_ context.Context) (cmd.EntryService, error)
 	return c.entryService, outErr
 }
 
-func (c *Container) GetTokenService(_ context.Context) (cmd.TokenService, error) {
-	return c.getAuthService()
-}
-
-func (c *Container) GetRegisterService(_ context.Context) (cmd.RegisterService, error) {
-	return c.getAuthService()
-}
-
-func (c *Container) getAuthService() (*auth.Service, error) {
+func (c *container) GetAuthService(_ context.Context) (auth.Service, error) {
 	var outErr error
 
 	c.initAuthService.Do(func() {
@@ -129,7 +127,7 @@ func (c *Container) getAuthService() (*auth.Service, error) {
 	return c.authService, outErr
 }
 
-func (c *Container) getConnection() (*grpc.ClientConn, error) {
+func (c *container) getConnection() (*grpc.ClientConn, error) {
 	var err error
 
 	c.initConnection.Do(func() {
@@ -139,7 +137,7 @@ func (c *Container) getConnection() (*grpc.ClientConn, error) {
 	return c.connection, err
 }
 
-func (c *Container) newConnection() (*grpc.ClientConn, error) {
+func (c *container) newConnection() (*grpc.ClientConn, error) {
 	var creds credentials.TransportCredentials
 	if c.conf.GetBool("server.insecure") {
 		creds = insecure.NewCredentials()
@@ -158,7 +156,7 @@ func (c *Container) newConnection() (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func (c *Container) getCrypter() (*crypt.AgeCrypter, error) {
+func (c *container) getCrypter() (*crypt.AgeCrypter, error) {
 	var outErr error
 
 	c.initCrypter.Do(func() {
@@ -169,7 +167,7 @@ func (c *Container) getCrypter() (*crypt.AgeCrypter, error) {
 		}
 
 		if !ok {
-			outErr = cmd.ErrNoSecret
+			outErr = auth.ErrNoSecret
 			return
 		}
 

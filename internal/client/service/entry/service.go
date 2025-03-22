@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
@@ -19,8 +18,8 @@ func New(
 	crypt Crypt,
 	client pbSync.SyncServiceClient,
 	blobRepo blob.Repository,
-) (*Service, error) {
-	return &Service{
+) (Service, error) {
+	return &service{
 		crypt:     crypt,
 		client:    client,
 		blobRepo:  blobRepo,
@@ -28,14 +27,14 @@ func New(
 	}, nil
 }
 
-type Service struct {
+type service struct {
 	crypt     Crypt
 	client    pbSync.SyncServiceClient
 	blobRepo  blob.Repository
 	chunkSize int64
 }
 
-func (s *Service) Set(ctx context.Context, key string, name string, entry cmd.Entry) error {
+func (s *service) Set(ctx context.Context, key string, name string, entry Entry) error {
 	err := s.encryptBlob(entry, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry: %w", err)
@@ -87,7 +86,7 @@ func (s *Service) Set(ctx context.Context, key string, name string, entry cmd.En
 	return nil
 }
 
-func (s *Service) encryptBlob(entry cmd.Entry, key string) (err error) {
+func (s *service) encryptBlob(entry Entry, key string) (err error) {
 	bytesReader, err := entry.Bytes()
 	if err != nil {
 		return fmt.Errorf("cant get entry bytes reader: %w", err)
@@ -131,7 +130,7 @@ func (s *Service) encryptBlob(entry cmd.Entry, key string) (err error) {
 	return nil
 }
 
-func (s *Service) uploadBlob(
+func (s *service) uploadBlob(
 	blob io.Reader,
 	stream grpc.ClientStreamingClient[pbSync.Entry, emptypb.Empty],
 ) error {
@@ -157,7 +156,7 @@ func (s *Service) uploadBlob(
 	return nil
 }
 
-func (s *Service) encryptNotes(notes string) ([]byte, error) {
+func (s *service) encryptNotes(notes string) ([]byte, error) {
 	var buf bytes.Buffer
 	encryptWriter, err := s.crypt.Encrypt(&buf)
 	if err != nil {
@@ -179,7 +178,7 @@ func (s *Service) encryptNotes(notes string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *Service) Get(ctx context.Context, key string, entry cmd.Entry) (bool, error) {
+func (s *service) Get(ctx context.Context, key string, entry Entry) (bool, error) {
 	stream, err := s.client.GetEntry(ctx, &pbSync.GetEntryRequest{Key: key})
 	if err != nil {
 		return false, fmt.Errorf("cant start downloading entry: %w", err)
@@ -220,7 +219,7 @@ func (s *Service) Get(ctx context.Context, key string, entry cmd.Entry) (bool, e
 	return true, nil
 }
 
-func (s *Service) decryptNotes(encNotes []byte) (string, error) {
+func (s *service) decryptNotes(encNotes []byte) (string, error) {
 	dec, err := s.crypt.Decrypt(bytes.NewReader(encNotes))
 	if err != nil {
 		return "", fmt.Errorf("could not create decrypt reader: %w", err)
@@ -234,7 +233,7 @@ func (s *Service) decryptNotes(encNotes []byte) (string, error) {
 	return string(notes), nil
 }
 
-func (s *Service) downloadBlob(key string, stream grpc.ServerStreamingClient[pbSync.Entry]) (io.ReadCloser, error) {
+func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pbSync.Entry]) (io.ReadCloser, error) {
 	dst, err := s.blobRepo.Writer(key)
 	if err != nil {
 		return nil, fmt.Errorf("cant create blob to temporary store entry: %w", err)
@@ -269,7 +268,7 @@ func (s *Service) downloadBlob(key string, stream grpc.ServerStreamingClient[pbS
 	return reader, nil
 }
 
-func (s *Service) Delete(ctx context.Context, name string) error {
+func (s *service) Delete(ctx context.Context, name string) error {
 	//TODO implement me
 	panic("implement me")
 }
