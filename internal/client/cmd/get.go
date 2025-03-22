@@ -47,9 +47,7 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Getting login...")
 
-			entry := &entries.LoginPasswordPair{}
-
-			exists, err := service.Get(ctxWithToken, utils.GetEntryKey("login", name), entry)
+			notes, content, exists, err := service.Get(ctxWithToken, utils.GetEntryKey("login", name))
 			if err != nil {
 				return fmt.Errorf("error getting login: %w", err)
 			}
@@ -60,7 +58,15 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			cmd.Printf("Login: %s\nPassword: %s\nNotes: %s\n", entry.Login, entry.Password, entry.Notes())
+			defer content.Close()
+
+			entry := &entries.LoginPasswordPair{}
+			err = entry.Unmarshal(content)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling login: %w", err)
+			}
+
+			cmd.Printf("Login: %s\nPassword: %s\nNotes: %s\n", entry.Login, entry.Password, notes)
 
 			return nil
 		},

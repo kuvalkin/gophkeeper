@@ -13,10 +13,9 @@ import (
 type LoginPasswordPair struct {
 	Login    string
 	Password string
-	notes    string
 }
 
-func (l *LoginPasswordPair) Bytes() (io.ReadCloser, error) {
+func (l *LoginPasswordPair) Marshal() (io.ReadCloser, error) {
 	m := &pb.Login{
 		Login:    l.Login,
 		Password: l.Password,
@@ -30,8 +29,8 @@ func (l *LoginPasswordPair) Bytes() (io.ReadCloser, error) {
 	return io.NopCloser(bytes.NewReader(b)), nil
 }
 
-func (l *LoginPasswordPair) FromBytes(reader io.Reader) error {
-	b, err := io.ReadAll(reader)
+func (l *LoginPasswordPair) Unmarshal(content io.Reader) error {
+	b, err := io.ReadAll(content)
 	if err != nil {
 		return fmt.Errorf("error reading Login entry: %w", err)
 	}
@@ -44,16 +43,6 @@ func (l *LoginPasswordPair) FromBytes(reader io.Reader) error {
 
 	l.Login = m.Login
 	l.Password = m.Password
-
-	return nil
-}
-
-func (l *LoginPasswordPair) Notes() string {
-	return l.notes
-}
-
-func (l *LoginPasswordPair) SetNotes(notes string) error {
-	l.notes = notes
 
 	return nil
 }

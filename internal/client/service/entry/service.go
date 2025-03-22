@@ -35,15 +35,15 @@ type service struct {
 	chunkSize int64
 }
 
-func (s *service) Set(ctx context.Context, key string, name string, entry Entry) error {
-	err := s.encryptBlob(entry, key)
+func (s *service) Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser) error {
+	err := s.encryptBlob(content, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry: %w", err)
 	}
 
-	var notes []byte
-	if entry.Notes() != "" {
-		notes, err = s.encryptNotes(entry.Notes())
+	var encNotes []byte
+	if notes != "" {
+		encNotes, err = s.encryptNotes(notes)
 		if err != nil {
 			return fmt.Errorf("error encrypting notes: %w", err)
 		}
@@ -68,7 +68,7 @@ func (s *service) Set(ctx context.Context, key string, name string, entry Entry)
 	err = stream.Send(&entypb.Entry{
 		Key:   key,
 		Name:  name,
-		Notes: notes,
+		Notes: encNotes,
 	})
 	if err != nil {
 		return fmt.Errorf("error sending metadata to the server: %w", err)
@@ -87,13 +87,9 @@ func (s *service) Set(ctx context.Context, key string, name string, entry Entry)
 	return nil
 }
 
-func (s *service) encryptBlob(entry Entry, key string) (err error) {
-	bytesReader, err := entry.Bytes()
-	if err != nil {
-		return fmt.Errorf("cant get entry bytes reader: %w", err)
-	}
+func (s *service) encryptBlob(content io.ReadCloser, key string) (err error) {
 	defer func() {
-		closeErr := bytesReader.Close()
+		closeErr := content.Close()
 		if err == nil && closeErr != nil {
 			err = fmt.Errorf("error closing entry bytes reader: %w", err)
 		}
@@ -122,7 +118,7 @@ func (s *service) encryptBlob(entry Entry, key string) (err error) {
 	}()
 
 	// todo cancel on ctx since encrypting can take a while
-	_, err = io.Copy(encrypter, bytesReader)
+	_, err = io.Copy(encrypter, content)
 	if err != nil {
 		return fmt.Errorf("error writing to encrypted blob: %w", err)
 	}
@@ -179,46 +175,37 @@ func (s *service) encryptNotes(notes string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (s *service) Get(ctx context.Context, key string, entry Entry) (bool, error) {
+func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
 	stream, err := s.client.GetEntry(ctx, &entypb.GetEntryRequest{Key: key})
 	if err != nil {
-		return false, fmt.Errorf("cant start downloading entry: %w", err)
+		return "", nil, false, fmt.Errorf("cant start downloading entry: %w", err)
 	}
 	defer stream.CloseSend()
 
 	resp, err := stream.Recv()
 	if err != nil {
-		return false, fmt.Errorf("error getting metadata: %w", err)
+		return "", nil, false, fmt.Errorf("error getting metadata: %w", err)
 	}
 
+	var notes string
 	if resp.Notes != nil {
-		notes, err := s.decryptNotes(resp.Notes)
+		notes, err = s.decryptNotes(resp.Notes)
 		if err != nil {
-			return false, fmt.Errorf("error decrypting notes: %w", err)
-		}
-		err = entry.SetNotes(notes)
-		if err != nil {
-			return false, fmt.Errorf("error setting notes: %w", err)
+			return "", nil, false, fmt.Errorf("error decrypting notes: %w", err)
 		}
 	}
 
 	content, err := s.downloadBlob(key, stream)
 	if err != nil {
-		return false, fmt.Errorf("error downloading entry: %w", err)
+		return "", nil, false, fmt.Errorf("error downloading entry: %w", err)
 	}
-	defer content.Close()
 
 	decr, err := s.crypt.Decrypt(content)
 	if err != nil {
-		return false, fmt.Errorf("could not create decrypt reader: %w", err)
+		return "", nil, false, fmt.Errorf("could not create decrypt reader: %w", err)
 	}
 
-	err = entry.FromBytes(decr)
-	if err != nil {
-		return false, fmt.Errorf("could not read decrypted entry: %w", err)
-	}
-
-	return true, nil
+	return notes, &combinedRC{reader: decr, closer: content}, true, nil
 }
 
 func (s *service) decryptNotes(encNotes []byte) (string, error) {
@@ -277,4 +264,17 @@ func (s *service) Delete(ctx context.Context, name string) error {
 	}
 
 	return nil
+}
+
+type combinedRC struct {
+	reader io.Reader
+	closer io.Closer
+}
+
+func (c *combinedRC) Read(p []byte) (n int, err error) {
+	return c.reader.Read(p)
+}
+
+func (c *combinedRC) Close() error {
+	return c.closer.Close()
 }

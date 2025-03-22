@@ -32,16 +32,12 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			entry := &entries.LoginPasswordPair{}
-
 			notes, err := cmd.Flags().GetString("notes")
 			if err != nil {
 				return fmt.Errorf("error getting notes flag: %w", err)
 			}
-			err = entry.SetNotes(notes)
-			if err != nil {
-				return fmt.Errorf("error setting notes: %w", err)
-			}
+
+			entry := &entries.LoginPasswordPair{}
 
 			entry.Login, err = prompts.AskString("Enter login you want to save", "Login")
 			if err != nil {
@@ -59,6 +55,11 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 				}
 
 				return fmt.Errorf("error asking password: %w", err)
+			}
+
+			content, err := entry.Marshal()
+			if err != nil {
+				return fmt.Errorf("error getting entry bytes: %w", err)
 			}
 
 			service, err := container.GetEntryService(cmd.Context())
@@ -79,7 +80,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 			cmd.Println("Storing login...")
 
 			// todo provide feedback as service runs
-			err = service.Set(ctxWithToken, utils.GetEntryKey("login", name), name, entry)
+			err = service.Set(ctxWithToken, utils.GetEntryKey("login", name), name, notes, content)
 			if err != nil {
 				return fmt.Errorf("error setting login: %w", err)
 			}

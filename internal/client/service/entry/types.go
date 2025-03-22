@@ -6,16 +6,9 @@ import (
 )
 
 type Service interface {
-	Set(ctx context.Context, key string, name string, entry Entry) error
-	Get(ctx context.Context, key string, entry Entry) (bool, error)
+	Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser) error
+	Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error)
 	Delete(ctx context.Context, key string) error
-}
-
-type Entry interface {
-	Bytes() (io.ReadCloser, error)
-	FromBytes(reader io.Reader) error
-	Notes() string
-	SetNotes(notes string) error
 }
 
 type Crypt interface {
