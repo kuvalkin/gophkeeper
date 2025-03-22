@@ -7,8 +7,11 @@ COPY ./go.sum ./go.sum
 
 RUN go mod download
 
-COPY ./cmd ./cmd
-COPY ./internal ./internal
+COPY ./cmd/server ./cmd/server
+COPY ./internal/proto ./internal/proto
+COPY ./internal/server ./internal/server
+COPY ./internal/storage ./internal/storage
+COPY ./internal/support ./internal/support
 
 RUN go build -o /build/server /build/cmd/server/main.go
 

@@ -3,11 +3,7 @@ package blob
 import "io"
 
 type Repository interface {
-	Writer(key string) (ErrWriteCloser, error)
+	Writer(key string) (io.WriteCloser, error)
 	Reader(key string) (io.ReadCloser, bool, error)
-}
-
-type ErrWriteCloser interface {
-	io.WriteCloser
-	CloseWithError(err error) error
+	Delete(key string) error
 }

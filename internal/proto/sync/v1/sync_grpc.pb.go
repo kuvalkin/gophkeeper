@@ -31,7 +31,7 @@ const (
 type SyncServiceClient interface {
 	GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Entry], error)
 	UpdateEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Entry, emptypb.Empty], error)
-	DeleteEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[DeleteEntryRequest, emptypb.Empty], error)
+	DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type syncServiceClient struct {
@@ -74,18 +74,15 @@ func (c *syncServiceClient) UpdateEntry(ctx context.Context, opts ...grpc.CallOp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SyncService_UpdateEntryClient = grpc.ClientStreamingClient[Entry, emptypb.Empty]
 
-func (c *syncServiceClient) DeleteEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[DeleteEntryRequest, emptypb.Empty], error) {
+func (c *syncServiceClient) DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &SyncService_ServiceDesc.Streams[2], SyncService_DeleteEntry_FullMethodName, cOpts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, SyncService_DeleteEntry_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[DeleteEntryRequest, emptypb.Empty]{ClientStream: stream}
-	return x, nil
+	return out, nil
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type SyncService_DeleteEntryClient = grpc.ClientStreamingClient[DeleteEntryRequest, emptypb.Empty]
 
 // SyncServiceServer is the server API for SyncService service.
 // All implementations must embed UnimplementedSyncServiceServer
@@ -93,7 +90,7 @@ type SyncService_DeleteEntryClient = grpc.ClientStreamingClient[DeleteEntryReque
 type SyncServiceServer interface {
 	GetEntry(*GetEntryRequest, grpc.ServerStreamingServer[Entry]) error
 	UpdateEntry(grpc.ClientStreamingServer[Entry, emptypb.Empty]) error
-	DeleteEntry(grpc.ClientStreamingServer[DeleteEntryRequest, emptypb.Empty]) error
+	DeleteEntry(context.Context, *DeleteEntryRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedSyncServiceServer()
 }
 
@@ -110,8 +107,8 @@ func (UnimplementedSyncServiceServer) GetEntry(*GetEntryRequest, grpc.ServerStre
 func (UnimplementedSyncServiceServer) UpdateEntry(grpc.ClientStreamingServer[Entry, emptypb.Empty]) error {
 	return status.Errorf(codes.Unimplemented, "method UpdateEntry not implemented")
 }
-func (UnimplementedSyncServiceServer) DeleteEntry(grpc.ClientStreamingServer[DeleteEntryRequest, emptypb.Empty]) error {
-	return status.Errorf(codes.Unimplemented, "method DeleteEntry not implemented")
+func (UnimplementedSyncServiceServer) DeleteEntry(context.Context, *DeleteEntryRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEntry not implemented")
 }
 func (UnimplementedSyncServiceServer) mustEmbedUnimplementedSyncServiceServer() {}
 func (UnimplementedSyncServiceServer) testEmbeddedByValue()                     {}
@@ -152,12 +149,23 @@ func _SyncService_UpdateEntry_Handler(srv interface{}, stream grpc.ServerStream)
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SyncService_UpdateEntryServer = grpc.ClientStreamingServer[Entry, emptypb.Empty]
 
-func _SyncService_DeleteEntry_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(SyncServiceServer).DeleteEntry(&grpc.GenericServerStream[DeleteEntryRequest, emptypb.Empty]{ServerStream: stream})
+func _SyncService_DeleteEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteEntryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SyncServiceServer).DeleteEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SyncService_DeleteEntry_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SyncServiceServer).DeleteEntry(ctx, req.(*DeleteEntryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type SyncService_DeleteEntryServer = grpc.ClientStreamingServer[DeleteEntryRequest, emptypb.Empty]
 
 // SyncService_ServiceDesc is the grpc.ServiceDesc for SyncService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -165,7 +173,12 @@ type SyncService_DeleteEntryServer = grpc.ClientStreamingServer[DeleteEntryReque
 var SyncService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "com.kuvalkin.gophkeeper.proto.sync.v1.SyncService",
 	HandlerType: (*SyncServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DeleteEntry",
+			Handler:    _SyncService_DeleteEntry_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetEntry",
@@ -175,11 +188,6 @@ var SyncService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UpdateEntry",
 			Handler:       _SyncService_UpdateEntry_Handler,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "DeleteEntry",
-			Handler:       _SyncService_DeleteEntry_Handler,
 			ClientStreams: true,
 		},
 	},

@@ -56,6 +56,7 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	//set.PersistentPreRunE = middleware.WithParentPersistentPreRunE(ensureFullSetup(set.PersistentPreRunE))
 	rootCmd.AddCommand(set)
 	rootCmd.AddCommand(newGetCommand(container))
+	rootCmd.AddCommand(newDeleteCommand(container))
 
 	return rootCmd
 }

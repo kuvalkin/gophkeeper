@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -105,7 +106,7 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 	}
 
 	// todo maybe do smth similar with pipes and chans on client?
-	uploadChan, resultChan, err := s.service.UpdateEntry(stream.Context(), tokenInfo.UserID, sync.Metadata{
+	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, sync.Metadata{
 		Key:   request.Key,
 		Name:  request.Name,
 		Notes: request.Notes,
@@ -186,6 +187,20 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 	}
 }
 
-func (s *Server) DeleteEntry(stream grpc.ClientStreamingServer[pb.DeleteEntryRequest, emptypb.Empty]) error {
-	panic("implement me")
+func (s *Server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*emptypb.Empty, error) {
+	tokenInfo, ok := auth.GetTokenInfo(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "no token info")
+	}
+
+	llog := s.log.WithLazy("userID", tokenInfo.UserID, "key", request.Key, "method", "DeleteEntry")
+
+	err := s.service.Delete(ctx, tokenInfo.UserID, request.Key)
+	if err != nil {
+		llog.Errorw("cant delete entry", "err", err)
+
+		return nil, status.Error(codes.Internal, "cant delete entry")
+	}
+
+	return &emptypb.Empty{}, nil
 }

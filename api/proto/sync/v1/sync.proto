@@ -8,7 +8,7 @@ import "google/protobuf/empty.proto";
 service SyncService {
   rpc GetEntry(GetEntryRequest) returns (stream Entry);
   rpc UpdateEntry(stream Entry) returns (google.protobuf.Empty);
-  rpc DeleteEntry(stream DeleteEntryRequest) returns (google.protobuf.Empty);
+  rpc DeleteEntry(DeleteEntryRequest) returns (google.protobuf.Empty);
 }
 
 message GetEntryRequest {

@@ -50,3 +50,18 @@ func (d *DatabaseMetadataRepository) Set(ctx context.Context, userID string, md 
 
 	return nil
 }
+
+func (d *DatabaseMetadataRepository) Delete(ctx context.Context, userID string, key string) error {
+	_, err := d.db.ExecContext(
+		ctx,
+		"DELETE FROM entries WHERE user_id = $1 AND key = $2",
+		userID,
+		key,
+	)
+
+	if err != nil {
+		return fmt.Errorf("query error: %w", err)
+	}
+
+	return nil
+}

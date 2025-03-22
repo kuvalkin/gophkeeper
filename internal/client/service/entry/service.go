@@ -269,6 +269,10 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pbS
 }
 
 func (s *service) Delete(ctx context.Context, name string) error {
-	//TODO implement me
-	panic("implement me")
+	_, err := s.client.DeleteEntry(ctx, &pbSync.DeleteEntryRequest{Key: name})
+	if err != nil {
+		return fmt.Errorf("cant delete entry: %w", err)
+	}
+
+	return nil
 }

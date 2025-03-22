@@ -20,7 +20,13 @@ services:
         - action: rebuild
           path: ../../cmd/server
         - action: rebuild
-          path: ../../internal
+          path: ../../internal/proto
+        - action: rebuild
+          path: ../../internal/server
+        - action: rebuild
+          path: ../../internal/storage
+        - action: rebuild
+          path: ../../internal/support
 
   postgres:
       image: postgres:17

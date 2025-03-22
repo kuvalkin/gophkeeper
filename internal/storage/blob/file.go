@@ -26,7 +26,7 @@ type FileBlobRepository struct {
 const dirPerms = os.FileMode(0700)
 const filePerms = os.FileMode(0600)
 
-func (f *FileBlobRepository) Writer(key string) (ErrWriteCloser, error) {
+func (f *FileBlobRepository) Writer(key string) (io.WriteCloser, error) {
 	fullPath := path.Join(f.path, key)
 
 	err := os.MkdirAll(path.Dir(fullPath), dirPerms)
@@ -41,7 +41,7 @@ func (f *FileBlobRepository) Writer(key string) (ErrWriteCloser, error) {
 		return nil, fmt.Errorf("cant open file: %w", err)
 	}
 
-	return &FileWriteErrCloser{file: file}, nil
+	return file, nil
 }
 
 func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
@@ -59,30 +59,9 @@ func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
 	return file, true, nil
 }
 
-type FileWriteErrCloser struct {
-	file *os.File
-}
+func (f *FileBlobRepository) Delete(key string) error {
+	fullPath := path.Join(f.path, key)
+	f.log.Debugw("deleting", "path", fullPath)
 
-func (f *FileWriteErrCloser) Write(p []byte) (n int, err error) {
-	return f.file.Write(p)
-}
-
-func (f *FileWriteErrCloser) Close() error {
-	return f.file.Close()
-}
-
-func (f *FileWriteErrCloser) CloseWithError(err error) error {
-	log.Logger().Named("blobs").Debugw("closing with error", "err", err)
-
-	err = f.file.Close()
-	if err != nil {
-		return fmt.Errorf("cant close file: %w", err)
-	}
-
-	err = os.Remove(f.file.Name())
-	if err != nil {
-		return fmt.Errorf("cant remove file: %w", err)
-	}
-
-	return nil
+	return os.Remove(fullPath)
 }
