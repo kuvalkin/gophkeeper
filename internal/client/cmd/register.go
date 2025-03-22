@@ -16,7 +16,7 @@ func newRegisterCommand(container container.Container) *cobra.Command {
 		Short: "Register on server",
 		Long:  "Register on a remote server. It's necessary only if you've never had an account. Existing users can simply login",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			login, err := prompts.AskString("Enter login", "New login")
+			login, err := prompts.AskString(cmd.Context(), "Enter login", "New login")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -25,7 +25,7 @@ func newRegisterCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking login: %w", err)
 			}
 
-			password, err := prompts.AskPassword("Enter password", "New password")
+			password, err := prompts.AskPassword(cmd.Context(), "Enter password", "New password")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil

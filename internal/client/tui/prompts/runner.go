@@ -1,6 +1,7 @@
 package prompts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -13,15 +14,22 @@ type cancellable interface {
 
 var ErrCanceled = errors.New("cancelled")
 
-func run[T tea.Model](initModel T) (T, error) {
-	finalModel, err := tea.NewProgram(initModel).Run()
+func run[T tea.Model](ctx context.Context, initModel T, altScreen bool) (T, error) {
+	options := []tea.ProgramOption{
+		tea.WithContext(ctx),
+	}
+	if altScreen {
+		options = append(options, tea.WithAltScreen())
+	}
+
+	finalModel, err := tea.NewProgram(initModel, options...).Run()
 
 	if err != nil {
 		return finalModel.(T), fmt.Errorf("run error: %w", err)
 	}
 
-	if finalModelCancellabel, ok := finalModel.(cancellable); ok {
-		if finalModelCancellabel.Canceled() {
+	if finalModelCancellable, ok := finalModel.(cancellable); ok {
+		if finalModelCancellable.Canceled() {
 			return finalModel.(T), ErrCanceled
 		}
 	}

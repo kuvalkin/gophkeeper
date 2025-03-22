@@ -24,7 +24,7 @@ func newSecretCommand() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			secret, err := prompts.AskPassword("Enter secret", "Secret")
+			secret, err := prompts.AskPassword(cmd.Context(), "Enter secret", "Secret")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil

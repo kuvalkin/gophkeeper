@@ -46,7 +46,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 
 			entry := &entries.LoginPasswordPair{}
 
-			entry.Login, err = prompts.AskString("Enter login you want to save", "Login")
+			entry.Login, err = prompts.AskString(cmd.Context(), "Enter login you want to save", "Login")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -55,7 +55,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking login: %w", err)
 			}
 
-			entry.Password, err = prompts.AskPassword("Enter password you want to save", "Password")
+			entry.Password, err = prompts.AskPassword(cmd.Context(), "Enter password you want to save", "Password")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -136,7 +136,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 
 			entry := &entries.BankCard{}
 
-			entry.Number, err = prompts.AskString("Enter bank card number", "xxxxxxxxxxxxxxxx")
+			entry.Number, err = prompts.AskString(cmd.Context(), "Enter bank card number", "xxxxxxxxxxxxxxxx")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -145,7 +145,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking card number: %w", err)
 			}
 
-			entry.HolderName, err = prompts.AskString("Enter card holder name", "John Doe")
+			entry.HolderName, err = prompts.AskString(cmd.Context(), "Enter card holder name", "John Doe")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -154,7 +154,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking card holder name: %w", err)
 			}
 
-			entry.ExpirationDate.Year, err = prompts.AskInt("Enter card expiration year", "2030")
+			entry.ExpirationDate.Year, err = prompts.AskInt(cmd.Context(), "Enter card expiration year", "2030")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -163,7 +163,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking expiration year: %w", err)
 			}
 
-			entry.ExpirationDate.Month, err = prompts.AskInt("Enter card expiration month", "05")
+			entry.ExpirationDate.Month, err = prompts.AskInt(cmd.Context(), "Enter card expiration month", "05")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -172,7 +172,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking expiration month: %w", err)
 			}
 
-			entry.CVV, err = prompts.AskInt("Enter card CVV", "123")
+			entry.CVV, err = prompts.AskInt(cmd.Context(), "Enter card CVV", "123")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
