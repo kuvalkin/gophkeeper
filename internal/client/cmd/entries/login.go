@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/bufbuild/protovalidate-go"
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
@@ -19,6 +20,16 @@ func (l *LoginPasswordPair) Marshal() (io.ReadCloser, error) {
 	m := &pb.Login{
 		Login:    l.Login,
 		Password: l.Password,
+	}
+
+	validator, err := protovalidate.New()
+	if err != nil {
+		return nil, fmt.Errorf("error creating validator: %w", err)
+	}
+
+	err = validator.Validate(m)
+	if err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
 	b, err := proto.Marshal(m)
