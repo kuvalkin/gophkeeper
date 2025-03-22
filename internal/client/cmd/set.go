@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
@@ -31,15 +32,18 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			entry := &loginPasswordEntry{}
+			entry := &entries.LoginPasswordPair{}
 
-			var err error
-			entry.notes, err = cmd.Flags().GetString("notes")
+			notes, err := cmd.Flags().GetString("notes")
 			if err != nil {
 				return fmt.Errorf("error getting notes flag: %w", err)
 			}
+			err = entry.SetNotes(notes)
+			if err != nil {
+				return fmt.Errorf("error setting notes: %w", err)
+			}
 
-			entry.login, err = prompts.AskString("Enter login you want to save", "Login")
+			entry.Login, err = prompts.AskString("Enter login you want to save", "Login")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -48,7 +52,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking login: %w", err)
 			}
 
-			entry.password, err = prompts.AskPassword("Enter password you want to save", "Password")
+			entry.Password, err = prompts.AskPassword("Enter password you want to save", "Password")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil

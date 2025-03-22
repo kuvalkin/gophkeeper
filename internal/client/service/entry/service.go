@@ -206,6 +206,7 @@ func (s *service) Get(ctx context.Context, key string, entry Entry) (bool, error
 	if err != nil {
 		return false, fmt.Errorf("error downloading entry: %w", err)
 	}
+	defer content.Close()
 
 	decr, err := s.crypt.Decrypt(content)
 	if err != nil {

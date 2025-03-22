@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 )
@@ -46,7 +47,7 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Getting login...")
 
-			entry := &loginPasswordEntry{}
+			entry := &entries.LoginPasswordPair{}
 
 			exists, err := service.Get(ctxWithToken, utils.GetEntryKey("login", name), entry)
 			if err != nil {
@@ -59,7 +60,7 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			cmd.Printf("Login: %s\nPassword: %s\nNotes: %s\n", entry.login, entry.password, entry.notes)
+			cmd.Printf("Login: %s\nPassword: %s\nNotes: %s\n", entry.Login, entry.Password, entry.Notes())
 
 			return nil
 		},
