@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -10,43 +11,29 @@ import (
 )
 
 func newDeleteCommand(container container.Container) *cobra.Command {
-	set := &cobra.Command{
+	deleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Remove value",
 		Long:  "Remove value from the cloud. This operation is final and can't be undone",
 	}
 
-	set.AddCommand(newDeleteLoginCommand(container))
+	deleteCmd.AddCommand(newDeleteLoginCommand(container))
+	deleteCmd.AddCommand(newDeleteFileCommand(container))
 
-	return set
+	return deleteCmd
 }
 
 func newDeleteLoginCommand(container container.Container) *cobra.Command {
-	setLogin := &cobra.Command{
+	deleteLogin := &cobra.Command{
 		Use:   "login",
 		Short: "Delete login and password pair",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			service, err := container.GetEntryService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting entry service: %w", err)
-			}
-
-			authService, err := container.GetAuthService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting token service: %w", err)
-			}
-
-			ctxWithToken, err := authService.SetToken(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error setting token: %w", err)
-			}
-
 			cmd.Println("Deleting login...")
 
-			err = service.Delete(ctxWithToken, utils.GetEntryKey("login", name))
+			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("login", name))
 			if err != nil {
 				return fmt.Errorf("error deleting login: %w", err)
 			}
@@ -57,5 +44,53 @@ func newDeleteLoginCommand(container container.Container) *cobra.Command {
 		},
 	}
 
-	return setLogin
+	return deleteLogin
+}
+
+func newDeleteFileCommand(container container.Container) *cobra.Command {
+	deleteFile := &cobra.Command{
+		Use:   "file",
+		Short: "Delete file",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cmd.Println("Deleting file...")
+
+			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("file", name))
+			if err != nil {
+				return fmt.Errorf("error deleting file: %w", err)
+			}
+
+			cmd.Println("File deleted!")
+
+			return nil
+		},
+	}
+
+	return deleteFile
+}
+
+func deleteEntry(ctx context.Context, container container.Container, key string) error {
+	service, err := container.GetEntryService(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting entry service: %w", err)
+	}
+
+	authService, err := container.GetAuthService(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting token service: %w", err)
+	}
+
+	ctxWithToken, err := authService.SetToken(ctx)
+	if err != nil {
+		return fmt.Errorf("error setting token: %w", err)
+	}
+
+	err = service.Delete(ctxWithToken, key)
+	if err != nil {
+		return fmt.Errorf("error deleting entry: %w", err)
+	}
+
+	return nil
 }
