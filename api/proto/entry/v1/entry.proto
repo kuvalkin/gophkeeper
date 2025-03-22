@@ -1,18 +1,19 @@
 syntax = "proto3";
 
-package com.kuvalkin.gophkeeper.proto.sync.v1;
-option go_package = "internal/proto/sync/v1;v1";
+package com.kuvalkin.gophkeeper.proto.entry.v1;
+option go_package = "internal/proto/entry/v1;v1";
 
 import "google/protobuf/empty.proto";
+import "buf/validate/validate.proto";
 
-service SyncService {
+service EntryService {
   rpc GetEntry(GetEntryRequest) returns (stream Entry);
-  rpc UpdateEntry(stream Entry) returns (google.protobuf.Empty);
+  rpc SetEntry(stream Entry) returns (google.protobuf.Empty);
   rpc DeleteEntry(DeleteEntryRequest) returns (google.protobuf.Empty);
 }
 
 message GetEntryRequest {
-  string key = 1;
+  string key = 1 [(buf.validate.field).string.min_len = 1];
 }
 
 message Entry {
@@ -23,5 +24,5 @@ message Entry {
 }
 
 message DeleteEntryRequest {
-  string key = 1;
+  string key = 1 [(buf.validate.field).string.min_len = 1];
 }

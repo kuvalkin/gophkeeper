@@ -1,4 +1,4 @@
-package sync
+package entry
 
 import (
 	"context"
@@ -13,13 +13,13 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
-	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
+	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
+	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
-func New(service sync.Service) *Server {
+func New(service entry.Service) pb.EntryServiceServer {
 	return &Server{
 		service: service,
 		log:     log.Logger().Named("server.sync"),
@@ -27,8 +27,8 @@ func New(service sync.Service) *Server {
 }
 
 type Server struct {
-	pb.UnimplementedSyncServiceServer
-	service sync.Service
+	pb.UnsafeEntryServiceServer
+	service entry.Service
 	log     *zap.SugaredLogger
 }
 
@@ -89,7 +89,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 	return nil
 }
 
-func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Empty]) error {
+func (s *Server) SetEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Empty]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
 		return status.Error(codes.Unauthenticated, "no token info")
@@ -106,7 +106,7 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 	}
 
 	// todo maybe do smth similar with pipes and chans on client?
-	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, sync.Metadata{
+	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
 		Key:   request.Key,
 		Name:  request.Name,
 		Notes: request.Notes,
@@ -169,7 +169,7 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 			}
 
 			if err != nil {
-				uploadChan <- sync.UploadChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
+				uploadChan <- entry.UploadChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
 
 				if !isUploadClosed {
 					close(uploadChan)
@@ -181,7 +181,7 @@ func (s *Server) UpdateEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb
 				continue
 			}
 
-			uploadChan <- sync.UploadChunk{Content: req.Content}
+			uploadChan <- entry.UploadChunk{Content: req.Content}
 			llog.Debug("chunk uploaded")
 		}
 	}

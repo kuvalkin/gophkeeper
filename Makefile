@@ -1,4 +1,4 @@
-generate: generate-auth generate-sync generate-serialize
+generate: generate-auth generate-entry generate-serialize
 
 generate-auth:
 	protoc \
@@ -8,13 +8,13 @@ generate-auth:
 		--go-grpc_out=. --go-grpc_opt=paths=import \
 		api/proto/auth/v1/*.proto
 
-generate-sync:
+generate-entry:
 	protoc \
 		-I api/proto/vendor/protovalidate/proto/protovalidate \
 		-I . \
  		--go_out=. --go_opt=paths=import \
 		--go-grpc_out=. --go-grpc_opt=paths=import \
-		api/proto/sync/v1/*.proto
+		api/proto/entry/v1/*.proto
 
 generate-serialize:
 	protoc \

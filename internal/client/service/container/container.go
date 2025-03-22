@@ -18,8 +18,8 @@ import (
 	authStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/auth"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
-	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
+	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
+	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
@@ -100,7 +100,7 @@ func (c *container) GetEntryService(_ context.Context) (entry.Service, error) {
 
 		c.entryService, outErr = entry.New(
 			crypter,
-			pbSync.NewSyncServiceClient(conn),
+			entypb.NewEntryServiceClient(conn),
 			blob.NewFileBlobRepository(c.tempDir),
 		)
 	})
@@ -119,7 +119,7 @@ func (c *container) GetAuthService(_ context.Context) (auth.Service, error) {
 		}
 
 		c.authService = auth.New(
-			pbAuth.NewAuthServiceClient(conn),
+			authpb.NewAuthServiceClient(conn),
 			authStorage.NewKeyringRepository(),
 		)
 	})

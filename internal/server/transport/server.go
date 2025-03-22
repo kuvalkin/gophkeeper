@@ -12,19 +12,19 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	pbSync "github.com/kuvalkin/gophkeeper/internal/proto/sync/v1"
-	sync2 "github.com/kuvalkin/gophkeeper/internal/server/service/sync"
+	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
+	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
+	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	auth2 "github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
-	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
-	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/sync"
+	authServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
+	entryServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 type Services struct {
-	User user.Service
-	Sync sync2.Service
+	User  user.Service
+	Entry entry.Service
 }
 
 func NewServer(services Services) (*grpc.Server, error) {
@@ -55,8 +55,8 @@ func NewServer(services Services) (*grpc.Server, error) {
 		),
 	)
 
-	pbAuth.RegisterAuthServiceServer(srv, auth.New(services.User))
-	pbSync.RegisterSyncServiceServer(srv, sync.New(services.Sync))
+	authpb.RegisterAuthServiceServer(srv, authServer.New(services.User))
+	entypb.RegisterEntryServiceServer(srv, entryServer.New(services.Entry))
 
 	return srv, nil
 }

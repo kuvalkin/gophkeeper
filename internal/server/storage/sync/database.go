@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
+	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 )
 
 func NewDatabaseMetadataRepository(db *sql.DB) *DatabaseMetadataRepository {
@@ -19,7 +19,7 @@ type DatabaseMetadataRepository struct {
 	db *sql.DB
 }
 
-func (d *DatabaseMetadataRepository) Get(ctx context.Context, userID string, key string) (sync.Metadata, bool, error) {
+func (d *DatabaseMetadataRepository) Get(ctx context.Context, userID string, key string) (entry.Metadata, bool, error) {
 	row := d.db.QueryRowContext(
 		ctx,
 		"SELECT key, name, notes FROM entries WHERE user_id = $1 AND key = $2",
@@ -27,20 +27,20 @@ func (d *DatabaseMetadataRepository) Get(ctx context.Context, userID string, key
 		key,
 	)
 
-	var md sync.Metadata
+	var md entry.Metadata
 	err := row.Scan(&md.Key, &md.Name, &md.Notes)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return sync.Metadata{}, false, nil
+			return entry.Metadata{}, false, nil
 		}
 
-		return sync.Metadata{}, false, fmt.Errorf("query error: %w", err)
+		return entry.Metadata{}, false, fmt.Errorf("query error: %w", err)
 	}
 
 	return md, true, nil
 }
 
-func (d *DatabaseMetadataRepository) Set(ctx context.Context, userID string, md sync.Metadata) error {
+func (d *DatabaseMetadataRepository) Set(ctx context.Context, userID string, md entry.Metadata) error {
 	_, err := d.db.ExecContext(
 		ctx,
 		"INSERT INTO entries (user_id, key, name, notes) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id, key) DO UPDATE SET name = excluded.name, notes = excluded.notes", userID, md.Key, md.Name, md.Notes)

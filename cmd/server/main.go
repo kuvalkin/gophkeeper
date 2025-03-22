@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/kuvalkin/gophkeeper/internal/server/service/sync"
+	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	syncStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/sync"
 	userStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/user"
@@ -100,7 +100,7 @@ func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport
 				TokenExpirationPeriod: config.GetDuration("token.expiration"),
 			},
 		),
-		Sync: sync.New(
+		Entry: entry.New(
 			syncStorage.NewDatabaseMetadataRepository(db),
 			blob.NewFileBlobRepository(config.GetString("blob.path")),
 		),
