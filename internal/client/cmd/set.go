@@ -26,6 +26,7 @@ func newSetCommand(container container.Container) *cobra.Command {
 
 	set.AddCommand(newSetLoginCommand(container))
 	set.AddCommand(newSetFileCommand(container))
+	set.AddCommand(newSetCardCommand(container))
 
 	return set
 }
@@ -118,6 +119,87 @@ func newSetFileCommand(container container.Container) *cobra.Command {
 	}
 
 	return setFile
+}
+
+func newSetCardCommand(container container.Container) *cobra.Command {
+	setCard := &cobra.Command{
+		Use:   "card",
+		Short: "Store bank card info",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			notes, err := cmd.Flags().GetString("notes")
+			if err != nil {
+				return fmt.Errorf("error getting notes flag: %w", err)
+			}
+
+			entry := &entries.BankCard{}
+
+			entry.Number, err = prompts.AskString("Enter bank card number", "xxxxxxxxxxxxxxxx")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking card number: %w", err)
+			}
+
+			entry.HolderName, err = prompts.AskString("Enter card holder name", "John Doe")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking card holder name: %w", err)
+			}
+
+			entry.ExpirationDate.Year, err = prompts.AskInt("Enter card expiration year", "2030")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking expiration year: %w", err)
+			}
+
+			entry.ExpirationDate.Month, err = prompts.AskInt("Enter card expiration month", "05")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking expiration month: %w", err)
+			}
+
+			entry.CVV, err = prompts.AskInt("Enter card CVV", "123")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking cvv: %w", err)
+			}
+
+			content, err := entry.Marshal()
+			if err != nil {
+				return fmt.Errorf("error getting entry bytes: %w", err)
+			}
+
+			cmd.Println("Storing bank card...")
+
+			err = store(cmd.Context(), container, utils.GetEntryKey("card", name), name, notes, content)
+			if err != nil {
+				return fmt.Errorf("error storing card: %w", err)
+			}
+
+			cmd.Println("Bank card stored successfully!")
+
+			return nil
+		},
+	}
+
+	return setCard
 }
 
 func store(ctx context.Context, container container.Container, key string, name string, notes string, content io.ReadCloser) error {

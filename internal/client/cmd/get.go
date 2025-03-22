@@ -23,6 +23,7 @@ func newGetCommand(container container.Container) *cobra.Command {
 
 	set.AddCommand(newGetLoginCommand(container))
 	set.AddCommand(newGetFileCommand(container))
+	set.AddCommand(newGetCardCommand(container))
 
 	return set
 }
@@ -118,6 +119,50 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 	}
 
 	return getFile
+}
+
+func newGetCardCommand(container container.Container) *cobra.Command {
+	getLogin := &cobra.Command{
+		Use:   "card",
+		Short: "Get bank card details",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cmd.Println("Getting bank card...")
+
+			notes, content, exists, err := get(cmd.Context(), container, utils.GetEntryKey("card", name))
+			if err != nil {
+				return fmt.Errorf("error getting card: %w", err)
+			}
+
+			if !exists {
+				cmd.Println("Bank card not found")
+
+				return nil
+			}
+
+			defer content.Close()
+
+			entry := &entries.BankCard{}
+			err = entry.Unmarshal(content)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling card: %w", err)
+			}
+
+			cmd.Println("Number:", entry.Number)
+			cmd.Println("Holder:", entry.HolderName)
+			cmd.Println("Expiration Year:", entry.ExpirationDate.Year)
+			cmd.Println("Expiration Month:", entry.ExpirationDate.Month)
+			cmd.Println("CVV:", entry.CVV)
+			cmd.Println("")
+			cmd.Println("Notes:", notes)
+
+			return nil
+		},
+	}
+
+	return getLogin
 }
 
 func get(ctx context.Context, container container.Container, key string) (string, io.ReadCloser, bool, error) {

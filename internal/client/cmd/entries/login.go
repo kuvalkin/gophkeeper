@@ -34,7 +34,7 @@ func (l *LoginPasswordPair) Marshal() (io.ReadCloser, error) {
 
 	b, err := proto.Marshal(m)
 	if err != nil {
-		return nil, fmt.Errorf("error marshaling Login entry: %w", err)
+		return nil, fmt.Errorf("error marshaling entry: %w", err)
 	}
 
 	return io.NopCloser(bytes.NewReader(b)), nil
@@ -43,13 +43,13 @@ func (l *LoginPasswordPair) Marshal() (io.ReadCloser, error) {
 func (l *LoginPasswordPair) Unmarshal(content io.Reader) error {
 	b, err := io.ReadAll(content)
 	if err != nil {
-		return fmt.Errorf("error reading Login entry: %w", err)
+		return fmt.Errorf("error reading entry: %w", err)
 	}
 
 	m := &pb.Login{}
 	err = proto.Unmarshal(b, m)
 	if err != nil {
-		return fmt.Errorf("error unmarshaling Login entry: %w", err)
+		return fmt.Errorf("error unmarshaling entry: %w", err)
 	}
 
 	l.Login = m.Login

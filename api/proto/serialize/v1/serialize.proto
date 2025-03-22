@@ -6,19 +6,20 @@ option go_package = "internal/proto/serialize/v1;v1";
 import "buf/validate/validate.proto";
 
 message Login {
-  string login = 1 [(buf.validate.field).string.min_len = 1];
-  string password = 2 [(buf.validate.field).string.min_len = 1];
+  string login = 1 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
+  string password = 2 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
 }
 
 message BankCard {
-  string number = 1;
+  string number = 1 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
 
-  ExpirationDate expiration_date = 2;
+  ExpirationDate expiration_date = 2 [(buf.validate.field).required = true];
   message ExpirationDate {
-    sint32 year = 1;
-    sint32 month = 2;
+    sint32 year = 1 [(buf.validate.field).required = true, (buf.validate.field).sint32.gt = 2000, (buf.validate.field).sint32.lt = 3000];
+    sint32 month = 2 [(buf.validate.field).required = true, (buf.validate.field).sint32.gte = 1, (buf.validate.field).sint32.lte = 12];
   }
 
-  string holder_name = 3;
-  string cvv = 4;
+  string holder_name = 3 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
+//  cvv is a 3 or 4 digit number
+  sint32 cvv = 4 [(buf.validate.field).required = true, (buf.validate.field).sint32.gte = 100, (buf.validate.field).sint32.lte = 9999];
 }

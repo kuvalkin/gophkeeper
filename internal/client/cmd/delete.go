@@ -19,6 +19,7 @@ func newDeleteCommand(container container.Container) *cobra.Command {
 
 	deleteCmd.AddCommand(newDeleteLoginCommand(container))
 	deleteCmd.AddCommand(newDeleteFileCommand(container))
+	deleteCmd.AddCommand(newDeleteCardCommand(container))
 
 	return deleteCmd
 }
@@ -69,6 +70,30 @@ func newDeleteFileCommand(container container.Container) *cobra.Command {
 	}
 
 	return deleteFile
+}
+
+func newDeleteCardCommand(container container.Container) *cobra.Command {
+	deleteCard := &cobra.Command{
+		Use:   "card",
+		Short: "Delete bank card info",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cmd.Println("Deleting bank card...")
+
+			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("card", name))
+			if err != nil {
+				return fmt.Errorf("error deleting card: %w", err)
+			}
+
+			cmd.Println("Bank card deleted!")
+
+			return nil
+		},
+	}
+
+	return deleteCard
 }
 
 func deleteEntry(ctx context.Context, container container.Container, key string) error {
