@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -20,6 +19,7 @@ func newDeleteCommand(container container.Container) *cobra.Command {
 	deleteCmd.AddCommand(newDeleteLoginCommand(container))
 	deleteCmd.AddCommand(newDeleteFileCommand(container))
 	deleteCmd.AddCommand(newDeleteCardCommand(container))
+	deleteCmd.AddCommand(newDeleteTextCommand(container))
 
 	return deleteCmd
 }
@@ -30,18 +30,7 @@ func newDeleteLoginCommand(container container.Container) *cobra.Command {
 		Short: "Delete login and password pair",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
-
-			cmd.Println("Deleting login...")
-
-			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("login", name))
-			if err != nil {
-				return fmt.Errorf("error deleting login: %w", err)
-			}
-
-			cmd.Println("Login deleted!")
-
-			return nil
+			return deleteEntry(cmd, container, args[0], "login")
 		},
 	}
 
@@ -54,18 +43,7 @@ func newDeleteFileCommand(container container.Container) *cobra.Command {
 		Short: "Delete file",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
-
-			cmd.Println("Deleting file...")
-
-			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("file", name))
-			if err != nil {
-				return fmt.Errorf("error deleting file: %w", err)
-			}
-
-			cmd.Println("File deleted!")
-
-			return nil
+			return deleteEntry(cmd, container, args[0], "file")
 		},
 	}
 
@@ -78,44 +56,52 @@ func newDeleteCardCommand(container container.Container) *cobra.Command {
 		Short: "Delete bank card info",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			name := args[0]
-
-			cmd.Println("Deleting bank card...")
-
-			err := deleteEntry(cmd.Context(), container, utils.GetEntryKey("card", name))
-			if err != nil {
-				return fmt.Errorf("error deleting card: %w", err)
-			}
-
-			cmd.Println("Bank card deleted!")
-
-			return nil
+			return deleteEntry(cmd, container, args[0], "card")
 		},
 	}
 
 	return deleteCard
 }
 
-func deleteEntry(ctx context.Context, container container.Container, key string) error {
-	service, err := container.GetEntryService(ctx)
+func newDeleteTextCommand(container container.Container) *cobra.Command {
+	deleteText := &cobra.Command{
+		Use:   "text",
+		Short: "Delete text",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return deleteEntry(cmd, container, args[0], "text")
+		},
+	}
+
+	return deleteText
+}
+
+func deleteEntry(cmd *cobra.Command, container container.Container, name string, entryType string) error {
+	cmd.Printf("Deleting %s...\n", entryType)
+
+	service, err := container.GetEntryService(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("error getting entry service: %w", err)
 	}
 
-	authService, err := container.GetAuthService(ctx)
+	authService, err := container.GetAuthService(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("error getting token service: %w", err)
 	}
 
-	ctxWithToken, err := authService.SetToken(ctx)
+	ctxWithToken, err := authService.SetToken(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("error setting token: %w", err)
 	}
+
+	key := utils.GetEntryKey(entryType, name)
 
 	err = service.Delete(ctxWithToken, key)
 	if err != nil {
 		return fmt.Errorf("error deleting entry: %w", err)
 	}
+
+	cmd.Println("Successfully deleted!")
 
 	return nil
 }

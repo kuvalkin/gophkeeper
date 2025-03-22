@@ -24,6 +24,7 @@ func newGetCommand(container container.Container) *cobra.Command {
 	set.AddCommand(newGetLoginCommand(container))
 	set.AddCommand(newGetFileCommand(container))
 	set.AddCommand(newGetCardCommand(container))
+	set.AddCommand(newGetTextCommand(container))
 
 	return set
 }
@@ -155,6 +156,46 @@ func newGetCardCommand(container container.Container) *cobra.Command {
 			cmd.Println("Expiration Year:", entry.ExpirationDate.Year)
 			cmd.Println("Expiration Month:", entry.ExpirationDate.Month)
 			cmd.Println("CVV:", entry.CVV)
+			cmd.Println("")
+			cmd.Println("Notes:", notes)
+
+			return nil
+		},
+	}
+
+	return getLogin
+}
+
+func newGetTextCommand(container container.Container) *cobra.Command {
+	getLogin := &cobra.Command{
+		Use:   "text",
+		Short: "Get text",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			cmd.Println("Getting text...")
+
+			notes, content, exists, err := get(cmd.Context(), container, utils.GetEntryKey("text", name))
+			if err != nil {
+				return fmt.Errorf("error getting text: %w", err)
+			}
+
+			if !exists {
+				cmd.Println("Text not found")
+
+				return nil
+			}
+
+			defer content.Close()
+
+			text, err := io.ReadAll(content)
+			if err != nil {
+				return fmt.Errorf("error reading text: %w", err)
+			}
+
+			cmd.Println("Text:")
+			cmd.Println(string(text))
 			cmd.Println("")
 			cmd.Println("Notes:", notes)
 

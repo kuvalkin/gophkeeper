@@ -18,6 +18,9 @@ func NewTextareaInputModel(prompt string, placeholder string) TextareaInputModel
 	area := textarea.New()
 
 	area.Placeholder = placeholder
+	area.MaxHeight = -1
+	area.CharLimit = -1
+	area.SetHeight(10)
 
 	area.Focus()
 

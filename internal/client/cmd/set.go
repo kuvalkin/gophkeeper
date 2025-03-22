@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -27,6 +28,7 @@ func newSetCommand(container container.Container) *cobra.Command {
 	set.AddCommand(newSetLoginCommand(container))
 	set.AddCommand(newSetFileCommand(container))
 	set.AddCommand(newSetCardCommand(container))
+	set.AddCommand(newSetTextCommand(container))
 
 	return set
 }
@@ -200,6 +202,50 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 	}
 
 	return setCard
+}
+
+func newSetTextCommand(container container.Container) *cobra.Command {
+	setText := &cobra.Command{
+		Use:   "text",
+		Short: "Store text content",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+
+			text, err := prompts.AskText(cmd.Context(), "Enter text you want to save", "")
+			if err != nil {
+				if errors.Is(err, prompts.ErrCanceled) {
+					return nil
+				}
+
+				return fmt.Errorf("error asking text: %w", err)
+			}
+
+			if text == "" {
+				return errors.New("text is empty")
+			}
+
+			content := io.NopCloser(strings.NewReader(text))
+
+			notes, err := cmd.Flags().GetString("notes")
+			if err != nil {
+				return fmt.Errorf("error getting notes flag: %w", err)
+			}
+
+			cmd.Println("Storing text...")
+
+			err = store(cmd.Context(), container, utils.GetEntryKey("text", name), name, notes, content)
+			if err != nil {
+				return fmt.Errorf("error storing text: %w", err)
+			}
+
+			cmd.Println("Text stored successfully!")
+
+			return nil
+		},
+	}
+
+	return setText
 }
 
 func store(ctx context.Context, container container.Container, key string, name string, notes string, content io.ReadCloser) error {
