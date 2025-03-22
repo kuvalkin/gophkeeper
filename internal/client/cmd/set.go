@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -15,11 +18,14 @@ import (
 func newSetCommand(container container.Container) *cobra.Command {
 	set := &cobra.Command{
 		Use:   "set",
-		Short: "Store value",
-		Long:  "Store new value and sync it to the cloud. Value is E2E encrypted",
+		Short: "Store entry",
+		Long:  "Store new entry and sync it to the cloud. Entry is E2E encrypted",
 	}
 
+	set.PersistentFlags().String("notes", "", "Notes for the entry. Will be stored encrypted along with the entry itself. Optional")
+
 	set.AddCommand(newSetLoginCommand(container))
+	set.AddCommand(newSetFileCommand(container))
 
 	return set
 }
@@ -27,7 +33,7 @@ func newSetCommand(container container.Container) *cobra.Command {
 func newSetLoginCommand(container container.Container) *cobra.Command {
 	setLogin := &cobra.Command{
 		Use:   "login",
-		Short: "Store login and password",
+		Short: "Store login and password pair",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
@@ -62,27 +68,11 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error getting entry bytes: %w", err)
 			}
 
-			service, err := container.GetEntryService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting entry service: %w", err)
-			}
-
-			tokenService, err := container.GetAuthService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting token service: %w", err)
-			}
-
-			ctxWithToken, err := tokenService.SetToken(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error setting token: %w", err)
-			}
-
 			cmd.Println("Storing login...")
 
-			// todo provide feedback as service runs
-			err = service.Set(ctxWithToken, utils.GetEntryKey("login", name), name, notes, content)
+			err = store(cmd.Context(), container, utils.GetEntryKey("login", name), name, notes, content)
 			if err != nil {
-				return fmt.Errorf("error setting login: %w", err)
+				return fmt.Errorf("error storing login: %w", err)
 			}
 
 			cmd.Println("Login stored successfully!")
@@ -91,7 +81,66 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 		},
 	}
 
-	setLogin.Flags().String("notes", "", "Notes for the login entry. Will be stored encrypted along with login and password. Optional")
-
 	return setLogin
+}
+
+func newSetFileCommand(container container.Container) *cobra.Command {
+	setFile := &cobra.Command{
+		Use:   "file",
+		Short: "Store file with any content",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			path := args[1]
+
+			file, err := os.Open(path)
+			if err != nil {
+				return fmt.Errorf("error opening file: %w", err)
+			}
+
+			notes, err := cmd.Flags().GetString("notes")
+			if err != nil {
+				return fmt.Errorf("error getting notes flag: %w", err)
+			}
+
+			cmd.Println("Storing file...")
+			cmd.Println("It may take a while depending on the file size")
+
+			err = store(cmd.Context(), container, utils.GetEntryKey("file", name), name, notes, file)
+			if err != nil {
+				return fmt.Errorf("error storing file: %w", err)
+			}
+
+			cmd.Println("File stored successfully!")
+
+			return nil
+		},
+	}
+
+	return setFile
+}
+
+func store(ctx context.Context, container container.Container, key string, name string, notes string, content io.ReadCloser) error {
+	service, err := container.GetEntryService(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting entry service: %w", err)
+	}
+
+	tokenService, err := container.GetAuthService(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting token service: %w", err)
+	}
+
+	ctxWithToken, err := tokenService.SetToken(ctx)
+	if err != nil {
+		return fmt.Errorf("error setting token: %w", err)
+	}
+
+	// todo provide feedback as service runs
+	err = service.Set(ctxWithToken, key, name, notes, content)
+	if err != nil {
+		return fmt.Errorf("error setting entry: %w", err)
+	}
+
+	return nil
 }

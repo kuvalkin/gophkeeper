@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"os"
+	"path"
 
 	"github.com/spf13/cobra"
 
@@ -18,36 +22,22 @@ func newGetCommand(container container.Container) *cobra.Command {
 	}
 
 	set.AddCommand(newGetLoginCommand(container))
+	set.AddCommand(newGetFileCommand(container))
 
 	return set
 }
 
 func newGetLoginCommand(container container.Container) *cobra.Command {
-	setLogin := &cobra.Command{
+	getLogin := &cobra.Command{
 		Use:   "login",
 		Short: "Get login and password pair",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			service, err := container.GetEntryService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting entry service: %w", err)
-			}
-
-			authService, err := container.GetAuthService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error getting token service: %w", err)
-			}
-
-			ctxWithToken, err := authService.SetToken(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("error setting token: %w", err)
-			}
-
 			cmd.Println("Getting login...")
 
-			notes, content, exists, err := service.Get(ctxWithToken, utils.GetEntryKey("login", name))
+			notes, content, exists, err := get(cmd.Context(), container, utils.GetEntryKey("login", name))
 			if err != nil {
 				return fmt.Errorf("error getting login: %w", err)
 			}
@@ -72,5 +62,79 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 		},
 	}
 
-	return setLogin
+	return getLogin
+}
+
+func newGetFileCommand(container container.Container) *cobra.Command {
+	getFile := &cobra.Command{
+		Use:   "file",
+		Short: "Get file",
+		Long:  "Download file from the cloud, decrypts it and stores in a provided path",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			name := args[0]
+			pathToDst := args[1]
+
+			cmd.Println("Getting file...")
+			cmd.Println("It may take a while depending on the file size")
+
+			notes, content, exists, err := get(cmd.Context(), container, utils.GetEntryKey("file", name))
+			if err != nil {
+				return fmt.Errorf("error getting file: %w", err)
+			}
+
+			if !exists {
+				cmd.Println("File not found")
+
+				return nil
+			}
+
+			defer content.Close()
+
+			cmd.Println("Downloaded entry from server")
+			cmd.Println("Your notes:", notes)
+
+			cmd.Println("Storing file...")
+
+			err = os.MkdirAll(path.Dir(pathToDst), 0755)
+			if err != nil {
+				return fmt.Errorf("error creating directory: %w", err)
+			}
+
+			dst, err := os.OpenFile(pathToDst, os.O_CREATE|os.O_WRONLY, 0644)
+			if err != nil {
+				return fmt.Errorf("error opening file: %w", err)
+			}
+
+			_, err = io.Copy(dst, content)
+			if err != nil {
+				return fmt.Errorf("error copying file: %w", err)
+			}
+
+			cmd.Println("File stored successfully!")
+
+			return nil
+		},
+	}
+
+	return getFile
+}
+
+func get(ctx context.Context, container container.Container, key string) (string, io.ReadCloser, bool, error) {
+	service, err := container.GetEntryService(ctx)
+	if err != nil {
+		return "", nil, false, fmt.Errorf("error getting entry service: %w", err)
+	}
+
+	authService, err := container.GetAuthService(ctx)
+	if err != nil {
+		return "", nil, false, fmt.Errorf("error getting auth service: %w", err)
+	}
+
+	ctxWithToken, err := authService.SetToken(ctx)
+	if err != nil {
+		return "", nil, false, fmt.Errorf("error setting token: %w", err)
+	}
+
+	return service.Get(ctxWithToken, key)
 }
