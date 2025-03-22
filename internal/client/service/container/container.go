@@ -15,9 +15,9 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
-	authStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/auth"
+	"github.com/kuvalkin/gophkeeper/internal/client/service/secret"
+	keyringStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/keyring"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
-	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
@@ -25,8 +25,9 @@ import (
 
 type Container interface {
 	io.Closer
-	GetEntryService(ctx context.Context) (entry.Service, error)
+	GetSecretService(ctx context.Context) (secret.Service, error)
 	GetAuthService(ctx context.Context) (auth.Service, error)
+	GetEntryService(ctx context.Context) (entry.Service, error)
 }
 
 func New(conf *viper.Viper) (Container, error) {
@@ -43,11 +44,14 @@ type container struct {
 	initConnection sync.Once
 	connection     *grpc.ClientConn
 
-	initEntryService sync.Once
-	entryService     entry.Service
+	initSecretService sync.Once
+	secretService     secret.Service
 
 	initAuthService sync.Once
 	authService     auth.Service
+
+	initEntryService sync.Once
+	entryService     entry.Service
 
 	initCrypter sync.Once
 	crypter     *crypt.AgeCrypter
@@ -76,7 +80,17 @@ func (c *container) Close() error {
 	return errors.Join(errs...)
 }
 
-func (c *container) GetEntryService(_ context.Context) (entry.Service, error) {
+func (c *container) GetSecretService(_ context.Context) (secret.Service, error) {
+	c.initSecretService.Do(func() {
+		c.secretService = secret.New(
+			keyringStorage.NewRepository("secret"),
+		)
+	})
+
+	return c.secretService, nil
+}
+
+func (c *container) GetEntryService(ctx context.Context) (entry.Service, error) {
 	var outErr error //todo will there be error on second pass?
 
 	c.initEntryService.Do(func() {
@@ -86,7 +100,7 @@ func (c *container) GetEntryService(_ context.Context) (entry.Service, error) {
 			return
 		}
 
-		crypter, err := c.getCrypter()
+		crypter, err := c.getCrypter(ctx)
 		if err != nil {
 			outErr = fmt.Errorf("cant create crypter: %w", err)
 			return
@@ -121,7 +135,7 @@ func (c *container) GetAuthService(_ context.Context) (auth.Service, error) {
 
 		c.authService = auth.New(
 			authpb.NewAuthServiceClient(conn),
-			authStorage.NewKeyringRepository(),
+			keyringStorage.NewRepository("token"),
 		)
 	})
 
@@ -157,22 +171,28 @@ func (c *container) newConnection() (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func (c *container) getCrypter() (*crypt.AgeCrypter, error) {
+func (c *container) getCrypter(ctx context.Context) (*crypt.AgeCrypter, error) {
 	var outErr error
 
 	c.initCrypter.Do(func() {
-		secret, ok, err := keyring.Get("secret")
+		ss, err := c.GetSecretService(ctx)
+		if err != nil {
+			outErr = fmt.Errorf("cant get secret service: %w", err)
+			return
+		}
+
+		s, ok, err := ss.Get(ctx)
 		if err != nil {
 			outErr = fmt.Errorf("cant get secret from keyring: %w", err)
 			return
 		}
 
 		if !ok {
-			outErr = auth.ErrNoSecret
+			outErr = errors.New("secret not found")
 			return
 		}
 
-		c.crypter, err = crypt.NewAgeCrypter(secret)
+		c.crypter, err = crypt.NewAgeCrypter(s)
 		if err != nil {
 			outErr = fmt.Errorf("cant create crypter: %w", err)
 			return

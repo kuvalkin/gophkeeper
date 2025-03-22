@@ -2,10 +2,7 @@ package auth
 
 import (
 	"context"
-	"errors"
 )
-
-var ErrNoSecret = errors.New("secret not set")
 
 type Service interface {
 	Register(ctx context.Context, login string, password string) error
@@ -16,7 +13,7 @@ type Service interface {
 }
 
 type Repository interface {
-	GetToken(ctx context.Context) (string, bool, error)
-	SetToken(ctx context.Context, token string) error
-	DeleteToken(ctx context.Context) error
+	Get(ctx context.Context) (string, bool, error)
+	Set(ctx context.Context, token string) error
+	Delete(ctx context.Context) error
 }

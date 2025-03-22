@@ -49,7 +49,9 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	}
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output. Useful for debugging")
 
-	rootCmd.AddCommand(newSecretCommand())
+	secret := newSecretCommand(container)
+	secret.PreRunE = middleware.SecretNotSet(container)(secret.PreRunE)
+	rootCmd.AddCommand(secret)
 
 	notLoggedIn := middleware.NotLoggedIn(container)
 
@@ -63,12 +65,20 @@ func NewRootCommand(container container.Container) *cobra.Command {
 
 	rootCmd.AddCommand(newLogoutCommand(container))
 
+	secretSet := middleware.SecretSet(container)
+	loggedIn := middleware.LoggedIn(container)
+
 	set := newSetCommand(container)
-	// todo guard
-	//set.PersistentPreRunE = middleware.WithParentPersistentPreRunE(ensureFullSetup(set.PersistentPreRunE))
+	set.PersistentPreRunE = secretSet(loggedIn(set.PersistentPreRunE))
 	rootCmd.AddCommand(set)
-	rootCmd.AddCommand(newGetCommand(container))
-	rootCmd.AddCommand(newDeleteCommand(container))
+
+	getCmd := newGetCommand(container)
+	getCmd.PersistentPreRunE = secretSet(loggedIn(getCmd.PersistentPreRunE))
+	rootCmd.AddCommand(getCmd)
+
+	deleteCmd := newDeleteCommand(container)
+	deleteCmd.PersistentPreRunE = loggedIn(deleteCmd.PersistentPreRunE)
+	rootCmd.AddCommand(deleteCmd)
 
 	return rootCmd
 }
