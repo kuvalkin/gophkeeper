@@ -30,7 +30,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EntryServiceClient interface {
 	GetEntry(ctx context.Context, in *GetEntryRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Entry], error)
-	SetEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Entry, emptypb.Empty], error)
+	SetEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SetEntryRequest, SetEntryResponse], error)
 	DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -61,18 +61,18 @@ func (c *entryServiceClient) GetEntry(ctx context.Context, in *GetEntryRequest, 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type EntryService_GetEntryClient = grpc.ServerStreamingClient[Entry]
 
-func (c *entryServiceClient) SetEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[Entry, emptypb.Empty], error) {
+func (c *entryServiceClient) SetEntry(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SetEntryRequest, SetEntryResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &EntryService_ServiceDesc.Streams[1], EntryService_SetEntry_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Entry, emptypb.Empty]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SetEntryRequest, SetEntryResponse]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type EntryService_SetEntryClient = grpc.ClientStreamingClient[Entry, emptypb.Empty]
+type EntryService_SetEntryClient = grpc.BidiStreamingClient[SetEntryRequest, SetEntryResponse]
 
 func (c *entryServiceClient) DeleteEntry(ctx context.Context, in *DeleteEntryRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -89,7 +89,7 @@ func (c *entryServiceClient) DeleteEntry(ctx context.Context, in *DeleteEntryReq
 // for forward compatibility.
 type EntryServiceServer interface {
 	GetEntry(*GetEntryRequest, grpc.ServerStreamingServer[Entry]) error
-	SetEntry(grpc.ClientStreamingServer[Entry, emptypb.Empty]) error
+	SetEntry(grpc.BidiStreamingServer[SetEntryRequest, SetEntryResponse]) error
 	DeleteEntry(context.Context, *DeleteEntryRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedEntryServiceServer()
 }
@@ -104,7 +104,7 @@ type UnimplementedEntryServiceServer struct{}
 func (UnimplementedEntryServiceServer) GetEntry(*GetEntryRequest, grpc.ServerStreamingServer[Entry]) error {
 	return status.Errorf(codes.Unimplemented, "method GetEntry not implemented")
 }
-func (UnimplementedEntryServiceServer) SetEntry(grpc.ClientStreamingServer[Entry, emptypb.Empty]) error {
+func (UnimplementedEntryServiceServer) SetEntry(grpc.BidiStreamingServer[SetEntryRequest, SetEntryResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method SetEntry not implemented")
 }
 func (UnimplementedEntryServiceServer) DeleteEntry(context.Context, *DeleteEntryRequest) (*emptypb.Empty, error) {
@@ -143,11 +143,11 @@ func _EntryService_GetEntry_Handler(srv interface{}, stream grpc.ServerStream) e
 type EntryService_GetEntryServer = grpc.ServerStreamingServer[Entry]
 
 func _EntryService_SetEntry_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(EntryServiceServer).SetEntry(&grpc.GenericServerStream[Entry, emptypb.Empty]{ServerStream: stream})
+	return srv.(EntryServiceServer).SetEntry(&grpc.GenericServerStream[SetEntryRequest, SetEntryResponse]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type EntryService_SetEntryServer = grpc.ClientStreamingServer[Entry, emptypb.Empty]
+type EntryService_SetEntryServer = grpc.BidiStreamingServer[SetEntryRequest, SetEntryResponse]
 
 func _EntryService_DeleteEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteEntryRequest)
@@ -188,6 +188,7 @@ var EntryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "SetEntry",
 			Handler:       _EntryService_SetEntry_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

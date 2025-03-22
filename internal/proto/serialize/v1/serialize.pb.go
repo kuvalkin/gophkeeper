@@ -79,9 +79,10 @@ type BankCard struct {
 	Number         string                   `protobuf:"bytes,1,opt,name=number,proto3" json:"number,omitempty"`
 	ExpirationDate *BankCard_ExpirationDate `protobuf:"bytes,2,opt,name=expiration_date,json=expirationDate,proto3" json:"expiration_date,omitempty"`
 	HolderName     string                   `protobuf:"bytes,3,opt,name=holder_name,json=holderName,proto3" json:"holder_name,omitempty"`
-	Cvv            int32                    `protobuf:"zigzag32,4,opt,name=cvv,proto3" json:"cvv,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// cvv is a 3 or 4 digit number
+	Cvv           int32 `protobuf:"zigzag32,4,opt,name=cvv,proto3" json:"cvv,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BankCard) Reset() {

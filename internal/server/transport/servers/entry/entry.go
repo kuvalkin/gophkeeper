@@ -44,9 +44,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 
 	md, reader, ok, err := s.service.Get(stream.Context(), tokenInfo.UserID, request.Key)
 	if err != nil {
-		llog.Errorw("cant get entry", "err", err)
-
-		return status.Errorf(codes.Internal, "cant get entry: %v", err)
+		return status.Errorf(codes.Internal, "cant get entry")
 	}
 	if !ok {
 		return status.Errorf(codes.NotFound, "entry not found")
@@ -91,7 +89,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 	return nil
 }
 
-func (s *Server) SetEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Empty]) error {
+func (s *Server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
 		return status.Error(codes.Unauthenticated, "no token info")
@@ -102,23 +100,65 @@ func (s *Server) SetEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Em
 	// get the metadata
 	request, err := stream.Recv()
 	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return status.Error(codes.Canceled, "client closed connection")
+		}
+
 		llog.Errorw("cant get metadata", "err", err)
 
-		return status.Errorf(codes.InvalidArgument, "cant get metadata: %v", err)
+		return status.Error(codes.InvalidArgument, "cant get metadata")
 	}
 
-	// todo maybe do smth similar with pipes and chans on client?
 	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
-		Key:   request.Key,
-		Name:  request.Name,
-		Notes: request.Notes,
-	})
+		Key:   request.Entry.Key,
+		Name:  request.Entry.Name,
+		Notes: request.Entry.Notes,
+	}, request.Overwrite)
 	if err != nil {
-		// todo handle different error types and provide aduquate status
-		return status.Errorf(codes.Internal, "cant update entry: %v", err)
+		if !errors.Is(err, entry.ErrEntryExists) {
+			return status.Error(codes.Internal, "cant set entry")
+		}
+
+		err = stream.Send(&pb.SetEntryResponse{AlreadyExists: true})
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return status.Error(codes.Canceled, "client closed connection")
+			}
+
+			llog.Errorw("cant send already exists", "err", err)
+
+			return status.Error(codes.Internal, "cant send already exists")
+		}
+
+		resp, err := stream.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return status.Error(codes.Canceled, "client closed connection")
+			}
+
+			llog.Errorw("cant get already exists response", "err", err)
+
+			return status.Error(codes.InvalidArgument, "cant get already exists response")
+		}
+
+		if !resp.Overwrite {
+			return status.Errorf(codes.AlreadyExists, "entry already exists")
+		}
+
+		llog.Debug("client sent overwrite signal")
+
+		// continue and overwrite
+		uploadChan, resultChan, err = s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
+			Key:   request.Entry.Key,
+			Name:  request.Entry.Name,
+			Notes: request.Entry.Notes,
+		}, true)
+		if err != nil {
+			return status.Error(codes.Internal, "cant set entry")
+		}
 	}
 
-	llog = llog.WithLazy("key", request.Key)
+	llog = llog.WithLazy("key", request.Entry.Notes)
 
 	llog.Debug("metadata received, preparing to receive chunks")
 
@@ -139,11 +179,18 @@ func (s *Server) SetEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Em
 
 		case result := <-resultChan:
 			if result.Err != nil {
-				// todo handle different error types and provide aduquate status
-				return status.Errorf(codes.Internal, "cant update entry: %v", err)
+				if errors.Is(err, context.Canceled) {
+					return status.Error(codes.Canceled, "client closed connection")
+				}
+
+				if errors.Is(err, entry.ErrUploadChunk) {
+					return status.Error(codes.Internal, "cant upload chunk")
+				}
+
+				return status.Error(codes.Internal, "internal error during upload")
 			}
 
-			return stream.SendAndClose(&emptypb.Empty{})
+			return nil
 
 		default:
 			if isDone {
@@ -183,7 +230,7 @@ func (s *Server) SetEntry(stream grpc.ClientStreamingServer[pb.Entry, emptypb.Em
 				continue
 			}
 
-			uploadChan <- entry.UploadChunk{Content: req.Content}
+			uploadChan <- entry.UploadChunk{Content: req.Entry.Content}
 			llog.Debug("chunk uploaded")
 		}
 	}
@@ -195,12 +242,8 @@ func (s *Server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest
 		return nil, status.Error(codes.Unauthenticated, "no token info")
 	}
 
-	llog := s.log.WithLazy("userID", tokenInfo.UserID, "key", request.Key, "method", "DeleteEntry")
-
 	err := s.service.Delete(ctx, tokenInfo.UserID, request.Key)
 	if err != nil {
-		llog.Errorw("cant delete entry", "err", err)
-
 		return nil, status.Error(codes.Internal, "cant delete entry")
 	}
 

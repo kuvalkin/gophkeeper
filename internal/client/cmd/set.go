@@ -265,7 +265,10 @@ func store(ctx context.Context, container container.Container, key string, name 
 	}
 
 	// todo provide feedback as service runs
-	err = service.Set(ctxWithToken, key, name, notes, content)
+	// todo ask user
+	err = service.Set(ctxWithToken, key, name, notes, content, func() bool {
+		return true
+	})
 	if err != nil {
 		return fmt.Errorf("error setting entry: %w", err)
 	}

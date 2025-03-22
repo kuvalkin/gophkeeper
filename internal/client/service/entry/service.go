@@ -8,15 +8,16 @@ import (
 	"io"
 
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
-	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
+	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
 func New(
 	crypt Crypt,
-	client entypb.EntryServiceClient,
+	client pb.EntryServiceClient,
 	blobRepo blob.Repository,
 	chunkSize int64,
 ) (Service, error) {
@@ -30,12 +31,12 @@ func New(
 
 type service struct {
 	crypt     Crypt
-	client    entypb.EntryServiceClient
+	client    pb.EntryServiceClient
 	blobRepo  blob.Repository
 	chunkSize int64
 }
 
-func (s *service) Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser) error {
+func (s *service) Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error {
 	err := s.encryptBlob(content, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry: %w", err)
@@ -64,12 +65,11 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	}
 	defer stream.CloseSend()
 
-	// send metadata first
-	err = stream.Send(&entypb.Entry{
+	err = s.sendMetadata(stream, &pb.Entry{
 		Key:   key,
 		Name:  name,
 		Notes: encNotes,
-	})
+	}, onOverwrite)
 	if err != nil {
 		return fmt.Errorf("error sending metadata to the server: %w", err)
 	}
@@ -79,9 +79,14 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 		return fmt.Errorf("error uploading encrypted blob to server: %w", err)
 	}
 
-	_, err = stream.CloseAndRecv()
+	err = stream.CloseSend()
 	if err != nil {
 		return fmt.Errorf("error finishing upload process: %w", err)
+	}
+
+	_, err = stream.Recv()
+	if err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("error getting acknowledgement from server: %w", err)
 	}
 
 	return nil
@@ -127,9 +132,45 @@ func (s *service) encryptBlob(content io.ReadCloser, key string) (err error) {
 	return nil
 }
 
+func (s *service) sendMetadata(stream grpc.BidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse], entry *pb.Entry, onOverwrite func() bool) error {
+	err := stream.Send(&pb.SetEntryRequest{
+		Entry: entry,
+	})
+	if err != nil {
+		return fmt.Errorf("error sending initial request: %w", err)
+	}
+
+	resp, err := stream.Recv()
+	if err != nil {
+		if stErr, ok := status.FromError(err); ok && stErr.Code() == codes.AlreadyExists {
+			// errors means that stream is closed, no sense in continuing
+			return ErrEntryExists
+		}
+
+		return fmt.Errorf("error receiving response: %w", err)
+	}
+
+	if !resp.AlreadyExists {
+		return nil
+	}
+
+	if onOverwrite == nil || !onOverwrite() {
+		return ErrEntryExists
+	}
+
+	err = stream.Send(&pb.SetEntryRequest{
+		Overwrite: true,
+	})
+	if err != nil {
+		return fmt.Errorf("error sending overwrite signal to the server: %w", err)
+	}
+
+	return nil
+}
+
 func (s *service) uploadBlob(
 	blob io.Reader,
-	stream grpc.ClientStreamingClient[entypb.Entry, emptypb.Empty],
+	stream grpc.BidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse],
 ) error {
 	buffer := make([]byte, s.chunkSize)
 
@@ -142,8 +183,10 @@ func (s *service) uploadBlob(
 			return fmt.Errorf("error reading encrypted blob chunk: %w", err)
 		}
 
-		err = stream.Send(&entypb.Entry{
-			Content: buffer[:n],
+		err = stream.Send(&pb.SetEntryRequest{
+			Entry: &pb.Entry{
+				Content: buffer[:n],
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
@@ -176,7 +219,7 @@ func (s *service) encryptNotes(notes string) ([]byte, error) {
 }
 
 func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
-	stream, err := s.client.GetEntry(ctx, &entypb.GetEntryRequest{Key: key})
+	stream, err := s.client.GetEntry(ctx, &pb.GetEntryRequest{Key: key})
 	if err != nil {
 		return "", nil, false, fmt.Errorf("cant start downloading entry: %w", err)
 	}
@@ -184,6 +227,10 @@ func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, b
 
 	resp, err := stream.Recv()
 	if err != nil {
+		if stErr, ok := status.FromError(err); ok && stErr.Code() == codes.NotFound {
+			return "", nil, false, nil
+		}
+
 		return "", nil, false, fmt.Errorf("error getting metadata: %w", err)
 	}
 
@@ -222,7 +269,7 @@ func (s *service) decryptNotes(encNotes []byte) (string, error) {
 	return string(notes), nil
 }
 
-func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[entypb.Entry]) (io.ReadCloser, error) {
+func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.Entry]) (io.ReadCloser, error) {
 	dst, err := s.blobRepo.Writer(key)
 	if err != nil {
 		return nil, fmt.Errorf("cant create blob to temporary store entry: %w", err)
@@ -258,7 +305,7 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[ent
 }
 
 func (s *service) Delete(ctx context.Context, name string) error {
-	_, err := s.client.DeleteEntry(ctx, &entypb.DeleteEntryRequest{Key: name})
+	_, err := s.client.DeleteEntry(ctx, &pb.DeleteEntryRequest{Key: name})
 	if err != nil {
 		return fmt.Errorf("cant delete entry: %w", err)
 	}

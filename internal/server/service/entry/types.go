@@ -22,9 +22,11 @@ type UpdateEntryResult struct {
 }
 
 var ErrInternal = errors.New("internal error")
+var ErrUploadChunk = errors.New("received error from upload chunk chan")
+var ErrEntryExists = errors.New("entry already exists")
 
 type Service interface {
-	Set(ctx context.Context, userID string, md Metadata) (chan<- UploadChunk, <-chan UpdateEntryResult, error)
+	Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan UpdateEntryResult, error)
 	Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error)
 	Delete(ctx context.Context, userID string, key string) error
 }

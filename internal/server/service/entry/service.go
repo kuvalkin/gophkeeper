@@ -2,7 +2,6 @@ package entry
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 
@@ -26,10 +25,27 @@ type service struct {
 	blobRepo blob.Repository
 }
 
-func (s *service) Set(ctx context.Context, userID string, md Metadata) (chan<- UploadChunk, <-chan UpdateEntryResult, error) {
-	llog := s.log.WithLazy("userID", userID, "key", md.Key)
+func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan UpdateEntryResult, error) {
+	llog := s.log.WithLazy("userID", userID, "key", md.Key, "method", "Set")
 
-	dst, err := s.blobRepo.Writer(s.getBlobKey(userID, md.Key))
+	if !overwrite {
+		_, ok, err := s.metaRepo.Get(ctx, userID, md.Key)
+		if err != nil {
+			llog.Errorw("cant get metadata", "err", err)
+
+			return nil, nil, ErrInternal
+		}
+
+		if ok {
+			llog.Debug("entry already exists")
+
+			return nil, nil, ErrEntryExists
+		}
+	}
+
+	blobKey := s.getBlobKey(userID, md.Key)
+
+	dst, err := s.blobRepo.Writer(blobKey)
 	if err != nil {
 		llog.Errorw("cant get writer", "err", err)
 
@@ -42,55 +58,16 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata) (chan<- U
 	go func() {
 		defer close(resultChan)
 
-		llog.Debug("waiting for chunks")
-
-		for chunk := range uploadChan {
-			if chunk.Err != nil {
-				err = dst.Close()
-				if err != nil {
-					llog.Errorw("cant close writer", "err", err)
-
-					resultChan <- UpdateEntryResult{Err: ErrInternal}
-					return
-				}
-
-				err = s.blobRepo.Delete(s.getBlobKey(userID, md.Key))
-				if err != nil {
-					llog.Errorw("cant delete blob", "err", err)
-
-					resultChan <- UpdateEntryResult{Err: ErrInternal}
-					return
-				}
-
-				resultChan <- UpdateEntryResult{Err: chunk.Err}
-				return
-			}
-
-			_, err = dst.Write(chunk.Content)
-			if err != nil {
-				llog.Errorw("write error", "err", err)
-
-				err = dst.Close()
-				if err != nil {
-					llog.Errorw("cant close writer", "err", err)
-
-					resultChan <- UpdateEntryResult{Err: ErrInternal}
-					return
-				}
-
-				err = s.blobRepo.Delete(s.getBlobKey(userID, md.Key))
-				if err != nil {
-					llog.Errorw("cant delete blob", "err", err)
-
-					resultChan <- UpdateEntryResult{Err: ErrInternal}
-					return
-				}
-
+		err = s.processUpload(ctx, uploadChan, dst, llog)
+		if err != nil {
+			cderr := s.closeAndDelete(dst, blobKey, llog)
+			if cderr != nil {
 				resultChan <- UpdateEntryResult{Err: ErrInternal}
 				return
 			}
 
-			llog.Debug("chunk written")
+			resultChan <- UpdateEntryResult{Err: err}
+			return
 		}
 
 		err = dst.Close()
@@ -105,6 +82,11 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata) (chan<- U
 		if err != nil {
 			llog.Errorw("cant set metadata", "err", err)
 
+			err = s.blobRepo.Delete(blobKey)
+			if err != nil {
+				llog.Errorw("cant delete blob", "err", err)
+			}
+
 			resultChan <- UpdateEntryResult{Err: ErrInternal}
 			return
 		}
@@ -115,10 +97,65 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata) (chan<- U
 	return uploadChan, resultChan, nil
 }
 
+func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChunk, dst io.WriteCloser, llog *zap.SugaredLogger) error {
+	llog.Debug("waiting for chunks")
+
+	for {
+		select {
+		case <-ctx.Done():
+			llog.Debug("context done")
+			return ctx.Err()
+
+		case chunk, ok := <-uploadChan:
+			if !ok {
+				llog.Debug("no more chunks")
+				return nil
+			}
+
+			if chunk.Err != nil {
+				llog.Errorw("received error from upload chunk chan", "err", chunk.Err)
+
+				return ErrUploadChunk
+			}
+
+			_, err := dst.Write(chunk.Content)
+			if err != nil {
+				llog.Errorw("write chunk error", "err", err)
+
+				return ErrInternal
+			}
+
+			llog.Debug("chunk written")
+		}
+	}
+}
+
+func (s *service) closeAndDelete(c io.Closer, blobKey string, llog *zap.SugaredLogger) error {
+	err := c.Close()
+	if err != nil {
+		llog.Errorw("cant close writer", "err", err)
+
+		return err
+	}
+
+	err = s.blobRepo.Delete(blobKey)
+	if err != nil {
+		llog.Errorw("cant delete blob", "err", err)
+
+		return err
+	}
+
+	return nil
+}
+
 func (s *service) Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error) {
+	llog := s.log.WithLazy("userID", userID, "key", key, "method", "Get")
+
 	md, ok, err := s.metaRepo.Get(ctx, userID, key)
 	if err != nil {
-		return Metadata{}, nil, false, fmt.Errorf("cant get metadata: %w", err)
+		llog.Errorw("cant get metadata", "err", err)
+
+		return Metadata{}, nil, false, ErrInternal
 	}
 
 	if !ok {
@@ -127,24 +164,34 @@ func (s *service) Get(ctx context.Context, userID string, key string) (Metadata,
 
 	rc, ok, err := s.blobRepo.Reader(s.getBlobKey(userID, key))
 	if err != nil {
-		return Metadata{}, nil, false, fmt.Errorf("cant get blob reader: %w", err)
+		llog.Errorw("cant get blob reader", "err", err)
+
+		return Metadata{}, nil, false, ErrInternal
 	}
 	if !ok {
-		return Metadata{}, nil, false, errors.New("blob not found")
+		llog.Errorw("blob not found")
+
+		return Metadata{}, nil, false, ErrInternal
 	}
 
 	return md, rc, true, nil
 }
 
 func (s *service) Delete(ctx context.Context, userID string, key string) error {
+	llog := s.log.WithLazy("userID", userID, "key", key, "method", "Delete")
+
 	err := s.metaRepo.Delete(ctx, userID, key)
 	if err != nil {
-		return fmt.Errorf("cant delete metadata: %w", err)
+		llog.Errorw("cant delete metadata", "err", err)
+
+		return ErrInternal
 	}
 
 	err = s.blobRepo.Delete(s.getBlobKey(userID, key))
 	if err != nil {
-		return fmt.Errorf("cant delete blob: %w", err)
+		llog.Errorw("cant delete blob", "err", err)
+
+		return ErrInternal
 	}
 
 	return nil
