@@ -102,6 +102,7 @@ func (c *container) GetEntryService(_ context.Context) (entry.Service, error) {
 			crypter,
 			entypb.NewEntryServiceClient(conn),
 			blob.NewFileBlobRepository(c.tempDir),
+			c.conf.GetInt64("stream.chunk_size"),
 		)
 	})
 

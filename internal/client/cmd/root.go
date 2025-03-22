@@ -87,4 +87,5 @@ func NewConfig() (*viper.Viper, error) {
 
 func defaultConfig(conf *viper.Viper) {
 	conf.SetDefault("server.insecure", false)
+	conf.SetDefault("stream.chunk_size", 1024*1024) // 1 MB
 }

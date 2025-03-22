@@ -27,7 +27,7 @@ type Services struct {
 	Entry entry.Service
 }
 
-func NewServer(services Services) (*grpc.Server, error) {
+func NewServer(services Services, chunkSize int64) (*grpc.Server, error) {
 	interceptorLogger := newLogger(log.Logger())
 	logOptions := []logging.Option{
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
@@ -56,7 +56,7 @@ func NewServer(services Services) (*grpc.Server, error) {
 	)
 
 	authpb.RegisterAuthServiceServer(srv, authServer.New(services.User))
-	entypb.RegisterEntryServiceServer(srv, entryServer.New(services.Entry))
+	entypb.RegisterEntryServiceServer(srv, entryServer.New(services.Entry, chunkSize))
 
 	return srv, nil
 }

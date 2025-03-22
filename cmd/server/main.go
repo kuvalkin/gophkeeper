@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
@@ -49,7 +50,12 @@ func main() {
 		log.Logger().Fatalw("failed to initialize services", "error", err)
 	}
 
-	serve(ctx, config.GetString("address"), services)
+	server, err := transport.NewServer(services, config.GetInt64("blob.chunk_size"))
+	if err != nil {
+		log.Logger().Fatalw("failed to initialize server", "error", err)
+	}
+
+	serve(ctx, config.GetString("address"), server)
 
 	// if we are here, the server has been stopped
 	log.Logger().Info("server shutdown complete")
@@ -70,6 +76,8 @@ func newConfig() *viper.Viper {
 	config.MustBindEnv("database.dsn", "DATABASE_DSN")
 
 	config.MustBindEnv("blob.path", "BLOB_PATH")
+	config.SetDefault("blob.chunk_size", 1024*1024) // 1MB
+	config.MustBindEnv("blob.chunk_size", "BLOB_CHUNK_SIZE")
 
 	return config
 }
@@ -107,23 +115,17 @@ func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport
 	}, nil
 }
 
-func serve(ctx context.Context, addr string, services transport.Services) {
+func serve(ctx context.Context, addr string, server *grpc.Server) {
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Logger().Fatalw("failed to listen on address", "address", addr, "error", err)
 		return
 	}
 
-	srv, err := transport.NewServer(services)
-	if err != nil {
-		log.Logger().Fatalw("failed to create gRPC server", "error", err)
-		return
-	}
-
 	go func() {
 		log.Logger().Infow("starting gRPC server", "address", addr)
 
-		if err = srv.Serve(listener); err != nil {
+		if err = server.Serve(listener); err != nil {
 			log.Logger().Fatalw("error starting gRPC server", "error", err)
 			return
 		}
@@ -134,5 +136,5 @@ func serve(ctx context.Context, addr string, services transport.Services) {
 
 	log.Logger().Info("shutting down server")
 
-	srv.GracefulStop()
+	server.GracefulStop()
 }

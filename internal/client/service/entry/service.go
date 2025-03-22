@@ -18,12 +18,13 @@ func New(
 	crypt Crypt,
 	client entypb.EntryServiceClient,
 	blobRepo blob.Repository,
+	chunkSize int64,
 ) (Service, error) {
 	return &service{
 		crypt:     crypt,
 		client:    client,
 		blobRepo:  blobRepo,
-		chunkSize: 1024 * 1024, // 1MB, todo get from config
+		chunkSize: chunkSize,
 	}, nil
 }
 

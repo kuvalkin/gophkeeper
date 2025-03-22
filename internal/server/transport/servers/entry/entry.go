@@ -19,17 +19,19 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
-func New(service entry.Service) pb.EntryServiceServer {
+func New(service entry.Service, chunkSize int64) pb.EntryServiceServer {
 	return &Server{
-		service: service,
-		log:     log.Logger().Named("server.sync"),
+		service:   service,
+		chunkSize: chunkSize,
+		log:       log.Logger().Named("server.sync"),
 	}
 }
 
 type Server struct {
 	pb.UnsafeEntryServiceServer
-	service entry.Service
-	log     *zap.SugaredLogger
+	service   entry.Service
+	chunkSize int64
+	log       *zap.SugaredLogger
 }
 
 func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
@@ -63,7 +65,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 
 	defer reader.Close()
 
-	buf := make([]byte, 1024*1024) // todo from config
+	buf := make([]byte, s.chunkSize)
 	for {
 		n, err := reader.Read(buf)
 		if errors.Is(err, io.EOF) {
