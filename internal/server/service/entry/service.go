@@ -58,7 +58,7 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 	go func() {
 		defer close(resultChan)
 
-		err = s.processUpload(ctx, uploadChan, dst, llog)
+		err = s.processUpload(ctx, uploadChan, dst, llog.Named("upload"))
 		if err != nil {
 			cderr := s.closeAndDelete(dst, blobKey, llog)
 			if cderr != nil {
@@ -118,6 +118,8 @@ func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChu
 				return ErrUploadChunk
 			}
 
+			llog.Debug("received chunk")
+
 			_, err := dst.Write(chunk.Content)
 			if err != nil {
 				llog.Errorw("write chunk error", "err", err)
@@ -131,6 +133,8 @@ func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChu
 }
 
 func (s *service) closeAndDelete(c io.Closer, blobKey string, llog *zap.SugaredLogger) error {
+	llog.Debug("deleting blob")
+
 	err := c.Close()
 	if err != nil {
 		llog.Errorw("cant close writer", "err", err)

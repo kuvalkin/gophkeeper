@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -20,21 +19,21 @@ import (
 )
 
 func New(service entry.Service, chunkSize int64) pb.EntryServiceServer {
-	return &Server{
+	return &server{
 		service:   service,
 		chunkSize: chunkSize,
 		log:       log.Logger().Named("server.sync"),
 	}
 }
 
-type Server struct {
+type server struct {
 	pb.UnsafeEntryServiceServer
 	service   entry.Service
 	chunkSize int64
 	log       *zap.SugaredLogger
 }
 
-func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
+func (s *server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
 		return status.Error(codes.Unauthenticated, "no token info")
@@ -89,7 +88,7 @@ func (s *Server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 	return nil
 }
 
-func (s *Server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse]) error {
+func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
 		return status.Error(codes.Unauthenticated, "no token info")
@@ -108,17 +107,22 @@ func (s *Server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 
 		return status.Error(codes.InvalidArgument, "cant get metadata")
 	}
+	if request.Entry == nil || request.Entry.Key == "" || request.Entry.Name == "" {
+		return status.Error(codes.InvalidArgument, "metadata is empty")
+	}
 
 	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
 		Key:   request.Entry.Key,
 		Name:  request.Entry.Name,
 		Notes: request.Entry.Notes,
 	}, request.Overwrite)
-	if err != nil {
-		if !errors.Is(err, entry.ErrEntryExists) {
-			return status.Error(codes.Internal, "cant set entry")
-		}
+	if err != nil && !errors.Is(err, entry.ErrEntryExists) {
+		return status.Error(codes.Internal, "cant set entry")
+	}
 
+	llog = llog.WithLazy("key", request.Entry.Key)
+
+	if errors.Is(err, entry.ErrEntryExists) {
 		err = stream.Send(&pb.SetEntryResponse{AlreadyExists: true})
 		if err != nil {
 			if errors.Is(err, io.EOF) {
@@ -154,89 +158,88 @@ func (s *Server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 			Notes: request.Entry.Notes,
 		}, true)
 		if err != nil {
+			llog.Errorw("cant set entry with overwrite", "err", err)
+
 			return status.Error(codes.Internal, "cant set entry")
+		}
+	} else {
+		// send client signal that it can start uploading
+		err = stream.Send(&pb.SetEntryResponse{})
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return status.Error(codes.Canceled, "client closed connection")
+			}
+
+			llog.Errorw("cant send start upload signal", "err", err)
+
+			return status.Error(codes.Internal, "cant send start upload signal")
 		}
 	}
 
-	llog = llog.WithLazy("key", request.Entry.Notes)
-
 	llog.Debug("metadata received, preparing to receive chunks")
 
-	isUploadClosed := false
-	defer func() {
-		if !isUploadClosed {
-			close(uploadChan)
-			isUploadClosed = true
-		}
-	}()
+	go s.downloadContentChunks(stream.Context(), stream, uploadChan, llog.Named("upload"))
 
-	isDone := false
+	select {
+	case <-stream.Context().Done():
+		return status.Error(codes.Canceled, "client closed connection")
+
+	case result := <-resultChan:
+		if result.Err != nil {
+			if errors.Is(err, context.Canceled) {
+				return status.Error(codes.Canceled, "client closed connection")
+			}
+
+			if errors.Is(err, entry.ErrUploadChunk) {
+				return status.Error(codes.Internal, "cant upload chunk")
+			}
+
+			return status.Error(codes.Internal, "internal error during upload")
+		}
+
+		return nil
+	}
+}
+
+func (s *server) downloadContentChunks(ctx context.Context, stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse], uploadChan chan<- entry.UploadChunk, llog *zap.SugaredLogger) {
+	defer close(uploadChan)
 
 	for {
 		select {
-		case <-stream.Context().Done():
-			return status.Error(codes.Canceled, "client closed connection")
-
-		case result := <-resultChan:
-			if result.Err != nil {
-				if errors.Is(err, context.Canceled) {
-					return status.Error(codes.Canceled, "client closed connection")
-				}
-
-				if errors.Is(err, entry.ErrUploadChunk) {
-					return status.Error(codes.Internal, "cant upload chunk")
-				}
-
-				return status.Error(codes.Internal, "internal error during upload")
-			}
-
-			return nil
-
+		case <-ctx.Done():
+			llog.Debug("context done")
+			return
 		default:
-			if isDone {
-				llog.Debug("waiting for result")
-
-				// todo read steam from other goroutine, pipe in chan
-				time.Sleep(10 * time.Millisecond)
-				continue
-			}
-
 			llog.Debug("waiting for chunk")
 
 			req, err := stream.Recv()
 			if errors.Is(err, io.EOF) {
-				llog.Debug("uploaded ended, wait for result")
+				llog.Debug("uploaded ended")
 
-				if !isUploadClosed {
-					close(uploadChan)
-					isUploadClosed = true
-				}
+				return
+			}
+			if stErr, ok := status.FromError(err); ok && stErr.Code() == codes.Canceled {
+				llog.Debug("client closed connection")
 
-				isDone = true
-
-				continue
+				return
 			}
 
 			if err != nil {
+				llog.Errorw("cant get chunk", "err", err)
+
 				uploadChan <- entry.UploadChunk{Err: fmt.Errorf("cant get chunk: %w", err)}
 
-				if !isUploadClosed {
-					close(uploadChan)
-					isUploadClosed = true
-				}
-
-				isDone = true
-
-				continue
+				return
 			}
 
+			llog.Debug("uploading chunk")
 			uploadChan <- entry.UploadChunk{Content: req.Entry.Content}
 			llog.Debug("chunk uploaded")
 		}
 	}
 }
 
-func (s *Server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*emptypb.Empty, error) {
+func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*emptypb.Empty, error) {
 	tokenInfo, ok := auth.GetTokenInfo(ctx)
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "no token info")

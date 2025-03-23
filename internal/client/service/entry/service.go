@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"io"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 func New(
@@ -26,6 +28,7 @@ func New(
 		client:    client,
 		blobRepo:  blobRepo,
 		chunkSize: chunkSize,
+		log:       log.Logger().Named("service.entry"),
 	}, nil
 }
 
@@ -34,9 +37,13 @@ type service struct {
 	client    pb.EntryServiceClient
 	blobRepo  blob.Repository
 	chunkSize int64
+	log       *zap.SugaredLogger
 }
 
 func (s *service) Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error {
+	llog := s.log.WithLazy("key", key, "name", name)
+
+	llog.Debug("encrypting entry content")
 	err := s.encryptBlob(content, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry: %w", err)
@@ -44,6 +51,7 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 
 	var encNotes []byte
 	if notes != "" {
+		llog.Debug("encrypting notes")
 		encNotes, err = s.encryptNotes(notes)
 		if err != nil {
 			return fmt.Errorf("error encrypting notes: %w", err)
@@ -59,12 +67,14 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	}
 	defer reader.Close()
 
+	llog.Debug("opening grpc steam")
 	stream, err := s.client.SetEntry(ctx)
 	if err != nil {
 		return fmt.Errorf("cant start streaming encrypted blob to server: %w", err)
 	}
 	defer stream.CloseSend()
 
+	llog.Debug("sending metadata")
 	err = s.sendMetadata(stream, &pb.Entry{
 		Key:   key,
 		Name:  name,
@@ -74,16 +84,19 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 		return fmt.Errorf("error sending metadata to the server: %w", err)
 	}
 
+	llog.Debug("uploading encrypted content")
 	err = s.uploadBlob(reader, stream)
 	if err != nil {
 		return fmt.Errorf("error uploading encrypted blob to server: %w", err)
 	}
 
+	llog.Debug("upload done")
 	err = stream.CloseSend()
 	if err != nil {
 		return fmt.Errorf("error finishing upload process: %w", err)
 	}
 
+	llog.Debug("getting server acknowledgement")
 	_, err = stream.Recv()
 	if err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("error getting acknowledgement from server: %w", err)
