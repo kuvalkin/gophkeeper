@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/components"
 )
@@ -48,4 +49,17 @@ func AskText(ctx context.Context, prompt string, placeholder string) (string, er
 	}
 
 	return finalModel.Value(), nil
+}
+
+func Confirm(ctx context.Context, prompt string) bool {
+	confirm, err := AskString(ctx, fmt.Sprintf("%s [Y/n]", prompt), "y")
+	if err != nil {
+		return false
+	}
+
+	if confirm == "" || strings.ToLower(confirm) == "y" || strings.ToLower(confirm) == "yes" {
+		return true
+	}
+
+	return false
 }

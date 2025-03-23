@@ -73,7 +73,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Storing login...")
 
-			err = store(cmd.Context(), container, utils.GetEntryKey("login", name), name, notes, content)
+			err = store(cmd.Context(), container, "login", name, notes, content)
 			if err != nil {
 				return fmt.Errorf("error storing login: %w", err)
 			}
@@ -109,7 +109,7 @@ func newSetFileCommand(container container.Container) *cobra.Command {
 			cmd.Println("Storing file...")
 			cmd.Println("It may take a while depending on the file size")
 
-			err = store(cmd.Context(), container, utils.GetEntryKey("file", name), name, notes, file)
+			err = store(cmd.Context(), container, "file", name, notes, file)
 			if err != nil {
 				return fmt.Errorf("error storing file: %w", err)
 			}
@@ -190,7 +190,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Storing bank card...")
 
-			err = store(cmd.Context(), container, utils.GetEntryKey("card", name), name, notes, content)
+			err = store(cmd.Context(), container, "card", name, notes, content)
 			if err != nil {
 				return fmt.Errorf("error storing card: %w", err)
 			}
@@ -234,7 +234,7 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Storing text...")
 
-			err = store(cmd.Context(), container, utils.GetEntryKey("text", name), name, notes, content)
+			err = store(cmd.Context(), container, "text", name, notes, content)
 			if err != nil {
 				return fmt.Errorf("error storing text: %w", err)
 			}
@@ -248,7 +248,7 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 	return setText
 }
 
-func store(ctx context.Context, container container.Container, key string, name string, notes string, content io.ReadCloser) error {
+func store(ctx context.Context, container container.Container, entryType string, name string, notes string, content io.ReadCloser) error {
 	service, err := container.GetEntryService(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting entry service: %w", err)
@@ -265,9 +265,8 @@ func store(ctx context.Context, container container.Container, key string, name 
 	}
 
 	// todo provide feedback as service runs
-	// todo ask user
-	err = service.Set(ctxWithToken, key, name, notes, content, func() bool {
-		return true
+	err = service.Set(ctxWithToken, utils.GetEntryKey(entryType, name), name, notes, content, func() bool {
+		return prompts.Confirm(ctx, fmt.Sprintf("Entry %s with this name already exists. Do you want to overwrite it?", entryType))
 	})
 	if err != nil {
 		return fmt.Errorf("error setting entry: %w", err)
