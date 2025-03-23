@@ -2,7 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
 )
+
+var ErrLoginTaken = errors.New("user with this login already exists")
+var ErrInvalidPair = errors.New("login/password pair is invalid")
 
 type Service interface {
 	Register(ctx context.Context, login string, password string) error

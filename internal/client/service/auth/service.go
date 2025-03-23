@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 )
@@ -25,7 +27,10 @@ func (s *service) Register(ctx context.Context, login string, password string) e
 	response, err := s.client.Register(ctx, &pbAuth.RegisterRequest{Login: login, Password: password})
 
 	if err != nil {
-		//todo handle errors (conflict)
+		if stErr, ok := status.FromError(err); ok && stErr.Code() == codes.AlreadyExists {
+			return ErrLoginTaken
+		}
+
 		return fmt.Errorf("error registering user: %w", err)
 	}
 
@@ -41,6 +46,10 @@ func (s *service) Login(ctx context.Context, login string, password string) erro
 	response, err := s.client.Login(ctx, &pbAuth.LoginRequest{Login: login, Password: password})
 
 	if err != nil {
+		if stErr, ok := status.FromError(err); ok && stErr.Code() == codes.Unauthenticated {
+			return ErrInvalidPair
+		}
+
 		return fmt.Errorf("error logging in: %w", err)
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 )
@@ -41,6 +42,10 @@ func newRegisterCommand(container container.Container) *cobra.Command {
 
 			err = service.Register(cmd.Context(), login, password)
 			if err != nil {
+				if errors.Is(err, auth.ErrLoginTaken) {
+					return fmt.Errorf("user with this login already exists, pick another one")
+				}
+
 				return fmt.Errorf("cant register: %w", err)
 			}
 
