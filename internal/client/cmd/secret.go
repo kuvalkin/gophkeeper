@@ -14,8 +14,21 @@ func newSecretCommand(container container.Container) *cobra.Command {
 	secret := &cobra.Command{
 		Use:   "secret",
 		Short: "Set encryption secret",
-		Long:  "Set encryption secret. It's necessary to set it only once. It's used to encrypt and decrypt your data. You can't change secret after setting it",
+		Long:  "Set encryption secret. It's necessary to set it only once. It's used to encrypt and decrypt your data.",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			srv, err := container.GetSecretService(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get secret service: %w", err)
+			}
+
+			_, exists, err := srv.Get(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get secret: %w", err)
+			}
+			if exists && !prompts.Confirm(cmd.Context(), "Secret already set. Do you want to overwrite it? ANY EXISTING DATA WILL BECOME UNREADABLE!") {
+				return nil
+			}
+
 			secret, err := prompts.AskPassword(cmd.Context(), "Enter secret", "Secret")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
@@ -23,11 +36,6 @@ func newSecretCommand(container container.Container) *cobra.Command {
 				}
 
 				return fmt.Errorf("error asking secret: %w", err)
-			}
-
-			srv, err := container.GetSecretService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("cant get secret service: %w", err)
 			}
 
 			err = srv.Set(cmd.Context(), secret)

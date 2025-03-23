@@ -50,7 +50,6 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable verbose output. Useful for debugging")
 
 	secret := newSecretCommand(container)
-	secret.PreRunE = middleware.SecretNotSet(container)(secret.PreRunE)
 	rootCmd.AddCommand(secret)
 
 	notLoggedIn := middleware.NotLoggedIn(container)
