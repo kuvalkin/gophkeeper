@@ -26,7 +26,7 @@ func NewRootCommand(container container.Container) *cobra.Command {
 			}
 
 			if verbose {
-				err = log.InitLogger()
+				err = log.InitClientLogger()
 				if err != nil {
 					return fmt.Errorf("error initializing logger: %w", err)
 				}
@@ -69,15 +69,15 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	loggedIn := middleware.LoggedIn(container)
 
 	set := newSetCommand(container)
-	set.PersistentPreRunE = secretSet(loggedIn(set.PersistentPreRunE))
+	set.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, secretSet(loggedIn(set.PersistentPreRunE)))
 	rootCmd.AddCommand(set)
 
 	getCmd := newGetCommand(container)
-	getCmd.PersistentPreRunE = secretSet(loggedIn(getCmd.PersistentPreRunE))
+	getCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, secretSet(loggedIn(getCmd.PersistentPreRunE)))
 	rootCmd.AddCommand(getCmd)
 
 	deleteCmd := newDeleteCommand(container)
-	deleteCmd.PersistentPreRunE = loggedIn(deleteCmd.PersistentPreRunE)
+	deleteCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, loggedIn(deleteCmd.PersistentPreRunE))
 	rootCmd.AddCommand(deleteCmd)
 
 	return rootCmd

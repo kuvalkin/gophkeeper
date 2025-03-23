@@ -26,7 +26,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	err := log.InitLogger()
+	err := log.InitServerLogger()
 	if err != nil {
 		stdLog.Fatal(fmt.Errorf("failed to initialize logger: %w", err))
 	}
