@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
@@ -44,7 +45,7 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	llog := s.log.WithLazy("key", key, "name", name)
 
 	llog.Debug("encrypting entry content")
-	err := s.encryptBlob(content, key)
+	err := s.encryptBlob(ctx, content, key)
 	if err != nil {
 		return fmt.Errorf("error encrypting entry: %w", err)
 	}
@@ -105,7 +106,7 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	return nil
 }
 
-func (s *service) encryptBlob(content io.ReadCloser, key string) (err error) {
+func (s *service) encryptBlob(ctx context.Context, content io.ReadCloser, key string) (err error) {
 	defer func() {
 		closeErr := content.Close()
 		if err == nil && closeErr != nil {
@@ -135,8 +136,7 @@ func (s *service) encryptBlob(content io.ReadCloser, key string) (err error) {
 		}
 	}()
 
-	// todo cancel on ctx since encrypting can take a while
-	_, err = io.Copy(encrypter, content)
+	_, err = utils.CopyCtx(ctx, encrypter, content)
 	if err != nil {
 		return fmt.Errorf("error writing to encrypted blob: %w", err)
 	}
