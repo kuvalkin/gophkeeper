@@ -53,6 +53,7 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 	}
 
 	uploadChan := make(chan UploadChunk)
+	// don't wait for caller to read the result
 	resultChan := make(chan UpdateEntryResult, 1)
 
 	go func() {
@@ -73,6 +74,11 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 		err = dst.Close()
 		if err != nil {
 			llog.Errorw("cant close writer", "err", err)
+
+			err = s.blobRepo.Delete(blobKey)
+			if err != nil {
+				llog.Errorw("cant delete blob", "err", err)
+			}
 
 			resultChan <- UpdateEntryResult{Err: ErrInternal}
 			return
@@ -100,6 +106,8 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChunk, dst io.WriteCloser, llog *zap.SugaredLogger) error {
 	llog.Debug("waiting for chunks")
 
+	writtenAnything := false
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -109,6 +117,13 @@ func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChu
 		case chunk, ok := <-uploadChan:
 			if !ok {
 				llog.Debug("no more chunks")
+
+				if !writtenAnything {
+					llog.Error("upload closed with no data")
+
+					return ErrNoUpload
+				}
+
 				return nil
 			}
 
@@ -128,6 +143,7 @@ func (s *service) processUpload(ctx context.Context, uploadChan <-chan UploadChu
 			}
 
 			llog.Debug("chunk written")
+			writtenAnything = true
 		}
 	}
 }
@@ -138,8 +154,6 @@ func (s *service) closeAndDelete(c io.Closer, blobKey string, llog *zap.SugaredL
 	err := c.Close()
 	if err != nil {
 		llog.Errorw("cant close writer", "err", err)
-
-		return err
 	}
 
 	err = s.blobRepo.Delete(blobKey)

@@ -23,6 +23,7 @@ type UpdateEntryResult struct {
 
 var ErrInternal = errors.New("internal error")
 var ErrUploadChunk = errors.New("received error from upload chunk chan")
+var ErrNoUpload = errors.New("upload closed with no data")
 var ErrEntryExists = errors.New("entry already exists")
 
 type Service interface {
