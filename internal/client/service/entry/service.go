@@ -73,7 +73,12 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	if err != nil {
 		return fmt.Errorf("cant start streaming encrypted blob to server: %w", err)
 	}
-	defer stream.CloseSend()
+	defer func() {
+		err = stream.CloseSend()
+		if err != nil {
+			llog.Errorw("error closing stream", "err", err)
+		}
+	}()
 
 	llog.Debug("sending metadata")
 	err = s.sendMetadata(stream, &pb.Entry{
@@ -236,7 +241,12 @@ func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, b
 	if err != nil {
 		return "", nil, false, fmt.Errorf("cant start downloading entry: %w", err)
 	}
-	defer stream.CloseSend()
+	defer func() {
+		err = stream.CloseSend()
+		if err != nil {
+			s.log.Errorw("error closing stream", "err", err)
+		}
+	}()
 
 	resp, err := stream.Recv()
 	if err != nil {
@@ -299,6 +309,9 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.
 		}
 
 		_, err = dst.Write(response.Content)
+		if err != nil {
+			return nil, fmt.Errorf("error writing entry: %w", err)
+		}
 	}
 
 	err = dst.Close()
