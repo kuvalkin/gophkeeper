@@ -550,3 +550,52 @@ func TestService_Get(t *testing.T) {
 		require.Nil(t, r)
 	})
 }
+
+func TestService_Delete(t *testing.T) {
+	ctx, cancel := test.Context(t)
+	defer cancel()
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(nil)
+		blobRepo.EXPECT().Delete("user/key").Return(nil)
+
+		s := entry.New(metaRepo, blobRepo)
+		err := s.Delete(ctx, "user", "key")
+		require.NoError(t, err)
+	})
+
+	t.Run("metadata delete err", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(errors.New("query failed"))
+
+		s := entry.New(metaRepo, blobRepo)
+		err := s.Delete(ctx, "user", "key")
+		require.ErrorIs(t, err, entry.ErrInternal)
+	})
+
+	t.Run("blob delete err", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(nil)
+		blobRepo.EXPECT().Delete("user/key").Return(errors.New("query failed"))
+
+		s := entry.New(metaRepo, blobRepo)
+		err := s.Delete(ctx, "user", "key")
+		require.ErrorIs(t, err, entry.ErrInternal)
+	})
+}
