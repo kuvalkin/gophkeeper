@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/apparentlymart/go-userdirs/userdirs"
 	"github.com/spf13/cobra"
@@ -79,13 +80,15 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	deleteCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, loggedIn(deleteCmd.PersistentPreRunE))
 	rootCmd.AddCommand(deleteCmd)
 
+	rootCmd.AddCommand(newConfigPathCommand())
+
 	return rootCmd
 }
 
 func NewConfig() (*viper.Viper, error) {
 	conf := viper.New()
 
-	dirs := userdirs.ForApp("gophkeeper", "kuvalkin", "com.kuvalkin.gophkeeper")
+	dirs := getUserDirs()
 
 	defaultConfig(conf)
 
@@ -109,4 +112,28 @@ func NewConfig() (*viper.Viper, error) {
 func defaultConfig(conf *viper.Viper) {
 	conf.SetDefault("server.insecure", false)
 	conf.SetDefault("stream.chunk_size", 1024*1024) // 1 MB
+}
+
+func getUserDirs() userdirs.Dirs {
+	return userdirs.ForApp("gophkeeper", "kuvalkin", "com.kuvalkin.gophkeeper")
+}
+
+func newConfigPathCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:    "paths",
+		Short:  "Print config path",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Println("Config dirs:")
+
+			pwd, err := os.Getwd()
+			if err == nil {
+				cmd.Println(pwd)
+			}
+			dirs := getUserDirs()
+			for _, dir := range dirs.ConfigDirs {
+				cmd.Println(dir)
+			}
+		},
+	}
 }
