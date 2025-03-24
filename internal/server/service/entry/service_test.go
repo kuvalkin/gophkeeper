@@ -1,8 +1,10 @@
 package entry_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -428,5 +430,123 @@ func TestService_Set(t *testing.T) {
 			result := <-resultChan
 			require.ErrorIs(t, result.Err, entry.ErrInternal)
 		})
+	})
+}
+
+func TestService_Get(t *testing.T) {
+	ctx, cancel := test.Context(t)
+	defer cancel()
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+		reader := io.NopCloser(bytes.NewBuffer(nil))
+
+		md := entry.Metadata{
+			Key:   "key",
+			Name:  "name",
+			Notes: []byte("notes"),
+		}
+
+		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		blobRepo.EXPECT().Reader("user/key").Return(reader, true, nil)
+
+		s := entry.New(metaRepo, blobRepo)
+		meta, r, ok, err := s.Get(ctx, "user", "key")
+		require.NoError(t, err)
+		require.True(t, ok)
+		require.Equal(t, md, meta)
+		require.NotNil(t, r)
+	})
+
+	t.Run("metadata not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		metaRepo.EXPECT().Get(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
+
+		s := entry.New(metaRepo, blobRepo)
+		meta, r, ok, err := s.Get(ctx, "user", "key")
+		require.NoError(t, err)
+		require.False(t, ok)
+		require.Equal(t, entry.Metadata{}, meta)
+		require.Nil(t, r)
+	})
+
+	t.Run("metadata repo err", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		md := entry.Metadata{
+			Key:   "key",
+			Name:  "name",
+			Notes: []byte("notes"),
+		}
+
+		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, false, errors.New("query failed"))
+
+		s := entry.New(metaRepo, blobRepo)
+		meta, r, ok, err := s.Get(ctx, "user", "key")
+		require.ErrorIs(t, err, entry.ErrInternal)
+		require.False(t, ok)
+		require.Equal(t, entry.Metadata{}, meta)
+		require.Nil(t, r)
+	})
+
+	t.Run("blob repo err", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		md := entry.Metadata{
+			Key:   "key",
+			Name:  "name",
+			Notes: []byte("notes"),
+		}
+
+		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		blobRepo.EXPECT().Reader("user/key").Return(nil, false, errors.New("query failed"))
+
+		s := entry.New(metaRepo, blobRepo)
+		meta, r, ok, err := s.Get(ctx, "user", "key")
+		require.ErrorIs(t, err, entry.ErrInternal)
+		require.False(t, ok)
+		require.Equal(t, entry.Metadata{}, meta)
+		require.Nil(t, r)
+	})
+
+	t.Run("blob not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		metaRepo := NewMockMetadataRepository(ctrl)
+		blobRepo := NewMockRepository(ctrl)
+
+		md := entry.Metadata{
+			Key:   "key",
+			Name:  "name",
+			Notes: []byte("notes"),
+		}
+
+		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		blobRepo.EXPECT().Reader("user/key").Return(nil, false, nil)
+
+		s := entry.New(metaRepo, blobRepo)
+		meta, r, ok, err := s.Get(ctx, "user", "key")
+		require.ErrorIs(t, err, entry.ErrInternal)
+		require.False(t, ok)
+		require.Equal(t, entry.Metadata{}, meta)
+		require.Nil(t, r)
 	})
 }
