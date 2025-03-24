@@ -14,7 +14,7 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
-	syncStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/sync"
+	entryStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/entry"
 	userStorage "github.com/kuvalkin/gophkeeper/internal/server/storage/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/database"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport"
@@ -109,7 +109,7 @@ func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport
 			},
 		),
 		Entry: entry.New(
-			syncStorage.NewDatabaseMetadataRepository(db),
+			entryStorage.NewDatabaseMetadataRepository(db),
 			blob.NewFileBlobRepository(config.GetString("blob.path")),
 		),
 	}, nil
