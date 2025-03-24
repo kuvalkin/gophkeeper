@@ -136,7 +136,7 @@ func (s *service) encryptBlob(ctx context.Context, content io.ReadCloser, key st
 		}
 	}()
 
-	_, err = utils.CopyCtx(ctx, encrypter, content)
+	_, err = utils.CopyContext(ctx, encrypter, content)
 	if err != nil {
 		return fmt.Errorf("error writing to encrypted blob: %w", err)
 	}

@@ -108,7 +108,7 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error opening file: %w", err)
 			}
 
-			_, err = utils.CopyCtx(cmd.Context(), dst, content)
+			_, err = utils.CopyContext(cmd.Context(), dst, content)
 			if err != nil {
 				return fmt.Errorf("error copying file: %w", err)
 			}

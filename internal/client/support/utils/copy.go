@@ -8,7 +8,7 @@ import (
 
 const chunkSize = 32 * 1024
 
-func CopyCtx(ctx context.Context, dst io.Writer, src io.Reader) (int64, error) {
+func CopyContext(ctx context.Context, dst io.Writer, src io.Reader) (int64, error) {
 	copied := int64(0)
 
 	for {
