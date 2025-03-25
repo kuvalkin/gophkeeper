@@ -23,14 +23,14 @@ func New(
 	client pb.EntryServiceClient,
 	blobRepo blob.Repository,
 	chunkSize int64,
-) (Service, error) {
+) Service {
 	return &service{
 		crypt:     crypt,
 		client:    client,
 		blobRepo:  blobRepo,
 		chunkSize: chunkSize,
 		log:       log.Logger().Named("service.entry"),
-	}, nil
+	}
 }
 
 type service struct {
@@ -91,7 +91,7 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	}
 
 	llog.Debug("uploading encrypted content")
-	err = s.uploadBlob(reader, stream)
+	err = s.uploadBlob(ctx, reader, stream)
 	if err != nil {
 		return fmt.Errorf("error uploading encrypted blob to server: %w", err)
 	}
@@ -187,31 +187,37 @@ func (s *service) sendMetadata(stream grpc.BidiStreamingClient[pb.SetEntryReques
 }
 
 func (s *service) uploadBlob(
+	ctx context.Context,
 	blob io.Reader,
 	stream grpc.BidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse],
 ) error {
 	buffer := make([]byte, s.chunkSize)
 
 	for {
-		n, err := blob.Read(buffer)
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("error reading encrypted blob chunk: %w", err)
-		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("uploading was interrupted: %w", ctx.Err())
+		default:
+			n, err := blob.Read(buffer)
+			if n > 0 {
+				sendErr := stream.Send(&pb.SetEntryRequest{
+					Entry: &pb.Entry{
+						Content: buffer[:n],
+					},
+				})
+				if sendErr != nil {
+					return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
+				}
+			}
 
-		err = stream.Send(&pb.SetEntryRequest{
-			Entry: &pb.Entry{
-				Content: buffer[:n],
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("error reading encrypted blob chunk: %w", err)
+			}
 		}
 	}
-
-	return nil
 }
 
 func (s *service) encryptNotes(notes string) ([]byte, error) {

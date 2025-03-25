@@ -112,7 +112,7 @@ func (c *container) GetEntryService(ctx context.Context) (entry.Service, error) 
 			return
 		}
 
-		c.entryService, outErr = entry.New(
+		c.entryService = entry.New(
 			crypter,
 			entypb.NewEntryServiceClient(conn),
 			blob.NewFileBlobRepository(c.tempDir),
