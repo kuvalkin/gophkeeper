@@ -3,10 +3,7 @@ package secret
 import (
 	"context"
 	"errors"
-
-	"go.uber.org/zap"
-
-	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	"fmt"
 )
 
 type Service interface {
@@ -22,13 +19,11 @@ type Repository interface {
 func New(repo Repository) Service {
 	return &service{
 		repo: repo,
-		log:  log.Logger().Named("service.secret"),
 	}
 }
 
 type service struct {
 	repo Repository
-	log  *zap.SugaredLogger
 }
 
 var ErrInternal = errors.New("internal error")
@@ -37,9 +32,7 @@ var ErrAlreadySet = errors.New("secret already set")
 func (s *service) Set(ctx context.Context, secret string) error {
 	_, exists, err := s.repo.Get(ctx)
 	if err != nil {
-		s.log.Errorw("error getting secret", "error", err)
-
-		return ErrInternal
+		return fmt.Errorf("error getting secret: %w", err)
 	}
 
 	if exists {
@@ -48,9 +41,7 @@ func (s *service) Set(ctx context.Context, secret string) error {
 
 	err = s.repo.Set(ctx, secret)
 	if err != nil {
-		s.log.Errorw("error setting secret", "error", err)
-
-		return ErrInternal
+		return fmt.Errorf("error setting secret: %w", err)
 	}
 
 	return nil
@@ -59,9 +50,7 @@ func (s *service) Set(ctx context.Context, secret string) error {
 func (s *service) Get(ctx context.Context) (string, bool, error) {
 	secret, exists, err := s.repo.Get(ctx)
 	if err != nil {
-		s.log.Errorw("error getting secret", "error", err)
-
-		return "", false, ErrInternal
+		return "", false, fmt.Errorf("error getting secret: %w", err)
 	}
 
 	return secret, exists, nil
