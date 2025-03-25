@@ -259,7 +259,7 @@ func store(ctx context.Context, container container.Container, entryType string,
 		return fmt.Errorf("error getting token service: %w", err)
 	}
 
-	ctxWithToken, err := tokenService.SetToken(ctx)
+	ctxWithToken, err := tokenService.AddAuthorizationHeader(ctx)
 	if err != nil {
 		return fmt.Errorf("error setting token: %w", err)
 	}

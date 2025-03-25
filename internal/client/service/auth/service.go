@@ -79,7 +79,7 @@ func (s *service) Logout(ctx context.Context) error {
 	return nil
 }
 
-func (s *service) SetToken(ctx context.Context) (context.Context, error) {
+func (s *service) AddAuthorizationHeader(ctx context.Context) (context.Context, error) {
 	token, ok, err := s.repo.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting token: %w", err)

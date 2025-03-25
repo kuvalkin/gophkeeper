@@ -94,7 +94,7 @@ func deleteEntry(cmd *cobra.Command, container container.Container, name string,
 		return fmt.Errorf("error getting token service: %w", err)
 	}
 
-	ctxWithToken, err := authService.SetToken(cmd.Context())
+	ctxWithToken, err := authService.AddAuthorizationHeader(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("error setting token: %w", err)
 	}

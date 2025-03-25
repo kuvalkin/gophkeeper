@@ -217,7 +217,7 @@ func get(ctx context.Context, container container.Container, key string) (string
 		return "", nil, false, fmt.Errorf("error getting auth service: %w", err)
 	}
 
-	ctxWithToken, err := authService.SetToken(ctx)
+	ctxWithToken, err := authService.AddAuthorizationHeader(ctx)
 	if err != nil {
 		return "", nil, false, fmt.Errorf("error setting token: %w", err)
 	}
