@@ -5,6 +5,7 @@ go 1.23.6
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.5-20250307204501-0409229c3780.1
 	filippo.io/age v1.2.1
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/ShiraazMoollatjie/goluhn v0.0.0-20211017190329-0d86158c056a
 	github.com/apparentlymart/go-userdirs v0.0.0-20200915174352-b0c018a67c13
 	github.com/bufbuild/protovalidate-go v0.9.2
