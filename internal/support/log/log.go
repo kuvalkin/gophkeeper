@@ -2,9 +2,7 @@ package log
 
 import (
 	"fmt"
-	"testing"
 
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -41,8 +39,4 @@ func InitClientLogger() error {
 	logger = noSugarLogger.Sugar()
 
 	return nil
-}
-
-func InitTestLogger(t *testing.T) {
-	require.NoError(t, InitServerLogger())
 }

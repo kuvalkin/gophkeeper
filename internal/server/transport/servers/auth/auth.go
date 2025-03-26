@@ -65,11 +65,7 @@ func (s *server) login(ctx context.Context, login string, password string) (stri
 			return "", status.Error(codes.Unauthenticated, err.Error())
 		}
 
-		if errors.Is(err, user.ErrInternal) {
-			return "", status.Error(codes.Internal, "internal error")
-		}
-
-		return "", status.Error(codes.InvalidArgument, err.Error())
+		return "", status.Error(codes.Internal, "internal error")
 	}
 
 	return token, nil

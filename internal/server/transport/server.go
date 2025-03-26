@@ -11,6 +11,8 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
@@ -28,7 +30,9 @@ type Services struct {
 }
 
 func NewServer(services Services, chunkSize int64) (*grpc.Server, error) {
-	interceptorLogger := newLogger(log.Logger())
+	grpcLog := log.Logger().Named("grpc")
+
+	interceptorLogger := newLogger(grpcLog)
 	logOptions := []logging.Option{
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 	}
@@ -40,18 +44,24 @@ func NewServer(services Services, chunkSize int64) (*grpc.Server, error) {
 		return nil, fmt.Errorf("cant create validator: %w", err)
 	}
 
+	recovererFunc := func(p any) error {
+		grpcLog.Errorw("panic recovered", "panic", p)
+
+		return status.Error(codes.Internal, "internal server error")
+	}
+
 	srv := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			protovalidateInterceptor.UnaryServerInterceptor(validator),
 			authInterceptor.UnaryServerInterceptor(authFunc),
 			logging.UnaryServerInterceptor(interceptorLogger, logOptions...),
-			recovery.UnaryServerInterceptor(),
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(recovererFunc)),
 		),
 		grpc.ChainStreamInterceptor(
 			protovalidateInterceptor.StreamServerInterceptor(validator),
 			authInterceptor.StreamServerInterceptor(authFunc),
 			logging.StreamServerInterceptor(interceptorLogger, logOptions...),
-			recovery.StreamServerInterceptor(),
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(recovererFunc)),
 		),
 	)
 
