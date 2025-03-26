@@ -34,6 +34,10 @@ func Get(key string) (string, bool, error) {
 func Delete(key string) error {
 	err := keyring.Delete(service, key)
 	if err != nil {
+		if errors.Is(err, keyring.ErrNotFound) {
+			return nil
+		}
+
 		return fmt.Errorf("error deleting value from keyring: %w", err)
 	}
 
