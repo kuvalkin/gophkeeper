@@ -111,6 +111,28 @@ func (s *service) Set(ctx context.Context, key string, name string, notes string
 	return nil
 }
 
+func (s *service) encryptNotes(notes string) ([]byte, error) {
+	var buf bytes.Buffer
+	encryptWriter, err := s.crypt.Encrypt(&buf)
+	if err != nil {
+		return nil, fmt.Errorf("could not create encrypt writer: %w", err)
+	}
+
+	_, err = io.WriteString(encryptWriter, notes)
+	if err != nil {
+		_ = encryptWriter.Close()
+
+		return nil, fmt.Errorf("could not write notes to encrypt writer: %w", err)
+	}
+
+	err = encryptWriter.Close()
+	if err != nil {
+		return nil, fmt.Errorf("could not close encrypt writer: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
 func (s *service) encryptBlob(ctx context.Context, content io.ReadCloser, key string) (err error) {
 	defer func() {
 		closeErr := content.Close()
@@ -199,47 +221,25 @@ func (s *service) uploadBlob(
 			return fmt.Errorf("uploading was interrupted: %w", ctx.Err())
 		default:
 			n, err := blob.Read(buffer)
-			if n > 0 {
-				sendErr := stream.Send(&pb.SetEntryRequest{
-					Entry: &pb.Entry{
-						Content: buffer[:n],
-					},
-				})
-				if sendErr != nil {
-					return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
-				}
-			}
-
+			
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
+
 			if err != nil {
 				return fmt.Errorf("error reading encrypted blob chunk: %w", err)
 			}
+
+			err = stream.Send(&pb.SetEntryRequest{
+				Entry: &pb.Entry{
+					Content: buffer[:n],
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("error sending encrypted blob chunk to server: %w", err)
+			}
 		}
 	}
-}
-
-func (s *service) encryptNotes(notes string) ([]byte, error) {
-	var buf bytes.Buffer
-	encryptWriter, err := s.crypt.Encrypt(&buf)
-	if err != nil {
-		return nil, fmt.Errorf("could not create encrypt writer: %w", err)
-	}
-
-	_, err = io.WriteString(encryptWriter, notes)
-	if err != nil {
-		_ = encryptWriter.Close()
-
-		return nil, fmt.Errorf("could not write notes to encrypt writer: %w", err)
-	}
-
-	err = encryptWriter.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close encrypt writer: %w", err)
-	}
-
-	return buf.Bytes(), nil
 }
 
 func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
