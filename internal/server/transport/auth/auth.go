@@ -32,8 +32,12 @@ func NewAuthFunc(userService user.Service) func(ctx context.Context) (context.Co
 
 		ctx = logging.InjectFields(ctx, logging.Fields{"auth.userID", tokenInfo.UserID})
 
-		return context.WithValue(ctx, tokenInfoKey{}, *tokenInfo), nil
+		return SetTokenInfo(ctx, *tokenInfo), nil
 	}
+}
+
+func SetTokenInfo(ctx context.Context, tokenInfo user.TokenInfo) context.Context {
+	return context.WithValue(ctx, tokenInfoKey{}, tokenInfo)
 }
 
 func GetTokenInfo(ctx context.Context) (user.TokenInfo, bool) {
