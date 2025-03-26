@@ -105,7 +105,7 @@ func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 
 		llog.Errorw("cant get metadata", "err", err)
 
-		return status.Error(codes.InvalidArgument, "cant get metadata")
+		return status.Error(codes.Internal, "cant get metadata")
 	}
 	if request.Entry == nil || request.Entry.Key == "" || request.Entry.Name == "" {
 		return status.Error(codes.InvalidArgument, "metadata is empty")

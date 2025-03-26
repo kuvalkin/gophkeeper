@@ -74,11 +74,11 @@ func (mr *MockServiceMockRecorder) Get(ctx, userID, key any) *gomock.Call {
 }
 
 // Set mocks base method.
-func (m *MockService) Set(ctx context.Context, userID string, md entry.Metadata, overwrite bool) (chan<- entry.UploadChunk, <-chan entry.UpdateEntryResult, error) {
+func (m *MockService) Set(ctx context.Context, userID string, md entry.Metadata, overwrite bool) (chan<- entry.UploadChunk, <-chan entry.SetEntryResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", ctx, userID, md, overwrite)
 	ret0, _ := ret[0].(chan<- entry.UploadChunk)
-	ret1, _ := ret[1].(<-chan entry.UpdateEntryResult)
+	ret1, _ := ret[1].(<-chan entry.SetEntryResult)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }

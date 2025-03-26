@@ -25,7 +25,7 @@ type service struct {
 	blobRepo blob.Repository
 }
 
-func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan UpdateEntryResult, error) {
+func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error) {
 	llog := s.log.WithLazy("userID", userID, "key", md.Key, "method", "Set")
 
 	if !overwrite {
@@ -54,7 +54,7 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 
 	uploadChan := make(chan UploadChunk)
 	// don't wait for caller to read the result
-	resultChan := make(chan UpdateEntryResult, 1)
+	resultChan := make(chan SetEntryResult, 1)
 
 	go func() {
 		defer close(resultChan)
@@ -63,11 +63,11 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 		if err != nil {
 			cderr := s.closeAndDelete(dst, blobKey, llog)
 			if cderr != nil {
-				resultChan <- UpdateEntryResult{Err: ErrInternal}
+				resultChan <- SetEntryResult{Err: ErrInternal}
 				return
 			}
 
-			resultChan <- UpdateEntryResult{Err: err}
+			resultChan <- SetEntryResult{Err: err}
 			return
 		}
 
@@ -80,7 +80,7 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 				llog.Errorw("cant delete blob", "err", err)
 			}
 
-			resultChan <- UpdateEntryResult{Err: ErrInternal}
+			resultChan <- SetEntryResult{Err: ErrInternal}
 			return
 		}
 
@@ -93,11 +93,11 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 				llog.Errorw("cant delete blob", "err", err)
 			}
 
-			resultChan <- UpdateEntryResult{Err: ErrInternal}
+			resultChan <- SetEntryResult{Err: ErrInternal}
 			return
 		}
 
-		resultChan <- UpdateEntryResult{}
+		resultChan <- SetEntryResult{}
 	}()
 
 	return uploadChan, resultChan, nil

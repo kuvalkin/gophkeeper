@@ -17,7 +17,7 @@ type UploadChunk struct {
 	Err     error
 }
 
-type UpdateEntryResult struct {
+type SetEntryResult struct {
 	Err error
 }
 
@@ -27,7 +27,7 @@ var ErrNoUpload = errors.New("upload closed with no data")
 var ErrEntryExists = errors.New("entry already exists")
 
 type Service interface {
-	Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan UpdateEntryResult, error)
+	Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error)
 	Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error)
 	Delete(ctx context.Context, userID string, key string) error
 }
