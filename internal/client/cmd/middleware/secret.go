@@ -34,29 +34,3 @@ func SecretSet(container container.Container) MW {
 		}
 	}
 }
-
-func SecretNotSet(container container.Container) MW {
-	return func(f CobraRunE) CobraRunE {
-		return func(cmd *cobra.Command, args []string) error {
-			secret, err := container.GetSecretService(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("cant get secret service: %w", err)
-			}
-
-			_, exists, err := secret.Get(cmd.Context())
-			if err != nil {
-				return fmt.Errorf("cant check if secret is set: %w", err)
-			}
-
-			if exists {
-				return errors.New("secret already set")
-			}
-
-			if f == nil {
-				return nil
-			}
-
-			return f(cmd, args)
-		}
-	}
-}
