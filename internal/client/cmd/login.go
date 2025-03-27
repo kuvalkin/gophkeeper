@@ -16,7 +16,12 @@ func newLoginCommand(container container.Container) *cobra.Command {
 		Short: "Login on server",
 		Long:  "Login on a remote server. You need to have an account. If you don't have one, you can register",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			login, err := prompts.AskString(cmd.Context(), "Enter login", "login")
+			prompter, err := container.GetPrompter(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get prompter: %w", err)
+			}
+
+			login, err := prompter.AskString(cmd.Context(), "Enter login", "login")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -25,7 +30,7 @@ func newLoginCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking login: %w", err)
 			}
 
-			password, err := prompts.AskPassword(cmd.Context(), "Enter password", "password")
+			password, err := prompter.AskPassword(cmd.Context(), "Enter password", "password")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil

@@ -9,7 +9,21 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/components"
 )
 
-func AskString(ctx context.Context, prompt string, placeholder string) (string, error) {
+type Prompter interface {
+	AskString(ctx context.Context, prompt string, placeholder string) (string, error)
+	AskPassword(ctx context.Context, prompt string, placeholder string) (string, error)
+	AskInt(ctx context.Context, prompt string, placeholder string) (int, error)
+	AskText(ctx context.Context, prompt string, placeholder string) (string, error)
+	Confirm(ctx context.Context, prompt string) bool
+}
+
+type TerminalPrompter struct{}
+
+func NewTerminalPrompter() *TerminalPrompter {
+	return &TerminalPrompter{}
+}
+
+func (p *TerminalPrompter) AskString(ctx context.Context, prompt string, placeholder string) (string, error) {
 	finalModel, err := run(ctx, components.NewStringInputModel(prompt, placeholder, false), false)
 	if err != nil {
 		return "", fmt.Errorf("error running prompt: %w", err)
@@ -18,7 +32,7 @@ func AskString(ctx context.Context, prompt string, placeholder string) (string, 
 	return finalModel.Value(), nil
 }
 
-func AskPassword(ctx context.Context, prompt string, placeholder string) (string, error) {
+func (p *TerminalPrompter) AskPassword(ctx context.Context, prompt string, placeholder string) (string, error) {
 	finalModel, err := run(ctx, components.NewStringInputModel(prompt, placeholder, true), false)
 	if err != nil {
 		return "", fmt.Errorf("error running prompt: %w", err)
@@ -27,14 +41,13 @@ func AskPassword(ctx context.Context, prompt string, placeholder string) (string
 	return finalModel.Value(), nil
 }
 
-func AskInt(ctx context.Context, prompt string, placeholder string) (int, error) {
-	finalModel, err := run(ctx, components.NewStringInputModel(prompt, placeholder, true), false)
+func (p *TerminalPrompter) AskInt(ctx context.Context, prompt string, placeholder string) (int, error) {
+	val, err := p.AskString(ctx, prompt, placeholder)
 	if err != nil {
-		return 0, fmt.Errorf("error running prompt: %w", err)
+		return 0, err
 	}
 
-	value := finalModel.Value()
-	valueInt, err := strconv.Atoi(value)
+	valueInt, err := strconv.Atoi(val)
 	if err != nil {
 		return 0, fmt.Errorf("error converting value to int: %w", err)
 	}
@@ -42,7 +55,7 @@ func AskInt(ctx context.Context, prompt string, placeholder string) (int, error)
 	return valueInt, nil
 }
 
-func AskText(ctx context.Context, prompt string, placeholder string) (string, error) {
+func (p *TerminalPrompter) AskText(ctx context.Context, prompt string, placeholder string) (string, error) {
 	finalModel, err := run(ctx, components.NewTextareaInputModel(prompt, placeholder), true)
 	if err != nil {
 		return "", fmt.Errorf("error running prompt: %w", err)
@@ -51,8 +64,8 @@ func AskText(ctx context.Context, prompt string, placeholder string) (string, er
 	return finalModel.Value(), nil
 }
 
-func Confirm(ctx context.Context, prompt string) bool {
-	confirm, err := AskString(ctx, fmt.Sprintf("%s [Y/n]", prompt), "y")
+func (p *TerminalPrompter) Confirm(ctx context.Context, prompt string) bool {
+	confirm, err := p.AskString(ctx, fmt.Sprintf("%s [Y/n]", prompt), "y")
 	if err != nil {
 		return false
 	}

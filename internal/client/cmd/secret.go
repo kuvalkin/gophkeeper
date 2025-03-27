@@ -21,15 +21,20 @@ func newSecretCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("cant get secret service: %w", err)
 			}
 
+			promter, err := container.GetPrompter(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get prompter: %w", err)
+			}
+
 			_, exists, err := srv.Get(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("cant get secret: %w", err)
 			}
-			if exists && !prompts.Confirm(cmd.Context(), "Secret already set. Do you want to overwrite it? ANY EXISTING DATA WILL BECOME UNREADABLE!") {
+			if exists && !promter.Confirm(cmd.Context(), "Secret already set. Do you want to overwrite it? ANY EXISTING DATA WILL BECOME UNREADABLE!") {
 				return nil
 			}
 
-			secret, err := prompts.AskPassword(cmd.Context(), "Enter secret", "Secret")
+			secret, err := promter.AskPassword(cmd.Context(), "Enter secret", "Secret")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil

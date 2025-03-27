@@ -48,7 +48,12 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 
 			entry := &entries.LoginPasswordPair{}
 
-			entry.Login, err = prompts.AskString(cmd.Context(), "Enter login you want to save", "Login")
+			prompter, err := container.GetPrompter(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get prompter: %w", err)
+			}
+
+			entry.Login, err = prompter.AskString(cmd.Context(), "Enter login you want to save", "Login")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -57,7 +62,7 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking login: %w", err)
 			}
 
-			entry.Password, err = prompts.AskPassword(cmd.Context(), "Enter password you want to save", "Password")
+			entry.Password, err = prompter.AskPassword(cmd.Context(), "Enter password you want to save", "Password")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -138,7 +143,12 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 
 			entry := &entries.BankCard{}
 
-			entry.Number, err = prompts.AskString(cmd.Context(), "Enter bank card number", "xxxxxxxxxxxxxxxx")
+			promter, err := container.GetPrompter(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get prompter: %w", err)
+			}
+
+			entry.Number, err = promter.AskString(cmd.Context(), "Enter bank card number", "xxxxxxxxxxxxxxxx")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -147,7 +157,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking card number: %w", err)
 			}
 
-			entry.HolderName, err = prompts.AskString(cmd.Context(), "Enter card holder name", "John Doe")
+			entry.HolderName, err = promter.AskString(cmd.Context(), "Enter card holder name", "John Doe")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -156,7 +166,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking card holder name: %w", err)
 			}
 
-			entry.ExpirationDate.Year, err = prompts.AskInt(cmd.Context(), "Enter card expiration year", "2030")
+			entry.ExpirationDate.Year, err = promter.AskInt(cmd.Context(), "Enter card expiration year", "2030")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -165,7 +175,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking expiration year: %w", err)
 			}
 
-			entry.ExpirationDate.Month, err = prompts.AskInt(cmd.Context(), "Enter card expiration month", "05")
+			entry.ExpirationDate.Month, err = promter.AskInt(cmd.Context(), "Enter card expiration month", "05")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -174,7 +184,7 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking expiration month: %w", err)
 			}
 
-			entry.CVV, err = prompts.AskInt(cmd.Context(), "Enter card CVV", "123")
+			entry.CVV, err = promter.AskInt(cmd.Context(), "Enter card CVV", "123")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -212,7 +222,12 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
 
-			text, err := prompts.AskText(cmd.Context(), "Enter text you want to save", "")
+			prompter, err := container.GetPrompter(cmd.Context())
+			if err != nil {
+				return fmt.Errorf("cant get prompter: %w", err)
+			}
+
+			text, err := prompter.AskText(cmd.Context(), "Enter text you want to save", "")
 			if err != nil {
 				if errors.Is(err, prompts.ErrCanceled) {
 					return nil
@@ -264,9 +279,13 @@ func store(ctx context.Context, container container.Container, entryType string,
 		return fmt.Errorf("error setting token: %w", err)
 	}
 
-	// todo provide feedback as service runs
 	err = service.Set(ctxWithToken, utils.GetEntryKey(entryType, name), name, notes, content, func() bool {
-		return prompts.Confirm(ctx, fmt.Sprintf("Entry %s with this name already exists. Do you want to overwrite it?", entryType))
+		prompter, err := container.GetPrompter(ctx)
+		if err != nil {
+			return false
+		}
+
+		return prompter.Confirm(ctx, fmt.Sprintf("Entry %s with this name already exists. Do you want to overwrite it?", entryType))
 	})
 	if err != nil {
 		return fmt.Errorf("error setting entry: %w", err)

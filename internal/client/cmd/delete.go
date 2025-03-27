@@ -7,7 +7,6 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
-	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 )
 
 func newDeleteCommand(container container.Container) *cobra.Command {
@@ -78,7 +77,12 @@ func newDeleteTextCommand(container container.Container) *cobra.Command {
 }
 
 func deleteEntry(cmd *cobra.Command, container container.Container, name string, entryType string) error {
-	if !prompts.Confirm(cmd.Context(), fmt.Sprintf("Are you sure you want to delete %s?", entryType)) {
+	prompter, err := container.GetPrompter(cmd.Context())
+	if err != nil {
+		return fmt.Errorf("cant get prompter: %w", err)
+	}
+
+	if !prompter.Confirm(cmd.Context(), fmt.Sprintf("Are you sure you want to delete %s?", entryType)) {
 		return nil
 	}
 

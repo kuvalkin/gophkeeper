@@ -18,6 +18,7 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/service/secret"
 	keyringStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/keyring"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
+	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
@@ -28,6 +29,7 @@ type Container interface {
 	GetSecretService(ctx context.Context) (secret.Service, error)
 	GetAuthService(ctx context.Context) (auth.Service, error)
 	GetEntryService(ctx context.Context) (entry.Service, error)
+	GetPrompter(ctx context.Context) (prompts.Prompter, error)
 }
 
 func New(conf *viper.Viper) (Container, error) {
@@ -56,6 +58,9 @@ type container struct {
 	initCrypter sync.Once
 	crypter     *crypt.AgeCrypter
 
+	initPrompter sync.Once
+	prompter prompts.Prompter
+
 	tempDir string
 }
 
@@ -78,6 +83,14 @@ func (c *container) Close() error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func (c *container) GetPrompter(ctx context.Context) (prompts.Prompter, error) {
+	c.initPrompter.Do(func() {
+		c.prompter = prompts.NewTerminalPrompter()
+	})
+	
+	return c.prompter, nil
 }
 
 func (c *container) GetSecretService(_ context.Context) (secret.Service, error) {
