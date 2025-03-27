@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
+	"github.com/kuvalkin/gophkeeper/internal/support/test"
 )
 
 func TestSecret(t *testing.T) {

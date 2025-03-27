@@ -24,3 +24,8 @@ generate-serialize:
 		--go-grpc_out=. --go-grpc_opt=paths=import \
 		api/proto/serialize/v1/*.proto
 
+lint:
+	golangci-lint run ./...
+
+fmt:
+	golangci-lint fmt ./... -v
