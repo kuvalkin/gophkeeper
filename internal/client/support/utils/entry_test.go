@@ -3,8 +3,9 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 )
 
 func Test_GetEntryKey(t *testing.T) {

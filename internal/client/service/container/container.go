@@ -59,7 +59,7 @@ type container struct {
 	crypter     *crypt.AgeCrypter
 
 	initPrompter sync.Once
-	prompter prompts.Prompter
+	prompter     prompts.Prompter
 
 	tempDir string
 }
@@ -89,7 +89,7 @@ func (c *container) GetPrompter(ctx context.Context) (prompts.Prompter, error) {
 	c.initPrompter.Do(func() {
 		c.prompter = prompts.NewTerminalPrompter()
 	})
-	
+
 	return c.prompter, nil
 }
 

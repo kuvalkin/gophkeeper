@@ -4,13 +4,14 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
-	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
+	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
+	"github.com/kuvalkin/gophkeeper/internal/support/test"
 )
 
 func TestService_Register(t *testing.T) {

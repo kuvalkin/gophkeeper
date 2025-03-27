@@ -5,13 +5,14 @@ import (
 	io "io"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
+	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
+	"github.com/kuvalkin/gophkeeper/internal/support/test"
 )
 
 const chunkSize = 1024
@@ -54,9 +55,9 @@ func TestService_Set(t *testing.T) {
 		client.EXPECT().SetEntry(ctx).Return(stream, nil)
 		stream.EXPECT().Send(&pb.SetEntryRequest{
 			Entry: &pb.Entry{
-				Key: "key",
-				Name: "name",
-				Notes: nil, // encrypter will return nil bytes
+				Key:     "key",
+				Name:    "name",
+				Notes:   nil, // encrypter will return nil bytes
 				Content: nil,
 			},
 		}).Return(nil)
@@ -73,7 +74,6 @@ func TestService_Set(t *testing.T) {
 		}).Return(nil)
 		stream.EXPECT().CloseSend().Return(nil).MinTimes(1)
 		stream.EXPECT().Recv().Return(nil, io.EOF)
-
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
 		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
@@ -96,7 +96,7 @@ func TestService_Set(t *testing.T) {
 		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
-	
+
 	t.Run("error creating encrypt writer", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -193,9 +193,9 @@ func TestService_Set(t *testing.T) {
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
-					Key: "key",
-					Name: "name",
-					Notes: nil, // encrypter will return nil bytes
+					Key:     "key",
+					Name:    "name",
+					Notes:   nil, // encrypter will return nil bytes
 					Content: nil,
 				},
 			}).Return(nil)
@@ -238,9 +238,9 @@ func TestService_Set(t *testing.T) {
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
-					Key: "key",
-					Name: "name",
-					Notes: nil, // encrypter will return nil bytes
+					Key:     "key",
+					Name:    "name",
+					Notes:   nil, // encrypter will return nil bytes
 					Content: nil,
 				},
 			}).Return(nil)
@@ -291,9 +291,9 @@ func TestService_Set(t *testing.T) {
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
-					Key: "key",
-					Name: "name",
-					Notes: nil, // encrypter will return nil bytes
+					Key:     "key",
+					Name:    "name",
+					Notes:   nil, // encrypter will return nil bytes
 					Content: nil,
 				},
 			}).Return(nil)
@@ -317,7 +317,6 @@ func TestService_Set(t *testing.T) {
 			}).Return(nil)
 			stream.EXPECT().CloseSend().Return(nil).MinTimes(1)
 			stream.EXPECT().Recv().Return(nil, io.EOF)
-
 
 			service := entry.New(crypt, client, blobRepo, chunkSize)
 			err := service.Set(ctx, "key", "name", "notes", rawContent, func() bool {
@@ -360,9 +359,9 @@ func TestService_Set(t *testing.T) {
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
-					Key: "key",
-					Name: "name",
-					Notes: nil, // encrypter will return nil bytes
+					Key:     "key",
+					Name:    "name",
+					Notes:   nil, // encrypter will return nil bytes
 					Content: nil,
 				},
 			}).Return(nil)
@@ -414,9 +413,9 @@ func TestService_Set(t *testing.T) {
 		client.EXPECT().SetEntry(ctx).Return(stream, nil)
 		stream.EXPECT().Send(&pb.SetEntryRequest{
 			Entry: &pb.Entry{
-				Key: "key",
-				Name: "name",
-				Notes: nil,
+				Key:     "key",
+				Name:    "name",
+				Notes:   nil,
 				Content: nil,
 			},
 		}).Return(nil)
@@ -486,9 +485,9 @@ func TestService_Get(t *testing.T) {
 
 		// receive metadata
 		stream.EXPECT().Recv().Return(&pb.Entry{
-			Key: "key",
-			Name: "name",
-			Notes: []byte("encrypted notes"),
+			Key:     "key",
+			Name:    "name",
+			Notes:   []byte("encrypted notes"),
 			Content: nil,
 		}, nil)
 

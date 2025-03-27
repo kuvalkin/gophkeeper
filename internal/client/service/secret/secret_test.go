@@ -4,10 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/secret"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/secret"
+	"github.com/kuvalkin/gophkeeper/internal/support/test"
 )
 
 func TestService_Set(t *testing.T) {

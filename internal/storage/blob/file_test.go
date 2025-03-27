@@ -4,8 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 )
 
 func TestFile_Writer(t *testing.T) {

@@ -5,16 +5,17 @@ import (
 	"io"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	entryService "github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/test"
-	"github.com/stretchr/testify/require"
-	gomock "go.uber.org/mock/gomock"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func TestServer_GetEntry(t *testing.T) {
@@ -283,8 +284,8 @@ func TestServer_SetEntry(t *testing.T) {
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, false).Return(uploadChan, resultChan, nil)
 
@@ -383,8 +384,8 @@ func TestServer_SetEntry(t *testing.T) {
 
 		// start upload
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, false).Return(nil, nil, entryService.ErrEntryExists)
 
@@ -419,8 +420,8 @@ func TestServer_SetEntry(t *testing.T) {
 
 		// start upload
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, false).Return(nil, nil, entryService.ErrEntryExists)
 
@@ -433,8 +434,8 @@ func TestServer_SetEntry(t *testing.T) {
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, true).Return(uploadChan, resultChan, nil)
 
@@ -481,8 +482,8 @@ func TestServer_SetEntry(t *testing.T) {
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, false).Return(uploadChan, resultChan, nil)
 
@@ -535,8 +536,8 @@ func TestServer_SetEntry(t *testing.T) {
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
 		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
-			Key: "key",
-			Name: "name",
+			Key:   "key",
+			Name:  "name",
 			Notes: []byte("encrypted notes"),
 		}, false).Return(uploadChan, resultChan, nil)
 
@@ -549,7 +550,6 @@ func TestServer_SetEntry(t *testing.T) {
 		go func() {
 			uploaded := <-uploadChan
 			require.Error(t, uploaded.Err)
-		
 
 			resultChan <- entryService.SetEntryResult{
 				Err: entryService.ErrUploadChunk,

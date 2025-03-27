@@ -8,11 +8,12 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	userService "github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/storage/user"
 	"github.com/kuvalkin/gophkeeper/internal/support/test"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDatabaseRepository_Add(t *testing.T) {

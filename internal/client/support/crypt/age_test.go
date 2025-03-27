@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
 )
 
 func Test_NewAgeCrypter(t *testing.T) {
@@ -44,4 +45,3 @@ func Test_AgeCrypter_Decrypt(t *testing.T) {
 		require.Nil(t, r)
 	})
 }
-

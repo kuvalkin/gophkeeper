@@ -112,7 +112,7 @@ func TestDatabaseMetadataRepository_Set(t *testing.T) {
 		})
 		require.NoError(t, err)
 	})
-	
+
 	t.Run("query error", func(t *testing.T) {
 		db, mock, err := sqlmock.New()
 		require.NoError(t, err)
@@ -155,7 +155,7 @@ func TestDatabaseMetadataRepository_Delete(t *testing.T) {
 		err = repo.Delete(ctx, "user", "key")
 		require.NoError(t, err)
 	})
-	
+
 	t.Run("query error", func(t *testing.T) {
 		db, mock, err := sqlmock.New()
 		require.NoError(t, err)

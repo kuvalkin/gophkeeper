@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/support/test"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_CopyContext(t *testing.T) {

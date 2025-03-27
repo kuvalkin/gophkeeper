@@ -221,7 +221,7 @@ func (s *service) uploadBlob(
 			return fmt.Errorf("uploading was interrupted: %w", ctx.Err())
 		default:
 			n, err := blob.Read(buffer)
-			
+
 			if errors.Is(err, io.EOF) {
 				return nil
 			}

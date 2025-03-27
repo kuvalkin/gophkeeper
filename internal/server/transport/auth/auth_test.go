@@ -3,14 +3,15 @@ package auth_test
 import (
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
-	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
+	"github.com/kuvalkin/gophkeeper/internal/support/test"
 )
 
 func Test_TokenInfo(t *testing.T) {
@@ -23,7 +24,7 @@ func Test_TokenInfo(t *testing.T) {
 		require.Empty(t, info)
 
 	})
-	
+
 	tokenInfo := user.TokenInfo{
 		UserID: "user",
 	}
@@ -41,7 +42,7 @@ func Test_AuthFunc(t *testing.T) {
 	ctx, cancel := test.Context(t)
 	defer cancel()
 
-	t.Run("no token", func (t *testing.T) {
+	t.Run("no token", func(t *testing.T) {
 		authFunc := auth.NewAuthFunc(nil)
 		_, err := authFunc(ctx)
 		require.Error(t, err)

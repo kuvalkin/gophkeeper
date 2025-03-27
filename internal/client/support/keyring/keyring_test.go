@@ -4,9 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 	"github.com/stretchr/testify/require"
 	goKeyring "github.com/zalando/go-keyring"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/support/keyring"
 )
 
 func TestKeyring_Set(t *testing.T) {

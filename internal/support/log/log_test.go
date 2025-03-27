@@ -3,8 +3,9 @@ package log_test
 import (
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/support/log"
 	"github.com/stretchr/testify/require"
+
+	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
 func TestLogger(t *testing.T) {
