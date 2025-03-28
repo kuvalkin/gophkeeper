@@ -14,6 +14,9 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+//go:generate mockgen -destination=./repository_mock_test.go -package=auth_test github.com/kuvalkin/gophkeeper/internal/client/service/auth Repository
+//go:generate mockgen -destination=./client_mock_test.go -package=auth_test github.com/kuvalkin/gophkeeper/internal/proto/auth/v1 AuthServiceClient
+
 func TestService_Register(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
 	defer cancel()
@@ -28,7 +31,7 @@ func TestService_Register(t *testing.T) {
 		service := auth.New(client, repo)
 
 		client.EXPECT().Register(ctx, &pbAuth.RegisterRequest{Login: "login", Password: "password"}).Return(&pbAuth.RegisterResponse{Token: "token"}, nil)
-		repo.EXPECT().Set(ctx, "token").Return(nil)
+		repo.EXPECT().SetToken(ctx, "token").Return(nil)
 
 		err := service.Register(ctx, "login", "password")
 		require.NoError(t, err)
@@ -74,7 +77,7 @@ func TestService_Register(t *testing.T) {
 		service := auth.New(client, repo)
 
 		client.EXPECT().Register(ctx, &pbAuth.RegisterRequest{Login: "login", Password: "password"}).Return(&pbAuth.RegisterResponse{Token: "token"}, nil)
-		repo.EXPECT().Set(ctx, "token").Return(errors.New("error"))
+		repo.EXPECT().SetToken(ctx, "token").Return(errors.New("error"))
 
 		err := service.Register(ctx, "login", "password")
 		require.Error(t, err)
@@ -95,7 +98,7 @@ func TestService_Login(t *testing.T) {
 		service := auth.New(client, repo)
 
 		client.EXPECT().Login(ctx, &pbAuth.LoginRequest{Login: "login", Password: "password"}).Return(&pbAuth.LoginResponse{Token: "token"}, nil)
-		repo.EXPECT().Set(ctx, "token").Return(nil)
+		repo.EXPECT().SetToken(ctx, "token").Return(nil)
 
 		err := service.Login(ctx, "login", "password")
 		require.NoError(t, err)
@@ -141,7 +144,7 @@ func TestService_Login(t *testing.T) {
 		service := auth.New(client, repo)
 
 		client.EXPECT().Login(ctx, &pbAuth.LoginRequest{Login: "login", Password: "password"}).Return(&pbAuth.LoginResponse{Token: "token"}, nil)
-		repo.EXPECT().Set(ctx, "token").Return(errors.New("error"))
+		repo.EXPECT().SetToken(ctx, "token").Return(errors.New("error"))
 
 		err := service.Login(ctx, "login", "password")
 		require.Error(t, err)
@@ -161,7 +164,7 @@ func TestService_IsLoggedIn(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Get(ctx).Return("token", true, nil)
+		repo.EXPECT().GetToken(ctx).Return("token", true, nil)
 
 		ok, err := service.IsLoggedIn(ctx)
 		require.NoError(t, err)
@@ -177,7 +180,7 @@ func TestService_IsLoggedIn(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, errors.New("error"))
+		repo.EXPECT().GetToken(ctx).Return("", false, errors.New("error"))
 
 		ok, err := service.IsLoggedIn(ctx)
 		require.Error(t, err)
@@ -198,7 +201,7 @@ func TestService_Logout(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Delete(ctx).Return(nil)
+		repo.EXPECT().DeleteToken(ctx).Return(nil)
 
 		err := service.Logout(ctx)
 		require.NoError(t, err)
@@ -213,7 +216,7 @@ func TestService_Logout(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Delete(ctx).Return(errors.New("error"))
+		repo.EXPECT().DeleteToken(ctx).Return(errors.New("error"))
 
 		err := service.Logout(ctx)
 		require.Error(t, err)
@@ -233,7 +236,7 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Get(ctx).Return("token", true, nil)
+		repo.EXPECT().GetToken(ctx).Return("token", true, nil)
 
 		ctxWithToken, err := service.AddAuthorizationHeader(ctx)
 		require.NoError(t, err)
@@ -249,7 +252,7 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, nil)
+		repo.EXPECT().GetToken(ctx).Return("", false, nil)
 
 		ctxWithToken, err := service.AddAuthorizationHeader(ctx)
 		require.Error(t, err)
@@ -265,7 +268,7 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 
 		service := auth.New(client, repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, errors.New("error"))
+		repo.EXPECT().GetToken(ctx).Return("", false, errors.New("error"))
 
 		ctxWithToken, err := service.AddAuthorizationHeader(ctx)
 		require.Error(t, err)

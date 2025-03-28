@@ -17,7 +17,7 @@ type Service interface {
 }
 
 type Repository interface {
-	Get(ctx context.Context) (string, bool, error)
-	Set(ctx context.Context, token string) error
-	Delete(ctx context.Context) error
+	GetToken(ctx context.Context) (string, bool, error)
+	SetToken(ctx context.Context, token string) error
+	DeleteToken(ctx context.Context) error
 }

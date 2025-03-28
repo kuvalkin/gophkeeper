@@ -17,7 +17,7 @@ func SecretSet(container container.Container) MW {
 				return fmt.Errorf("cant get secret service: %w", err)
 			}
 
-			_, exists, err := secret.Get(cmd.Context())
+			_, exists, err := secret.GetSecret(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("cant check if secret is set: %w", err)
 			}

@@ -96,7 +96,7 @@ func (c *container) GetPrompter(ctx context.Context) (prompts.Prompter, error) {
 func (c *container) GetSecretService(_ context.Context) (secret.Service, error) {
 	c.initSecretService.Do(func() {
 		c.secretService = secret.New(
-			keyringStorage.NewRepository("secret"),
+			keyringStorage.NewRepository(),
 		)
 	})
 
@@ -148,7 +148,7 @@ func (c *container) GetAuthService(_ context.Context) (auth.Service, error) {
 
 		c.authService = auth.New(
 			authpb.NewAuthServiceClient(conn),
-			keyringStorage.NewRepository("token"),
+			keyringStorage.NewRepository(),
 		)
 	})
 
@@ -194,7 +194,7 @@ func (c *container) getCrypter(ctx context.Context) (*crypt.AgeCrypter, error) {
 			return
 		}
 
-		s, ok, err := ss.Get(ctx)
+		s, ok, err := ss.GetSecret(ctx)
 		if err != nil {
 			outErr = fmt.Errorf("cant get secret from keyring: %w", err)
 			return

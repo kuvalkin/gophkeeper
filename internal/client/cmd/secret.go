@@ -26,7 +26,7 @@ func newSecretCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("cant get prompter: %w", err)
 			}
 
-			_, exists, err := srv.Get(cmd.Context())
+			_, exists, err := srv.GetSecret(cmd.Context())
 			if err != nil {
 				return fmt.Errorf("cant get secret: %w", err)
 			}
@@ -43,7 +43,7 @@ func newSecretCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error asking secret: %w", err)
 			}
 
-			err = srv.Set(cmd.Context(), secret)
+			err = srv.SetSecret(cmd.Context(), secret)
 			if err != nil {
 				return fmt.Errorf("cant set secret: %w", err)
 			}

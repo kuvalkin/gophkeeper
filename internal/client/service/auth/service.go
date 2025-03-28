@@ -34,7 +34,7 @@ func (s *service) Register(ctx context.Context, login string, password string) e
 		return fmt.Errorf("error registering user: %w", err)
 	}
 
-	err = s.repo.Set(ctx, response.Token)
+	err = s.repo.SetToken(ctx, response.Token)
 	if err != nil {
 		return fmt.Errorf("error saving token: %w", err)
 	}
@@ -53,7 +53,7 @@ func (s *service) Login(ctx context.Context, login string, password string) erro
 		return fmt.Errorf("error logging in: %w", err)
 	}
 
-	err = s.repo.Set(ctx, response.Token)
+	err = s.repo.SetToken(ctx, response.Token)
 	if err != nil {
 		return fmt.Errorf("error saving token: %w", err)
 	}
@@ -62,7 +62,7 @@ func (s *service) Login(ctx context.Context, login string, password string) erro
 }
 
 func (s *service) IsLoggedIn(ctx context.Context) (bool, error) {
-	_, ok, err := s.repo.Get(ctx)
+	_, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
 		return false, fmt.Errorf("error getting token: %w", err)
 	}
@@ -71,7 +71,7 @@ func (s *service) IsLoggedIn(ctx context.Context) (bool, error) {
 }
 
 func (s *service) Logout(ctx context.Context) error {
-	err := s.repo.Delete(ctx)
+	err := s.repo.DeleteToken(ctx)
 	if err != nil {
 		return fmt.Errorf("error deleting token: %w", err)
 	}
@@ -80,7 +80,7 @@ func (s *service) Logout(ctx context.Context) error {
 }
 
 func (s *service) AddAuthorizationHeader(ctx context.Context) (context.Context, error) {
-	token, ok, err := s.repo.Get(ctx)
+	token, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting token: %w", err)
 	}

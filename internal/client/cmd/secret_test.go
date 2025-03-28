@@ -14,6 +14,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+//go:generate mockgen -destination=./secret_service_mock_test.go -package=cmd -mock_names Service=MockSecretService github.com/kuvalkin/gophkeeper/internal/client/service/secret Service
+
 func TestSecret(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
 	defer cancel()
@@ -38,9 +40,9 @@ func TestSecret(t *testing.T) {
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-		service.EXPECT().Get(ctx).Return("", false, nil)
+		service.EXPECT().GetSecret(ctx).Return("", false, nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("secret", nil)
-		service.EXPECT().Set(ctx, "secret").Return(nil)
+		service.EXPECT().SetSecret(ctx, "secret").Return(nil)
 
 		cmd := newTestSecretCommand(container)
 		err := cmd.Execute()
@@ -59,7 +61,7 @@ func TestSecret(t *testing.T) {
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 			container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-			service.EXPECT().Get(ctx).Return("secret", true, nil)
+			service.EXPECT().GetSecret(ctx).Return("secret", true, nil)
 			prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(false)
 
 			cmd := newTestSecretCommand(container)
@@ -78,10 +80,10 @@ func TestSecret(t *testing.T) {
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 			container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-			service.EXPECT().Get(ctx).Return("secret", true, nil)
+			service.EXPECT().GetSecret(ctx).Return("secret", true, nil)
 			prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 			prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("new_secret", nil)
-			service.EXPECT().Set(ctx, "new_secret").Return(nil)
+			service.EXPECT().SetSecret(ctx, "new_secret").Return(nil)
 
 			cmd := newTestSecretCommand(container)
 			err := cmd.Execute()
@@ -100,7 +102,7 @@ func TestSecret(t *testing.T) {
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-		service.EXPECT().Get(ctx).Return("", false, nil)
+		service.EXPECT().GetSecret(ctx).Return("", false, nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("", prompts.ErrCanceled)
 
 		cmd := newTestSecretCommand(container)
@@ -147,7 +149,7 @@ func TestSecret(t *testing.T) {
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-		service.EXPECT().Get(ctx).Return("", false, errors.New("err"))
+		service.EXPECT().GetSecret(ctx).Return("", false, errors.New("err"))
 
 		cmd := newTestSecretCommand(container)
 		err := cmd.Execute()
@@ -165,9 +167,9 @@ func TestSecret(t *testing.T) {
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-		service.EXPECT().Get(ctx).Return("", false, nil)
+		service.EXPECT().GetSecret(ctx).Return("", false, nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("secret", nil)
-		service.EXPECT().Set(ctx, "secret").Return(errors.New("err"))
+		service.EXPECT().SetSecret(ctx, "secret").Return(errors.New("err"))
 
 		cmd := newTestSecretCommand(container)
 		err := cmd.Execute()
@@ -185,7 +187,7 @@ func TestSecret(t *testing.T) {
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
 
-		service.EXPECT().Get(ctx).Return("", false, nil)
+		service.EXPECT().GetSecret(ctx).Return("", false, nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("", errors.New("err"))
 
 		cmd := newTestSecretCommand(container)

@@ -11,6 +11,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+//go:generate mockgen -destination=./repository_mock_test.go -package=secret_test github.com/kuvalkin/gophkeeper/internal/client/service/secret Repository
+
 func TestService_Set(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
 	defer cancel()
@@ -23,10 +25,10 @@ func TestService_Set(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, nil)
-		repo.EXPECT().Set(ctx, "secret").Return(nil)
+		repo.EXPECT().GetSecret(ctx).Return("", false, nil)
+		repo.EXPECT().SetSecret(ctx, "secret").Return(nil)
 
-		err := service.Set(ctx, "secret")
+		err := service.SetSecret(ctx, "secret")
 		require.NoError(t, err)
 	})
 
@@ -38,9 +40,9 @@ func TestService_Set(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("secret", true, nil)
+		repo.EXPECT().GetSecret(ctx).Return("secret", true, nil)
 
-		err := service.Set(ctx, "secret")
+		err := service.SetSecret(ctx, "secret")
 		require.Equal(t, secret.ErrAlreadySet, err)
 	})
 
@@ -52,9 +54,9 @@ func TestService_Set(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, errors.New("error"))
+		repo.EXPECT().GetSecret(ctx).Return("", false, errors.New("error"))
 
-		err := service.Set(ctx, "secret")
+		err := service.SetSecret(ctx, "secret")
 		require.Error(t, err)
 	})
 
@@ -66,10 +68,10 @@ func TestService_Set(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, nil)
-		repo.EXPECT().Set(ctx, "secret").Return(errors.New("error"))
+		repo.EXPECT().GetSecret(ctx).Return("", false, nil)
+		repo.EXPECT().SetSecret(ctx, "secret").Return(errors.New("error"))
 
-		err := service.Set(ctx, "secret")
+		err := service.SetSecret(ctx, "secret")
 		require.Error(t, err)
 	})
 }
@@ -86,9 +88,9 @@ func TestService_Get(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("secret", true, nil)
+		repo.EXPECT().GetSecret(ctx).Return("secret", true, nil)
 
-		secret, exists, err := service.Get(ctx)
+		secret, exists, err := service.GetSecret(ctx)
 		require.NoError(t, err)
 		require.Equal(t, "secret", secret)
 		require.True(t, exists)
@@ -102,9 +104,9 @@ func TestService_Get(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, nil)
+		repo.EXPECT().GetSecret(ctx).Return("", false, nil)
 
-		secret, exists, err := service.Get(ctx)
+		secret, exists, err := service.GetSecret(ctx)
 		require.NoError(t, err)
 		require.Empty(t, secret)
 		require.False(t, exists)
@@ -118,9 +120,9 @@ func TestService_Get(t *testing.T) {
 
 		service := secret.New(repo)
 
-		repo.EXPECT().Get(ctx).Return("", false, errors.New("error"))
+		repo.EXPECT().GetSecret(ctx).Return("", false, errors.New("error"))
 
-		secret, exists, err := service.Get(ctx)
+		secret, exists, err := service.GetSecret(ctx)
 		require.Error(t, err)
 		require.Empty(t, secret)
 		require.False(t, exists)
