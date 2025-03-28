@@ -279,7 +279,7 @@ func store(ctx context.Context, container container.Container, entryType string,
 		return fmt.Errorf("error setting token: %w", err)
 	}
 
-	err = service.Set(ctxWithToken, utils.GetEntryKey(entryType, name), name, notes, content, func() bool {
+	err = service.SetEntry(ctxWithToken, utils.GetEntryKey(entryType, name), name, notes, content, func() bool {
 		prompter, err := container.GetPrompter(ctx)
 		if err != nil {
 			return false

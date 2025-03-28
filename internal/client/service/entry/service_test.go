@@ -15,6 +15,13 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+//go:generate mockgen -destination=./bidi_stream_mock_test.go -package=entry_test google.golang.org/grpc BidiStreamingClient
+//go:generate mockgen -destination=./blob_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/storage/blob Repository
+//go:generate mockgen -destination=./client_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/proto/entry/v1 EntryServiceClient
+//go:generate mockgen -destination=./read_closer_mock_test.go -package=entry_test io ReadCloser
+//go:generate mockgen -destination=./server_stream_mock_test.go -package=entry_test google.golang.org/grpc ServerStreamingClient
+//go:generate mockgen -destination=./crypt_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/client/service/entry Crypt
+
 const chunkSize = 1024
 
 func TestService_Set(t *testing.T) {
@@ -76,7 +83,7 @@ func TestService_Set(t *testing.T) {
 		stream.EXPECT().Recv().Return(nil, io.EOF)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.NoError(t, err)
 	})
 
@@ -93,7 +100,7 @@ func TestService_Set(t *testing.T) {
 		rawContent.EXPECT().Close().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
 
@@ -113,7 +120,7 @@ func TestService_Set(t *testing.T) {
 		blobWriter.EXPECT().Close().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
 
@@ -136,7 +143,7 @@ func TestService_Set(t *testing.T) {
 		encryptWriter.EXPECT().Close().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
 
@@ -160,7 +167,7 @@ func TestService_Set(t *testing.T) {
 		blobWriter.EXPECT().Close().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
 
@@ -206,7 +213,7 @@ func TestService_Set(t *testing.T) {
 			encryptedContent.EXPECT().Close().Return(nil)
 
 			service := entry.New(crypt, client, blobRepo, chunkSize)
-			err := service.Set(ctx, "key", "name", "", rawContent, nil)
+			err := service.SetEntry(ctx, "key", "name", "", rawContent, nil)
 			require.ErrorIs(t, err, entry.ErrEntryExists)
 		})
 
@@ -251,7 +258,7 @@ func TestService_Set(t *testing.T) {
 			encryptedContent.EXPECT().Close().Return(nil)
 
 			service := entry.New(crypt, client, blobRepo, chunkSize)
-			err := service.Set(ctx, "key", "name", "", rawContent, func() bool {
+			err := service.SetEntry(ctx, "key", "name", "", rawContent, func() bool {
 				return false
 			})
 			require.ErrorIs(t, err, entry.ErrEntryExists)
@@ -319,7 +326,7 @@ func TestService_Set(t *testing.T) {
 			stream.EXPECT().Recv().Return(nil, io.EOF)
 
 			service := entry.New(crypt, client, blobRepo, chunkSize)
-			err := service.Set(ctx, "key", "name", "notes", rawContent, func() bool {
+			err := service.SetEntry(ctx, "key", "name", "notes", rawContent, func() bool {
 				return true
 			})
 			require.NoError(t, err)
@@ -378,7 +385,7 @@ func TestService_Set(t *testing.T) {
 			stream.EXPECT().CloseSend().Return(nil).MinTimes(1)
 
 			service := entry.New(crypt, client, blobRepo, chunkSize)
-			err := service.Set(ctx, "key", "name", "notes", rawContent, func() bool {
+			err := service.SetEntry(ctx, "key", "name", "notes", rawContent, func() bool {
 				return true
 			})
 			require.Error(t, err)
@@ -433,7 +440,7 @@ func TestService_Set(t *testing.T) {
 		stream.EXPECT().CloseSend().Return(nil).MinTimes(1)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "", rawContent, nil)
 		require.Error(t, err)
 	})
 
@@ -460,7 +467,7 @@ func TestService_Set(t *testing.T) {
 		crypt.EXPECT().Encrypt(gomock.Any()).Return(nil, errors.New("error"))
 
 		service := entry.New(crypt, NewMockEntryServiceClient(ctrl), blobRepo, chunkSize)
-		err := service.Set(ctx, "key", "name", "notes", rawContent, nil)
+		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
 }
@@ -517,7 +524,7 @@ func TestService_Get(t *testing.T) {
 		stream.EXPECT().CloseSend().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		notes, content, found, err := service.Get(ctx, "key")
+		notes, content, found, err := service.GetEntry(ctx, "key")
 		require.NoError(t, err)
 		require.True(t, found)
 		require.Equal(t, "notes", notes)
@@ -555,7 +562,7 @@ func TestService_Get(t *testing.T) {
 		stream.EXPECT().CloseSend().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		notes, content, found, err := service.Get(ctx, "key")
+		notes, content, found, err := service.GetEntry(ctx, "key")
 		require.NoError(t, err)
 		require.False(t, found)
 		require.Empty(t, notes)
@@ -580,7 +587,7 @@ func TestService_Delete(t *testing.T) {
 		}).Return(nil, nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Delete(ctx, "key")
+		err := service.DeleteEntry(ctx, "key")
 		require.NoError(t, err)
 	})
 
@@ -597,7 +604,7 @@ func TestService_Delete(t *testing.T) {
 		}).Return(nil, errors.New("error"))
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
-		err := service.Delete(ctx, "key")
+		err := service.DeleteEntry(ctx, "key")
 		require.Error(t, err)
 	})
 }

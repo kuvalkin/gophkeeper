@@ -41,7 +41,7 @@ type service struct {
 	log       *zap.SugaredLogger
 }
 
-func (s *service) Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error {
+func (s *service) SetEntry(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error {
 	llog := s.log.WithLazy("key", key, "name", name)
 
 	llog.Debug("encrypting entry content")
@@ -242,7 +242,7 @@ func (s *service) uploadBlob(
 	}
 }
 
-func (s *service) Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
+func (s *service) GetEntry(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
 	stream, err := s.client.GetEntry(ctx, &pb.GetEntryRequest{Key: key})
 	if err != nil {
 		return "", nil, false, fmt.Errorf("cant start downloading entry: %w", err)
@@ -336,7 +336,7 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.
 	return reader, nil
 }
 
-func (s *service) Delete(ctx context.Context, name string) error {
+func (s *service) DeleteEntry(ctx context.Context, name string) error {
 	_, err := s.client.DeleteEntry(ctx, &pb.DeleteEntryRequest{Key: name})
 	if err != nil {
 		return fmt.Errorf("cant delete entry: %w", err)

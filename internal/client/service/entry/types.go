@@ -9,9 +9,9 @@ import (
 var ErrEntryExists = errors.New("entry already exists")
 
 type Service interface {
-	Set(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error
-	Get(ctx context.Context, key string) (string, io.ReadCloser, bool, error)
-	Delete(ctx context.Context, key string) error
+	SetEntry(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error
+	GetEntry(ctx context.Context, key string) (string, io.ReadCloser, bool, error)
+	DeleteEntry(ctx context.Context, key string) error
 }
 
 type Crypt interface {

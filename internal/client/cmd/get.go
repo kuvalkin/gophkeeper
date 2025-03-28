@@ -222,5 +222,5 @@ func get(ctx context.Context, container container.Container, key string) (string
 		return "", nil, false, fmt.Errorf("error setting token: %w", err)
 	}
 
-	return service.Get(ctxWithToken, key)
+	return service.GetEntry(ctxWithToken, key)
 }

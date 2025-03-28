@@ -105,7 +105,7 @@ func deleteEntry(cmd *cobra.Command, container container.Container, name string,
 
 	key := utils.GetEntryKey(entryType, name)
 
-	err = service.Delete(ctxWithToken, key)
+	err = service.DeleteEntry(ctxWithToken, key)
 	if err != nil {
 		return fmt.Errorf("error deleting entry: %w", err)
 	}
