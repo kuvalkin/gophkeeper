@@ -111,23 +111,22 @@ func (s *service) SetEntry(ctx context.Context, key string, name string, notes s
 	return nil
 }
 
-func (s *service) encryptNotes(notes string) ([]byte, error) {
+func (s *service) encryptNotes(notes string) (b []byte, err error) {
 	var buf bytes.Buffer
 	encryptWriter, err := s.crypt.Encrypt(&buf)
 	if err != nil {
 		return nil, fmt.Errorf("could not create encrypt writer: %w", err)
 	}
+	defer func() {
+		closeErr := encryptWriter.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("error closing encrypt writer: %w", err)
+		}
+	}()
 
 	_, err = io.WriteString(encryptWriter, notes)
 	if err != nil {
-		_ = encryptWriter.Close()
-
 		return nil, fmt.Errorf("could not write notes to encrypt writer: %w", err)
-	}
-
-	err = encryptWriter.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not close encrypt writer: %w", err)
 	}
 
 	return buf.Bytes(), nil
