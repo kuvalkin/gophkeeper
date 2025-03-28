@@ -15,11 +15,11 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestServer_GetEntry(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	ctxWithToken := auth.SetTokenInfo(ctx, user.TokenInfo{
@@ -255,7 +255,7 @@ func TestServer_GetEntry(t *testing.T) {
 }
 
 func TestServer_SetEntry(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	ctxWithToken := auth.SetTokenInfo(ctx, user.TokenInfo{
@@ -565,7 +565,7 @@ func TestServer_SetEntry(t *testing.T) {
 }
 
 func TestServer_DeleteEntry(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	ctxWithToken := auth.SetTokenInfo(ctx, user.TokenInfo{

@@ -11,11 +11,11 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func Test_TokenInfo(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("no token info", func(t *testing.T) {
@@ -39,7 +39,7 @@ func Test_TokenInfo(t *testing.T) {
 }
 
 func Test_AuthFunc(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("no token", func(t *testing.T) {

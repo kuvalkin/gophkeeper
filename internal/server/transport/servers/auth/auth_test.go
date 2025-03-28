@@ -12,11 +12,11 @@ import (
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	userService "github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestAuth_AuthFuncOverride(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	server := auth.New(nil)
@@ -27,7 +27,7 @@ func TestAuth_AuthFuncOverride(t *testing.T) {
 }
 
 func TestAuth_Register(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -99,7 +99,7 @@ func TestAuth_Register(t *testing.T) {
 }
 
 func TestAuth_Login(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {

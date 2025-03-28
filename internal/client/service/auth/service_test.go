@@ -11,11 +11,11 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestService_Register(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestService_Register(t *testing.T) {
 }
 
 func TestService_Login(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -149,7 +149,7 @@ func TestService_Login(t *testing.T) {
 }
 
 func TestService_IsLoggedIn(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -186,7 +186,7 @@ func TestService_IsLoggedIn(t *testing.T) {
 }
 
 func TestService_Logout(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -221,7 +221,7 @@ func TestService_Logout(t *testing.T) {
 }
 
 func TestService_AddAuthorizationHeader(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {

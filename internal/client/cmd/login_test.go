@@ -11,11 +11,11 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestLogin(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	newTestLoginCommand := func(container container.Container) *cobra.Command {

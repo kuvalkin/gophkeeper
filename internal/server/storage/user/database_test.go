@@ -13,11 +13,11 @@ import (
 
 	userService "github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/storage/user"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestDatabaseRepository_Add(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -73,7 +73,7 @@ func TestDatabaseRepository_Add(t *testing.T) {
 }
 
 func TestDatabaseRepository_Find(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {

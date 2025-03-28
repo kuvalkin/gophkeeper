@@ -12,11 +12,11 @@ import (
 	auth "github.com/kuvalkin/gophkeeper/internal/client/service/auth"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestRegister(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	newTestRegisterCommand := func(container container.Container) *cobra.Command {

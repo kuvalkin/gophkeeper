@@ -11,7 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 var defaultOptions = user.Options{
@@ -21,7 +21,7 @@ var defaultOptions = user.Options{
 }
 
 func TestService_Register(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestService_Register(t *testing.T) {
 }
 
 func TestService_Login(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -137,7 +137,7 @@ func TestService_Login(t *testing.T) {
 }
 
 func TestService_ParseToken(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {

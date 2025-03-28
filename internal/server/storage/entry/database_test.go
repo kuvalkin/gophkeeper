@@ -11,12 +11,12 @@ import (
 
 	entryService "github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/storage/entry"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestDatabaseMetadataRepository_Get(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		ctx, cancel := test.Context(t)
+		ctx, cancel := utils.TestContext(t)
 		defer cancel()
 
 		db, mock, err := sqlmock.New()
@@ -44,7 +44,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		ctx, cancel := test.Context(t)
+		ctx, cancel := utils.TestContext(t)
 		defer cancel()
 
 		db, mock, err := sqlmock.New()
@@ -66,7 +66,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 	})
 
 	t.Run("query error", func(t *testing.T) {
-		ctx, cancel := test.Context(t)
+		ctx, cancel := utils.TestContext(t)
 		defer cancel()
 
 		db, mock, err := sqlmock.New()
@@ -89,7 +89,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 }
 
 func TestDatabaseMetadataRepository_Set(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -136,7 +136,7 @@ func TestDatabaseMetadataRepository_Set(t *testing.T) {
 }
 
 func TestDatabaseMetadataRepository_Delete(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {

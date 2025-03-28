@@ -12,13 +12,13 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
-	"github.com/kuvalkin/gophkeeper/internal/support/test"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 const chunkSize = 1024
 
 func TestService_Set(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -466,7 +466,7 @@ func TestService_Set(t *testing.T) {
 }
 
 func TestService_Get(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
@@ -564,7 +564,7 @@ func TestService_Get(t *testing.T) {
 }
 
 func TestService_Delete(t *testing.T) {
-	ctx, cancel := test.Context(t)
+	ctx, cancel := utils.TestContext(t)
 	defer cancel()
 
 	t.Run("success", func(t *testing.T) {
