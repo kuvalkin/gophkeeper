@@ -34,11 +34,11 @@ func (s *server) Register(ctx context.Context, request *pb.RegisterRequest) (*pb
 			return nil, status.Error(codes.AlreadyExists, err.Error())
 		}
 
-		if errors.Is(err, user.ErrInternal) {
-			return nil, status.Error(codes.Internal, "internal error")
+		if errors.Is(err, user.ErrInvalidLogin) {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+		return nil, status.Error(codes.Internal, "internal error")
 	}
 
 	token, err := s.login(ctx, request.Login, request.Password)
