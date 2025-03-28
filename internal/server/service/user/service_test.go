@@ -30,10 +30,10 @@ func TestService_Register(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Add(ctx, "login", "7a37b85c8918eac19a9089c0fa5a2ab4dce3f90528dcdeec108b23ddf3607b99").Return(nil)
+		repo.EXPECT().AddUser(ctx, "login", "7a37b85c8918eac19a9089c0fa5a2ab4dce3f90528dcdeec108b23ddf3607b99").Return(nil)
 
 		s := user.NewService(repo, defaultOptions)
-		err := s.Register(ctx, "login", "password")
+		err := s.RegisterUser(ctx, "login", "password")
 		require.NoError(t, err)
 	})
 
@@ -43,10 +43,10 @@ func TestService_Register(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Add(ctx, gomock.Any(), gomock.Any()).Return(user.ErrLoginNotUnique)
+		repo.EXPECT().AddUser(ctx, gomock.Any(), gomock.Any()).Return(user.ErrLoginNotUnique)
 
 		s := user.NewService(repo, defaultOptions)
-		err := s.Register(ctx, "login", "password")
+		err := s.RegisterUser(ctx, "login", "password")
 		require.ErrorIs(t, err, user.ErrLoginTaken)
 	})
 
@@ -57,7 +57,7 @@ func TestService_Register(t *testing.T) {
 		repo := NewMockRepository(ctrl)
 
 		s := user.NewService(repo, defaultOptions)
-		err := s.Register(ctx, "", "password")
+		err := s.RegisterUser(ctx, "", "password")
 		require.ErrorIs(t, err, user.ErrInvalidLogin)
 	})
 
@@ -67,10 +67,10 @@ func TestService_Register(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Add(ctx, gomock.Any(), gomock.Any()).Return(errors.New("query failed"))
+		repo.EXPECT().AddUser(ctx, gomock.Any(), gomock.Any()).Return(errors.New("query failed"))
 
 		s := user.NewService(repo, defaultOptions)
-		err := s.Register(ctx, "login", "password")
+		err := s.RegisterUser(ctx, "login", "password")
 		require.ErrorIs(t, err, user.ErrInternal)
 	})
 }
@@ -85,10 +85,13 @@ func TestService_Login(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Find(ctx, "login").Return(uuid.New().String(), "7a37b85c8918eac19a9089c0fa5a2ab4dce3f90528dcdeec108b23ddf3607b99", true, nil)
+		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{
+			ID:           uuid.New().String(),
+			PasswordHash: "7a37b85c8918eac19a9089c0fa5a2ab4dce3f90528dcdeec108b23ddf3607b99",
+		}, true, nil)
 
 		s := user.NewService(repo, defaultOptions)
-		token, err := s.Login(ctx, "login", "password")
+		token, err := s.LoginUser(ctx, "login", "password")
 		require.NoError(t, err)
 		require.NotEmpty(t, token)
 	})
@@ -99,10 +102,10 @@ func TestService_Login(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Find(ctx, "login").Return("", "", false, nil)
+		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{}, false, nil)
 
 		s := user.NewService(repo, defaultOptions)
-		token, err := s.Login(ctx, "login", "password")
+		token, err := s.LoginUser(ctx, "login", "password")
 		require.ErrorIs(t, err, user.ErrInvalidPair)
 		require.Empty(t, token)
 	})
@@ -113,10 +116,10 @@ func TestService_Login(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Find(ctx, "login").Return("", "", false, errors.New("query failed"))
+		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{}, false, errors.New("query failed"))
 
 		s := user.NewService(repo, defaultOptions)
-		token, err := s.Login(ctx, "login", "password")
+		token, err := s.LoginUser(ctx, "login", "password")
 		require.ErrorIs(t, err, user.ErrInternal)
 		require.Empty(t, token)
 	})
@@ -127,10 +130,13 @@ func TestService_Login(t *testing.T) {
 
 		repo := NewMockRepository(ctrl)
 
-		repo.EXPECT().Find(ctx, "login").Return(uuid.New().String(), "its password hash", true, nil)
+		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{
+			ID:           uuid.New().String(),
+			PasswordHash: "its password hash",
+		}, true, nil)
 
 		s := user.NewService(repo, defaultOptions)
-		token, err := s.Login(ctx, "login", "password")
+		token, err := s.LoginUser(ctx, "login", "password")
 		require.ErrorIs(t, err, user.ErrInvalidPair)
 		require.Empty(t, token)
 	})
@@ -155,14 +161,14 @@ func TestService_ParseToken(t *testing.T) {
 		require.NoError(t, err)
 
 		s := user.NewService(nil, defaultOptions)
-		info, err := s.ParseToken(ctx, tokenString)
+		info, err := s.ParseAuthToken(ctx, tokenString)
 		require.NoError(t, err)
 		require.Equal(t, userID, info.UserID)
 	})
 
 	t.Run("invalid string", func(t *testing.T) {
 		s := user.NewService(nil, defaultOptions)
-		info, err := s.ParseToken(ctx, "its definitely a valid token, trust me")
+		info, err := s.ParseAuthToken(ctx, "its definitely a valid token, trust me")
 		require.ErrorIs(t, err, user.ErrInvalidToken)
 		require.Nil(t, info)
 	})
@@ -182,7 +188,7 @@ func TestService_ParseToken(t *testing.T) {
 		require.NoError(t, err)
 
 		s := user.NewService(nil, defaultOptions)
-		info, err := s.ParseToken(ctx, tokenString)
+		info, err := s.ParseAuthToken(ctx, tokenString)
 		require.ErrorIs(t, err, user.ErrInvalidToken)
 		require.Nil(t, info)
 	})
@@ -202,7 +208,7 @@ func TestService_ParseToken(t *testing.T) {
 		require.NoError(t, err)
 
 		s := user.NewService(nil, defaultOptions)
-		info, err := s.ParseToken(ctx, tokenString)
+		info, err := s.ParseAuthToken(ctx, tokenString)
 		require.ErrorIs(t, err, user.ErrInvalidToken)
 		require.Nil(t, info)
 	})

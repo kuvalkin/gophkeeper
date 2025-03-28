@@ -30,14 +30,14 @@ type service struct {
 	logger  *zap.SugaredLogger
 }
 
-func (s *service) Register(ctx context.Context, login string, password string) error {
+func (s *service) RegisterUser(ctx context.Context, login string, password string) error {
 	if login == "" {
 		return ErrInvalidLogin
 	}
 
 	hash := s.hashPassword(password)
 
-	err := s.repo.Add(ctx, login, hash)
+	err := s.repo.AddUser(ctx, login, hash)
 	if err != nil {
 		if errors.Is(err, ErrLoginNotUnique) {
 			return ErrLoginTaken
@@ -51,8 +51,8 @@ func (s *service) Register(ctx context.Context, login string, password string) e
 	return nil
 }
 
-func (s *service) Login(ctx context.Context, login string, password string) (string, error) {
-	id, savedHash, found, err := s.repo.Find(ctx, login)
+func (s *service) LoginUser(ctx context.Context, login string, password string) (string, error) {
+	userInfo, found, err := s.repo.FindUser(ctx, login)
 	if err != nil {
 		s.logger.Errorw("failed to fetch password hash", "login", login, "error", err)
 
@@ -63,11 +63,11 @@ func (s *service) Login(ctx context.Context, login string, password string) (str
 		return "", ErrInvalidPair
 	}
 
-	if savedHash != s.hashPassword(password) {
+	if userInfo.PasswordHash != s.hashPassword(password) {
 		return "", ErrInvalidPair
 	}
 
-	token, err := s.issueToken(id)
+	token, err := s.issueToken(userInfo.ID)
 	if err != nil {
 		s.logger.Errorw("failed to issue token", "login", login, "error", err)
 
@@ -77,7 +77,7 @@ func (s *service) Login(ctx context.Context, login string, password string) (str
 	return token, nil
 }
 
-func (s *service) ParseToken(_ context.Context, token string) (*TokenInfo, error) {
+func (s *service) ParseAuthToken(_ context.Context, token string) (*TokenInfo, error) {
 	claims := new(jwt.RegisteredClaims)
 
 	parsedToken, err := jwt.ParseWithClaims(

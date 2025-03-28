@@ -17,10 +17,10 @@ type TokenInfo struct {
 }
 
 type Service interface {
-	Register(ctx context.Context, login string, password string) error
-	// Login authenticates a user and returns auth token on success
-	Login(ctx context.Context, login string, password string) (string, error)
-	ParseToken(ctx context.Context, token string) (*TokenInfo, error)
+	RegisterUser(ctx context.Context, login string, password string) error
+	// LoginUser authenticates a user and returns auth token on success
+	LoginUser(ctx context.Context, login string, password string) (string, error)
+	ParseAuthToken(ctx context.Context, token string) (*TokenInfo, error)
 }
 
 type Options struct {
@@ -31,7 +31,12 @@ type Options struct {
 
 var ErrLoginNotUnique = errors.New("user with this login already exists")
 
+type UserInfo struct {
+	ID       string
+	PasswordHash string
+}
+
 type Repository interface {
-	Add(ctx context.Context, login string, passwordHash string) error
-	Find(ctx context.Context, login string) (string, string, bool, error)
+	AddUser(ctx context.Context, login string, passwordHash string) error
+	FindUser(ctx context.Context, login string) (UserInfo, bool, error)
 }

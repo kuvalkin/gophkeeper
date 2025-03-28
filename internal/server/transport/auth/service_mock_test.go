@@ -41,46 +41,46 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// Login mocks base method.
-func (m *MockService) Login(ctx context.Context, login, password string) (string, error) {
+// LoginUser mocks base method.
+func (m *MockService) LoginUser(ctx context.Context, login, password string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", ctx, login, password)
+	ret := m.ctrl.Call(m, "LoginUser", ctx, login, password)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Login indicates an expected call of Login.
-func (mr *MockServiceMockRecorder) Login(ctx, login, password any) *gomock.Call {
+// LoginUser indicates an expected call of LoginUser.
+func (mr *MockServiceMockRecorder) LoginUser(ctx, login, password any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockService)(nil).Login), ctx, login, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoginUser", reflect.TypeOf((*MockService)(nil).LoginUser), ctx, login, password)
 }
 
-// ParseToken mocks base method.
-func (m *MockService) ParseToken(ctx context.Context, token string) (*user.TokenInfo, error) {
+// ParseAuthToken mocks base method.
+func (m *MockService) ParseAuthToken(ctx context.Context, token string) (*user.TokenInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ParseToken", ctx, token)
+	ret := m.ctrl.Call(m, "ParseAuthToken", ctx, token)
 	ret0, _ := ret[0].(*user.TokenInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ParseToken indicates an expected call of ParseToken.
-func (mr *MockServiceMockRecorder) ParseToken(ctx, token any) *gomock.Call {
+// ParseAuthToken indicates an expected call of ParseAuthToken.
+func (mr *MockServiceMockRecorder) ParseAuthToken(ctx, token any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseToken", reflect.TypeOf((*MockService)(nil).ParseToken), ctx, token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseAuthToken", reflect.TypeOf((*MockService)(nil).ParseAuthToken), ctx, token)
 }
 
-// Register mocks base method.
-func (m *MockService) Register(ctx context.Context, login, password string) error {
+// RegisterUser mocks base method.
+func (m *MockService) RegisterUser(ctx context.Context, login, password string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", ctx, login, password)
+	ret := m.ctrl.Call(m, "RegisterUser", ctx, login, password)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Register indicates an expected call of Register.
-func (mr *MockServiceMockRecorder) Register(ctx, login, password any) *gomock.Call {
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockServiceMockRecorder) RegisterUser(ctx, login, password any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockService)(nil).Register), ctx, login, password)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockService)(nil).RegisterUser), ctx, login, password)
 }

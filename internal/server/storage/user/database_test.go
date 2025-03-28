@@ -33,7 +33,7 @@ func TestDatabaseRepository_Add(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		repo := user.NewDatabaseRepository(db)
-		err = repo.Add(ctx, "login", "hash")
+		err = repo.AddUser(ctx, "login", "hash")
 		require.NoError(t, err)
 	})
 
@@ -50,7 +50,7 @@ func TestDatabaseRepository_Add(t *testing.T) {
 			WillReturnError(&pgconn.PgError{Code: pgerrcode.UniqueViolation})
 
 		repo := user.NewDatabaseRepository(db)
-		err = repo.Add(ctx, "login", "hash")
+		err = repo.AddUser(ctx, "login", "hash")
 		require.ErrorIs(t, err, userService.ErrLoginNotUnique)
 	})
 
@@ -67,7 +67,7 @@ func TestDatabaseRepository_Add(t *testing.T) {
 			WillReturnError(errors.New("error"))
 
 		repo := user.NewDatabaseRepository(db)
-		err = repo.Add(ctx, "login", "hash")
+		err = repo.AddUser(ctx, "login", "hash")
 		require.Error(t, err)
 	})
 }
@@ -89,11 +89,11 @@ func TestDatabaseRepository_Find(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id", "password_hash"}).AddRow("id", "hash"))
 
 		repo := user.NewDatabaseRepository(db)
-		userID, hash, ok, err := repo.Find(ctx, "login")
+		info, ok, err := repo.FindUser(ctx, "login")
 		require.NoError(t, err)
 		require.True(t, ok)
-		assert.Equal(t, "id", userID)
-		assert.Equal(t, "hash", hash)
+		assert.Equal(t, "id", info.ID)
+		assert.Equal(t, "hash", info.PasswordHash)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -109,11 +109,10 @@ func TestDatabaseRepository_Find(t *testing.T) {
 			WillReturnError(sql.ErrNoRows)
 
 		repo := user.NewDatabaseRepository(db)
-		userID, hash, ok, err := repo.Find(ctx, "login")
+		info, ok, err := repo.FindUser(ctx, "login")
 		require.NoError(t, err)
 		require.False(t, ok)
-		assert.Empty(t, userID)
-		assert.Empty(t, hash)
+		assert.Empty(t, info)
 	})
 
 	t.Run("query error", func(t *testing.T) {
@@ -129,10 +128,9 @@ func TestDatabaseRepository_Find(t *testing.T) {
 			WillReturnError(errors.New("error"))
 
 		repo := user.NewDatabaseRepository(db)
-		userID, hash, ok, err := repo.Find(ctx, "login")
+		info, ok, err := repo.FindUser(ctx, "login")
 		require.Error(t, err)
 		require.False(t, ok)
-		assert.Empty(t, userID)
-		assert.Empty(t, hash)
+		assert.Empty(t, info)
 	})
 }

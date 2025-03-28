@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	user "github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,33 +41,32 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// Add mocks base method.
-func (m *MockRepository) Add(ctx context.Context, login, passwordHash string) error {
+// AddUser mocks base method.
+func (m *MockRepository) AddUser(ctx context.Context, login, passwordHash string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", ctx, login, passwordHash)
+	ret := m.ctrl.Call(m, "AddUser", ctx, login, passwordHash)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Add indicates an expected call of Add.
-func (mr *MockRepositoryMockRecorder) Add(ctx, login, passwordHash any) *gomock.Call {
+// AddUser indicates an expected call of AddUser.
+func (mr *MockRepositoryMockRecorder) AddUser(ctx, login, passwordHash any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockRepository)(nil).Add), ctx, login, passwordHash)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockRepository)(nil).AddUser), ctx, login, passwordHash)
 }
 
-// Find mocks base method.
-func (m *MockRepository) Find(ctx context.Context, login string) (string, string, bool, error) {
+// FindUser mocks base method.
+func (m *MockRepository) FindUser(ctx context.Context, login string) (user.UserInfo, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Find", ctx, login)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(bool)
-	ret3, _ := ret[3].(error)
-	return ret0, ret1, ret2, ret3
+	ret := m.ctrl.Call(m, "FindUser", ctx, login)
+	ret0, _ := ret[0].(user.UserInfo)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// Find indicates an expected call of Find.
-func (mr *MockRepositoryMockRecorder) Find(ctx, login any) *gomock.Call {
+// FindUser indicates an expected call of FindUser.
+func (mr *MockRepositoryMockRecorder) FindUser(ctx, login any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockRepository)(nil).Find), ctx, login)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUser", reflect.TypeOf((*MockRepository)(nil).FindUser), ctx, login)
 }

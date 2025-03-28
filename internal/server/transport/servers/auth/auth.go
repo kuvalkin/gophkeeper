@@ -28,7 +28,7 @@ func (s *server) AuthFuncOverride(ctx context.Context, _ string) (context.Contex
 }
 
 func (s *server) Register(ctx context.Context, request *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	err := s.userService.Register(ctx, request.Login, request.Password)
+	err := s.userService.RegisterUser(ctx, request.Login, request.Password)
 	if err != nil {
 		if errors.Is(err, user.ErrLoginTaken) {
 			return nil, status.Error(codes.AlreadyExists, err.Error())
@@ -59,7 +59,7 @@ func (s *server) Login(ctx context.Context, request *pb.LoginRequest) (*pb.Login
 }
 
 func (s *server) login(ctx context.Context, login string, password string) (string, error) {
-	token, err := s.userService.Login(ctx, login, password)
+	token, err := s.userService.LoginUser(ctx, login, password)
 	if err != nil {
 		if errors.Is(err, user.ErrInvalidPair) {
 			return "", status.Error(codes.Unauthenticated, err.Error())

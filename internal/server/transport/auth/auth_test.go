@@ -59,7 +59,7 @@ func Test_AuthFunc(t *testing.T) {
 			"authorization": "bearer token",
 		}))
 
-		service.EXPECT().ParseToken(ctxWithToken, "token").Return(&user.TokenInfo{
+		service.EXPECT().ParseAuthToken(ctxWithToken, "token").Return(&user.TokenInfo{
 			UserID: "user",
 		}, nil)
 
@@ -83,7 +83,7 @@ func Test_AuthFunc(t *testing.T) {
 			"authorization": "bearer token",
 		}))
 
-		service.EXPECT().ParseToken(ctxWithToken, "token").Return(nil, user.ErrInvalidToken)
+		service.EXPECT().ParseAuthToken(ctxWithToken, "token").Return(nil, user.ErrInvalidToken)
 
 		newCtx, err := authFunc(ctxWithToken)
 		require.Error(t, err)
@@ -102,7 +102,7 @@ func Test_AuthFunc(t *testing.T) {
 			"authorization": "bearer token",
 		}))
 
-		service.EXPECT().ParseToken(ctxWithToken, "token").Return(nil, user.ErrInternal)
+		service.EXPECT().ParseAuthToken(ctxWithToken, "token").Return(nil, user.ErrInternal)
 
 		newCtx, err := authFunc(ctxWithToken)
 		require.Error(t, err)

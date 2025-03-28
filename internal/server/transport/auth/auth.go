@@ -21,7 +21,7 @@ func NewAuthFunc(userService user.Service) func(ctx context.Context) (context.Co
 			return nil, err
 		}
 
-		tokenInfo, err := userService.ParseToken(ctx, token)
+		tokenInfo, err := userService.ParseAuthToken(ctx, token)
 		if err != nil {
 			if errors.Is(err, user.ErrInvalidToken) {
 				return nil, status.Errorf(codes.Unauthenticated, "invalid auth token: %v", err)

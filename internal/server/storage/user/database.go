@@ -20,7 +20,7 @@ func NewDatabaseRepository(db *sql.DB) user.Repository {
 	return &dbRepo{db: db}
 }
 
-func (d *dbRepo) Add(ctx context.Context, login string, passwordHash string) error {
+func (d *dbRepo) AddUser(ctx context.Context, login string, passwordHash string) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO users (login, password_hash) VALUES ($1, $2)", login, passwordHash)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -33,21 +33,20 @@ func (d *dbRepo) Add(ctx context.Context, login string, passwordHash string) err
 	return nil
 }
 
-func (d *dbRepo) Find(ctx context.Context, login string) (string, string, bool, error) {
+func (d *dbRepo) FindUser(ctx context.Context, login string) (user.UserInfo, bool, error) {
 	row := d.db.QueryRowContext(ctx, "SELECT id, password_hash FROM users WHERE login = $1", login)
 
-	var userID string
-	var hash string
-	err := row.Scan(&userID, &hash)
+	info := user.UserInfo{}
+	err := row.Scan(&info.ID, &info.PasswordHash)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", "", false, nil
+			return user.UserInfo{}, false, nil
 		}
 
-		return "", "", false, fmt.Errorf("query error: %w", err)
+		return user.UserInfo{}, false, fmt.Errorf("query error: %w", err)
 	}
 
-	return userID, hash, true, nil
+	return info, true, nil
 }
 
 func isUniqueViolation(err error) bool {
