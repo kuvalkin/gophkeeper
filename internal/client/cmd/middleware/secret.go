@@ -9,7 +9,7 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 )
 
-func SecretSet(container container.Container) MW {
+func EnsureSecretSet(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {
 			secret, err := container.GetSecretService(cmd.Context())

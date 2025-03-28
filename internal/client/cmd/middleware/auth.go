@@ -9,7 +9,7 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 )
 
-func LoggedIn(container container.Container) MW {
+func EnsureLoggedIn(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {
 			auth, err := container.GetAuthService(cmd.Context())
@@ -35,7 +35,7 @@ func LoggedIn(container container.Container) MW {
 	}
 }
 
-func NotLoggedIn(container container.Container) MW {
+func EnsureNotLoggedIn(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {
 			auth, err := container.GetAuthService(cmd.Context())

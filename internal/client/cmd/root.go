@@ -53,31 +53,31 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	secret := newSecretCommand(container)
 	rootCmd.AddCommand(secret)
 
-	notLoggedIn := middleware.NotLoggedIn(container)
+	ensureNotLoggedIn := middleware.EnsureNotLoggedIn(container)
 
 	register := newRegisterCommand(container)
-	register.PreRunE = notLoggedIn(register.PreRunE)
+	register.PreRunE = ensureNotLoggedIn(register.PreRunE)
 	rootCmd.AddCommand(register)
 
 	login := newLoginCommand(container)
-	login.PreRunE = notLoggedIn(login.PreRunE)
+	login.PreRunE = ensureNotLoggedIn(login.PreRunE)
 	rootCmd.AddCommand(login)
 
 	rootCmd.AddCommand(newLogoutCommand(container))
 
-	secretSet := middleware.SecretSet(container)
-	loggedIn := middleware.LoggedIn(container)
+	ensureSecretSet := middleware.EnsureSecretSet(container)
+	ensureLoggedIn := middleware.EnsureLoggedIn(container)
 
 	set := newSetCommand(container)
-	set.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, secretSet(loggedIn(set.PersistentPreRunE)))
+	set.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, ensureSecretSet(ensureLoggedIn(set.PersistentPreRunE)))
 	rootCmd.AddCommand(set)
 
 	getCmd := newGetCommand(container)
-	getCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, secretSet(loggedIn(getCmd.PersistentPreRunE)))
+	getCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, ensureSecretSet(ensureLoggedIn(getCmd.PersistentPreRunE)))
 	rootCmd.AddCommand(getCmd)
 
 	deleteCmd := newDeleteCommand(container)
-	deleteCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, loggedIn(deleteCmd.PersistentPreRunE))
+	deleteCmd.PersistentPreRunE = middleware.Combine(rootCmd.PersistentPreRunE, ensureLoggedIn(deleteCmd.PersistentPreRunE))
 	rootCmd.AddCommand(deleteCmd)
 
 	rootCmd.AddCommand(newConfigPathCommand())
