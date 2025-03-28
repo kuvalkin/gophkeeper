@@ -3,7 +3,7 @@ package blob
 import "io"
 
 type Repository interface {
-	Writer(key string) (io.WriteCloser, error)
-	Reader(key string) (io.ReadCloser, bool, error)
-	Delete(key string) error
+	OpenBlobWriter(key string) (io.WriteCloser, error)
+	OpenBlobReader(key string) (io.ReadCloser, bool, error)
+	DeleteBlob(key string) error
 }

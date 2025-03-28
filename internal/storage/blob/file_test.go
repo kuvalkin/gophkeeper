@@ -18,23 +18,23 @@ func TestFile_Writer(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		t.Run("simple key", func(t *testing.T) {
-			wc, err := repo.Writer("test-simple-key")
+			wc, err := repo.OpenBlobWriter("test-simple-key")
 			require.NoError(t, err)
 			require.NotNil(t, wc)
 		})
 
 		t.Run("with subdirs", func(t *testing.T) {
-			wc, err := repo.Writer("test/test-with-subdirs")
+			wc, err := repo.OpenBlobWriter("test/test-with-subdirs")
 			require.NoError(t, err)
 			require.NotNil(t, wc)
 		})
 
 		t.Run("file already exists", func(t *testing.T) {
-			wc, err := repo.Writer("test-already-exists")
+			wc, err := repo.OpenBlobWriter("test-already-exists")
 			require.NoError(t, err)
 			require.NotNil(t, wc)
 
-			wc, err = repo.Writer("test-already-exists")
+			wc, err = repo.OpenBlobWriter("test-already-exists")
 			require.NoError(t, err)
 			require.NotNil(t, wc)
 		})
@@ -49,17 +49,17 @@ func TestFile_Reader(t *testing.T) {
 	repo := blob.NewFileBlobRepository(path)
 
 	t.Run("success", func(t *testing.T) {
-		_, err := repo.Writer("test")
+		_, err := repo.OpenBlobWriter("test")
 		require.NoError(t, err)
 
-		rc, exists, err := repo.Reader("test")
+		rc, exists, err := repo.OpenBlobReader("test")
 		require.NoError(t, err)
 		require.True(t, exists)
 		require.NotNil(t, rc)
 	})
 
 	t.Run("not exists", func(t *testing.T) {
-		rc, exists, err := repo.Reader("not-exists")
+		rc, exists, err := repo.OpenBlobReader("not-exists")
 		require.NoError(t, err)
 		require.False(t, exists)
 		require.Nil(t, rc)
@@ -74,18 +74,18 @@ func TestFile_Delete(t *testing.T) {
 	repo := blob.NewFileBlobRepository(path)
 
 	t.Run("success", func(t *testing.T) {
-		_, err := repo.Writer("test")
+		_, err := repo.OpenBlobWriter("test")
 		require.NoError(t, err)
 
-		rc, exists, err := repo.Reader("test")
+		rc, exists, err := repo.OpenBlobReader("test")
 		require.NoError(t, err)
 		require.True(t, exists)
 		require.NotNil(t, rc)
 
-		err = repo.Delete("test")
+		err = repo.DeleteBlob("test")
 		require.NoError(t, err)
 
-		_, exists, err = repo.Reader("test")
+		_, exists, err = repo.OpenBlobReader("test")
 		require.NoError(t, err)
 		require.False(t, exists)
 	})

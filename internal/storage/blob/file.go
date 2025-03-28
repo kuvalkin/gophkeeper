@@ -26,7 +26,7 @@ type FileBlobRepository struct {
 const dirPerms = os.FileMode(0700)
 const filePerms = os.FileMode(0600)
 
-func (f *FileBlobRepository) Writer(key string) (io.WriteCloser, error) {
+func (f *FileBlobRepository) OpenBlobWriter(key string) (io.WriteCloser, error) {
 	fullPath := path.Join(f.path, key)
 
 	err := os.MkdirAll(path.Dir(fullPath), dirPerms)
@@ -44,7 +44,7 @@ func (f *FileBlobRepository) Writer(key string) (io.WriteCloser, error) {
 	return file, nil
 }
 
-func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
+func (f *FileBlobRepository) OpenBlobReader(key string) (io.ReadCloser, bool, error) {
 	fullPath := path.Join(f.path, key)
 	f.log.Debugw("opening for read", "path", fullPath)
 
@@ -59,7 +59,7 @@ func (f *FileBlobRepository) Reader(key string) (io.ReadCloser, bool, error) {
 	return file, true, nil
 }
 
-func (f *FileBlobRepository) Delete(key string) error {
+func (f *FileBlobRepository) DeleteBlob(key string) error {
 	fullPath := path.Join(f.path, key)
 	f.log.Debugw("deleting", "path", fullPath)
 

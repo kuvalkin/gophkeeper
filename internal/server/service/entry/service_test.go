@@ -14,6 +14,10 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+//go:generate mockgen -destination=./meta_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/server/service/entry MetadataRepository
+//go:generate mockgen -destination=./blob_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/storage/blob Repository
+//go:generate mockgen -destination=./write_closer_mock_test.go -package=entry_test io WriteCloser
+
 func TestService_Set(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
 	defer cancel()
@@ -66,7 +70,7 @@ func TestService_Set(t *testing.T) {
 			}
 
 			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
 			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(nil)
@@ -99,7 +103,7 @@ func TestService_Set(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+		blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 		writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 		writer.EXPECT().Close().Return(nil)
 		metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(nil)
@@ -132,11 +136,11 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
 			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(errors.New("query failed"))
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -165,11 +169,11 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
 			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(errors.New("query failed"))
-			blobRepo.EXPECT().Delete("user/key").Return(errors.New("close fail"))
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(errors.New("close fail"))
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -200,10 +204,10 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(errors.New("close failed"))
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -232,10 +236,10 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(errors.New("close failed"))
-			blobRepo.EXPECT().Delete("user/key").Return(errors.New("delete failed"))
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(errors.New("delete failed"))
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -264,7 +268,7 @@ func TestService_Set(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		blobRepo.EXPECT().Writer("user/key").Return(nil, errors.New("cant open writer"))
+		blobRepo.EXPECT().OpenBlobWriter("user/key").Return(nil, errors.New("cant open writer"))
 
 		s := entry.New(metaRepo, blobRepo)
 		uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -288,9 +292,9 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Close().Return(nil)
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -318,9 +322,9 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Close().Return(errors.New("close failed"))
-			blobRepo.EXPECT().Delete("user/key").Return(errors.New("delete failed"))
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(errors.New("delete failed"))
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -348,9 +352,9 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Close().Return(nil)
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			localCtx, cancel := context.WithCancel(ctx)
 			// already closed
@@ -382,9 +386,9 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Close().Return(nil)
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -413,10 +417,10 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
+			blobRepo.EXPECT().OpenBlobWriter("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, errors.New("write failed"))
 			writer.EXPECT().Close().Return(nil)
-			blobRepo.EXPECT().Delete("user/key").Return(nil)
+			blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
 			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
@@ -452,7 +456,7 @@ func TestService_Get(t *testing.T) {
 		}
 
 		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
-		blobRepo.EXPECT().Reader("user/key").Return(reader, true, nil)
+		blobRepo.EXPECT().OpenBlobReader("user/key").Return(reader, true, nil)
 
 		s := entry.New(metaRepo, blobRepo)
 		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
@@ -516,7 +520,7 @@ func TestService_Get(t *testing.T) {
 		}
 
 		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
-		blobRepo.EXPECT().Reader("user/key").Return(nil, false, errors.New("query failed"))
+		blobRepo.EXPECT().OpenBlobReader("user/key").Return(nil, false, errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
 		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
@@ -540,7 +544,7 @@ func TestService_Get(t *testing.T) {
 		}
 
 		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
-		blobRepo.EXPECT().Reader("user/key").Return(nil, false, nil)
+		blobRepo.EXPECT().OpenBlobReader("user/key").Return(nil, false, nil)
 
 		s := entry.New(metaRepo, blobRepo)
 		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
@@ -563,7 +567,7 @@ func TestService_Delete(t *testing.T) {
 		blobRepo := NewMockRepository(ctrl)
 
 		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
-		blobRepo.EXPECT().Delete("user/key").Return(nil)
+		blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
 
 		s := entry.New(metaRepo, blobRepo)
 		err := s.DeleteEntry(ctx, "user", "key")
@@ -592,7 +596,7 @@ func TestService_Delete(t *testing.T) {
 		blobRepo := NewMockRepository(ctrl)
 
 		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
-		blobRepo.EXPECT().Delete("user/key").Return(errors.New("query failed"))
+		blobRepo.EXPECT().DeleteBlob("user/key").Return(errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
 		err := s.DeleteEntry(ctx, "user", "key")

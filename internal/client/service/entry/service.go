@@ -59,7 +59,7 @@ func (s *service) SetEntry(ctx context.Context, key string, name string, notes s
 		}
 	}
 
-	reader, ok, err := s.blobRepo.Reader(key)
+	reader, ok, err := s.blobRepo.OpenBlobReader(key)
 	if err != nil {
 		return fmt.Errorf("error initializing reader for the encrypted blob: %w", err)
 	}
@@ -141,7 +141,7 @@ func (s *service) encryptBlob(ctx context.Context, content io.ReadCloser, key st
 		}
 	}()
 
-	dst, err := s.blobRepo.Writer(key)
+	dst, err := s.blobRepo.OpenBlobWriter(key)
 	if err != nil {
 		return fmt.Errorf("cant create blob to store entry: %w", err)
 	}
@@ -299,7 +299,7 @@ func (s *service) decryptNotes(encNotes []byte) (string, error) {
 }
 
 func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.Entry]) (io.ReadCloser, error) {
-	dst, err := s.blobRepo.Writer(key)
+	dst, err := s.blobRepo.OpenBlobWriter(key)
 	if err != nil {
 		return nil, fmt.Errorf("cant create blob to temporary store entry: %w", err)
 	}
@@ -325,7 +325,7 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.
 		return nil, fmt.Errorf("error closing temporary blob: %w", err)
 	}
 
-	reader, exists, err := s.blobRepo.Reader(key)
+	reader, exists, err := s.blobRepo.OpenBlobReader(key)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing reader for the encrypted blob: %w", err)
 	}

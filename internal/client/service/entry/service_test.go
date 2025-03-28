@@ -39,7 +39,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 
 		// encrypt blob
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 		rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 		rawContent.EXPECT().Close().Return(nil)
@@ -58,7 +58,7 @@ func TestService_Set(t *testing.T) {
 		stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 		// send metadata
-		blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+		blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 		client.EXPECT().SetEntry(ctx).Return(stream, nil)
 		stream.EXPECT().Send(&pb.SetEntryRequest{
 			Entry: &pb.Entry{
@@ -96,7 +96,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 		client := NewMockEntryServiceClient(ctrl)
 
-		blobRepo.EXPECT().Writer("key").Return(nil, errors.New("error"))
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(nil, errors.New("error"))
 		rawContent.EXPECT().Close().Return(nil)
 
 		service := entry.New(crypt, client, blobRepo, chunkSize)
@@ -114,7 +114,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 		client := NewMockEntryServiceClient(ctrl)
 
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(nil, errors.New("error"))
 		rawContent.EXPECT().Close().Return(nil)
 		blobWriter.EXPECT().Close().Return(nil)
@@ -135,7 +135,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 		client := NewMockEntryServiceClient(ctrl)
 
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 		rawContent.EXPECT().Read(gomock.Any()).Return(0, errors.New("error"))
 		rawContent.EXPECT().Close().Return(nil)
@@ -158,7 +158,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 		client := NewMockEntryServiceClient(ctrl)
 
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 		rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 		rawContent.EXPECT().Close().Return(nil)
@@ -183,7 +183,7 @@ func TestService_Set(t *testing.T) {
 			rawContent := NewMockReadCloser(ctrl)
 
 			// encrypt blob
-			blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 			crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 			rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 			rawContent.EXPECT().Close().Return(nil)
@@ -196,7 +196,7 @@ func TestService_Set(t *testing.T) {
 			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
-			blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
@@ -228,7 +228,7 @@ func TestService_Set(t *testing.T) {
 			rawContent := NewMockReadCloser(ctrl)
 
 			// encrypt blob
-			blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 			crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 			rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 			rawContent.EXPECT().Close().Return(nil)
@@ -241,7 +241,7 @@ func TestService_Set(t *testing.T) {
 			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
-			blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
@@ -275,7 +275,7 @@ func TestService_Set(t *testing.T) {
 			rawContent := NewMockReadCloser(ctrl)
 
 			// encrypt blob
-			blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 			crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 			rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 			rawContent.EXPECT().Close().Return(nil)
@@ -294,7 +294,7 @@ func TestService_Set(t *testing.T) {
 			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
-			blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
@@ -343,7 +343,7 @@ func TestService_Set(t *testing.T) {
 			rawContent := NewMockReadCloser(ctrl)
 
 			// encrypt blob
-			blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 			crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 			rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 			rawContent.EXPECT().Close().Return(nil)
@@ -362,7 +362,7 @@ func TestService_Set(t *testing.T) {
 			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
-			blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 			client.EXPECT().SetEntry(ctx).Return(stream, nil)
 			stream.EXPECT().Send(&pb.SetEntryRequest{
 				Entry: &pb.Entry{
@@ -403,7 +403,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 
 		// encrypt blob
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 		rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 		rawContent.EXPECT().Close().Return(nil)
@@ -416,7 +416,7 @@ func TestService_Set(t *testing.T) {
 		stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 		// send metadata
-		blobRepo.EXPECT().Reader("key").Return(encryptedContent, true, nil)
+		blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
 		client.EXPECT().SetEntry(ctx).Return(stream, nil)
 		stream.EXPECT().Send(&pb.SetEntryRequest{
 			Entry: &pb.Entry{
@@ -455,7 +455,7 @@ func TestService_Set(t *testing.T) {
 		rawContent := NewMockReadCloser(ctrl)
 
 		// encrypt blob
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
 		rawContent.EXPECT().Read(gomock.Any()).SetArg(0, []byte("content")).Return(7, io.EOF)
 		rawContent.EXPECT().Close().Return(nil)
@@ -506,7 +506,7 @@ func TestService_Get(t *testing.T) {
 
 		// receive content
 		blobWriter := NewMockWriteCloser(ctrl)
-		blobRepo.EXPECT().Writer("key").Return(blobWriter, nil)
+		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		stream.EXPECT().Recv().Return(&pb.Entry{
 			Content: []byte("encrypted content"),
 		}, nil)
@@ -516,7 +516,7 @@ func TestService_Get(t *testing.T) {
 
 		// wrap in decrypt
 		blobReader := NewMockReadCloser(ctrl)
-		blobRepo.EXPECT().Reader("key").Return(blobReader, true, nil)
+		blobRepo.EXPECT().OpenBlobReader("key").Return(blobReader, true, nil)
 		decryptReader := NewMockReadCloser(ctrl)
 		crypt.EXPECT().Decrypt(blobReader).Return(decryptReader, nil)
 

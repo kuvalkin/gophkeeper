@@ -45,7 +45,7 @@ func (s *service) SetEntry(ctx context.Context, userID string, md Metadata, over
 
 	blobKey := s.getBlobKey(userID, md.Key)
 
-	dst, err := s.blobRepo.Writer(blobKey)
+	dst, err := s.blobRepo.OpenBlobWriter(blobKey)
 	if err != nil {
 		llog.Errorw("cant get writer", "err", err)
 
@@ -75,7 +75,7 @@ func (s *service) SetEntry(ctx context.Context, userID string, md Metadata, over
 		if err != nil {
 			llog.Errorw("cant close writer", "err", err)
 
-			err = s.blobRepo.Delete(blobKey)
+			err = s.blobRepo.DeleteBlob(blobKey)
 			if err != nil {
 				llog.Errorw("cant delete blob", "err", err)
 			}
@@ -88,7 +88,7 @@ func (s *service) SetEntry(ctx context.Context, userID string, md Metadata, over
 		if err != nil {
 			llog.Errorw("cant set metadata", "err", err)
 
-			err = s.blobRepo.Delete(blobKey)
+			err = s.blobRepo.DeleteBlob(blobKey)
 			if err != nil {
 				llog.Errorw("cant delete blob", "err", err)
 			}
@@ -156,7 +156,7 @@ func (s *service) closeAndDelete(c io.Closer, blobKey string, llog *zap.SugaredL
 		llog.Errorw("cant close writer", "err", err)
 	}
 
-	err = s.blobRepo.Delete(blobKey)
+	err = s.blobRepo.DeleteBlob(blobKey)
 	if err != nil {
 		llog.Errorw("cant delete blob", "err", err)
 
@@ -180,7 +180,7 @@ func (s *service) GetEntry(ctx context.Context, userID string, key string) (Meta
 		return Metadata{}, nil, false, nil
 	}
 
-	rc, ok, err := s.blobRepo.Reader(s.getBlobKey(userID, key))
+	rc, ok, err := s.blobRepo.OpenBlobReader(s.getBlobKey(userID, key))
 	if err != nil {
 		llog.Errorw("cant get blob reader", "err", err)
 
@@ -205,7 +205,7 @@ func (s *service) DeleteEntry(ctx context.Context, userID string, key string) er
 		return ErrInternal
 	}
 
-	err = s.blobRepo.Delete(s.getBlobKey(userID, key))
+	err = s.blobRepo.DeleteBlob(s.getBlobKey(userID, key))
 	if err != nil {
 		llog.Errorw("cant delete blob", "err", err)
 
