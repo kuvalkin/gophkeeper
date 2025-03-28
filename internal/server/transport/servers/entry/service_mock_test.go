@@ -42,8 +42,8 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// Delete mocks base method.
-func (m *MockService) Delete(ctx context.Context, userID, key string) error {
+// DeleteEntry mocks base method.
+func (m *MockService) DeleteEntry(ctx context.Context, userID, key string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, userID, key)
 	ret0, _ := ret[0].(error)
@@ -53,11 +53,11 @@ func (m *MockService) Delete(ctx context.Context, userID, key string) error {
 // Delete indicates an expected call of Delete.
 func (mr *MockServiceMockRecorder) Delete(ctx, userID, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockService)(nil).Delete), ctx, userID, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockService)(nil).DeleteEntry), ctx, userID, key)
 }
 
-// Get mocks base method.
-func (m *MockService) Get(ctx context.Context, userID, key string) (entry.Metadata, io.ReadCloser, bool, error) {
+// GetEntry mocks base method.
+func (m *MockService) GetEntry(ctx context.Context, userID, key string) (entry.Metadata, io.ReadCloser, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, userID, key)
 	ret0, _ := ret[0].(entry.Metadata)
@@ -70,11 +70,11 @@ func (m *MockService) Get(ctx context.Context, userID, key string) (entry.Metada
 // Get indicates an expected call of Get.
 func (mr *MockServiceMockRecorder) Get(ctx, userID, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), ctx, userID, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).GetEntry), ctx, userID, key)
 }
 
-// Set mocks base method.
-func (m *MockService) Set(ctx context.Context, userID string, md entry.Metadata, overwrite bool) (chan<- entry.UploadChunk, <-chan entry.SetEntryResult, error) {
+// SetEntry mocks base method.
+func (m *MockService) SetEntry(ctx context.Context, userID string, md entry.Metadata, overwrite bool) (chan<- entry.UploadChunk, <-chan entry.SetEntryResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", ctx, userID, md, overwrite)
 	ret0, _ := ret[0].(chan<- entry.UploadChunk)
@@ -86,5 +86,5 @@ func (m *MockService) Set(ctx context.Context, userID string, md entry.Metadata,
 // Set indicates an expected call of Set.
 func (mr *MockServiceMockRecorder) Set(ctx, userID, md, overwrite any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockService)(nil).Set), ctx, userID, md, overwrite)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockService)(nil).SetEntry), ctx, userID, md, overwrite)
 }

@@ -25,11 +25,11 @@ type service struct {
 	blobRepo blob.Repository
 }
 
-func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error) {
+func (s *service) SetEntry(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error) {
 	llog := s.log.WithLazy("userID", userID, "key", md.Key, "method", "Set")
 
 	if !overwrite {
-		_, ok, err := s.metaRepo.Get(ctx, userID, md.Key)
+		_, ok, err := s.metaRepo.GetMetadata(ctx, userID, md.Key)
 		if err != nil {
 			llog.Errorw("cant get metadata", "err", err)
 
@@ -84,7 +84,7 @@ func (s *service) Set(ctx context.Context, userID string, md Metadata, overwrite
 			return
 		}
 
-		err = s.metaRepo.Set(ctx, userID, md)
+		err = s.metaRepo.SetMetadata(ctx, userID, md)
 		if err != nil {
 			llog.Errorw("cant set metadata", "err", err)
 
@@ -166,10 +166,10 @@ func (s *service) closeAndDelete(c io.Closer, blobKey string, llog *zap.SugaredL
 	return nil
 }
 
-func (s *service) Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error) {
+func (s *service) GetEntry(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error) {
 	llog := s.log.WithLazy("userID", userID, "key", key, "method", "Get")
 
-	md, ok, err := s.metaRepo.Get(ctx, userID, key)
+	md, ok, err := s.metaRepo.GetMetadata(ctx, userID, key)
 	if err != nil {
 		llog.Errorw("cant get metadata", "err", err)
 
@@ -195,10 +195,10 @@ func (s *service) Get(ctx context.Context, userID string, key string) (Metadata,
 	return md, rc, true, nil
 }
 
-func (s *service) Delete(ctx context.Context, userID string, key string) error {
+func (s *service) DeleteEntry(ctx context.Context, userID string, key string) error {
 	llog := s.log.WithLazy("userID", userID, "key", key, "method", "Delete")
 
-	err := s.metaRepo.Delete(ctx, userID, key)
+	err := s.metaRepo.DeleteMetadata(ctx, userID, key)
 	if err != nil {
 		llog.Errorw("cant delete metadata", "err", err)
 

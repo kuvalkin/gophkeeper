@@ -41,7 +41,7 @@ func (s *server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 
 	llog := s.log.WithLazy("userID", tokenInfo.UserID, "method", "GetEntry", "key", request.Key)
 
-	md, reader, ok, err := s.service.Get(stream.Context(), tokenInfo.UserID, request.Key)
+	md, reader, ok, err := s.service.GetEntry(stream.Context(), tokenInfo.UserID, request.Key)
 	if err != nil {
 		return status.Errorf(codes.Internal, "cant get entry")
 	}
@@ -111,7 +111,7 @@ func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 		return status.Error(codes.InvalidArgument, "metadata is empty")
 	}
 
-	uploadChan, resultChan, err := s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
+	uploadChan, resultChan, err := s.service.SetEntry(stream.Context(), tokenInfo.UserID, entry.Metadata{
 		Key:   request.Entry.Key,
 		Name:  request.Entry.Name,
 		Notes: request.Entry.Notes,
@@ -152,7 +152,7 @@ func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 		llog.Debug("client sent overwrite signal")
 
 		// continue and overwrite
-		uploadChan, resultChan, err = s.service.Set(stream.Context(), tokenInfo.UserID, entry.Metadata{
+		uploadChan, resultChan, err = s.service.SetEntry(stream.Context(), tokenInfo.UserID, entry.Metadata{
 			Key:   request.Entry.Key,
 			Name:  request.Entry.Name,
 			Notes: request.Entry.Notes,
@@ -245,7 +245,7 @@ func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest
 		return nil, status.Error(codes.Unauthenticated, "no token info")
 	}
 
-	err := s.service.Delete(ctx, tokenInfo.UserID, request.Key)
+	err := s.service.DeleteEntry(ctx, tokenInfo.UserID, request.Key)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "cant delete entry")
 	}

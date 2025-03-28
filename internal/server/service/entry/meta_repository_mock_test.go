@@ -41,46 +41,46 @@ func (m *MockMetadataRepository) EXPECT() *MockMetadataRepositoryMockRecorder {
 	return m.recorder
 }
 
-// Delete mocks base method.
-func (m *MockMetadataRepository) Delete(ctx context.Context, userID, key string) error {
+// DeleteMetadata mocks base method.
+func (m *MockMetadataRepository) DeleteMetadata(ctx context.Context, userID, key string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, userID, key)
+	ret := m.ctrl.Call(m, "DeleteMetadata", ctx, userID, key)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Delete indicates an expected call of Delete.
-func (mr *MockMetadataRepositoryMockRecorder) Delete(ctx, userID, key any) *gomock.Call {
+// DeleteMetadata indicates an expected call of DeleteMetadata.
+func (mr *MockMetadataRepositoryMockRecorder) DeleteMetadata(ctx, userID, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockMetadataRepository)(nil).Delete), ctx, userID, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMetadata", reflect.TypeOf((*MockMetadataRepository)(nil).DeleteMetadata), ctx, userID, key)
 }
 
-// Get mocks base method.
-func (m *MockMetadataRepository) Get(ctx context.Context, userID, key string) (entry.Metadata, bool, error) {
+// GetMetadata mocks base method.
+func (m *MockMetadataRepository) GetMetadata(ctx context.Context, userID, key string) (entry.Metadata, bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, userID, key)
+	ret := m.ctrl.Call(m, "GetMetadata", ctx, userID, key)
 	ret0, _ := ret[0].(entry.Metadata)
 	ret1, _ := ret[1].(bool)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// Get indicates an expected call of Get.
-func (mr *MockMetadataRepositoryMockRecorder) Get(ctx, userID, key any) *gomock.Call {
+// GetMetadata indicates an expected call of GetMetadata.
+func (mr *MockMetadataRepositoryMockRecorder) GetMetadata(ctx, userID, key any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockMetadataRepository)(nil).Get), ctx, userID, key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetadata", reflect.TypeOf((*MockMetadataRepository)(nil).GetMetadata), ctx, userID, key)
 }
 
-// Set mocks base method.
-func (m *MockMetadataRepository) Set(ctx context.Context, userID string, md entry.Metadata) error {
+// SetMetadata mocks base method.
+func (m *MockMetadataRepository) SetMetadata(ctx context.Context, userID string, md entry.Metadata) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", ctx, userID, md)
+	ret := m.ctrl.Call(m, "SetMetadata", ctx, userID, md)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Set indicates an expected call of Set.
-func (mr *MockMetadataRepositoryMockRecorder) Set(ctx, userID, md any) *gomock.Call {
+// SetMetadata indicates an expected call of SetMetadata.
+func (mr *MockMetadataRepositoryMockRecorder) SetMetadata(ctx, userID, md any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockMetadataRepository)(nil).Set), ctx, userID, md)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMetadata", reflect.TypeOf((*MockMetadataRepository)(nil).SetMetadata), ctx, userID, md)
 }

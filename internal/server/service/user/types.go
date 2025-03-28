@@ -32,7 +32,7 @@ type Options struct {
 var ErrLoginNotUnique = errors.New("user with this login already exists")
 
 type UserInfo struct {
-	ID       string
+	ID           string
 	PasswordHash string
 }
 

@@ -26,10 +26,10 @@ func TestService_Set(t *testing.T) {
 			metaRepo := NewMockMetadataRepository(ctrl)
 			blobRepo := NewMockRepository(ctrl)
 
-			metaRepo.EXPECT().Get(ctx, "user", "key").Return(entry.Metadata{}, true, nil)
+			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, true, nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			upload, result, err := s.Set(ctx, "user", entry.Metadata{Key: "key"}, false)
+			upload, result, err := s.SetEntry(ctx, "user", entry.Metadata{Key: "key"}, false)
 			require.ErrorIs(t, err, entry.ErrEntryExists)
 			require.Nil(t, upload)
 			require.Nil(t, result)
@@ -42,10 +42,10 @@ func TestService_Set(t *testing.T) {
 			metaRepo := NewMockMetadataRepository(ctrl)
 			blobRepo := NewMockRepository(ctrl)
 
-			metaRepo.EXPECT().Get(ctx, "user", "key").Return(entry.Metadata{}, false, errors.New("query error"))
+			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, errors.New("query error"))
 
 			s := entry.New(metaRepo, blobRepo)
-			upload, result, err := s.Set(ctx, "user", entry.Metadata{Key: "key"}, false)
+			upload, result, err := s.SetEntry(ctx, "user", entry.Metadata{Key: "key"}, false)
 			require.ErrorIs(t, err, entry.ErrInternal)
 			require.Nil(t, upload)
 			require.Nil(t, result)
@@ -65,14 +65,14 @@ func TestService_Set(t *testing.T) {
 				Notes: []byte("notes"),
 			}
 
-			metaRepo.EXPECT().Get(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
+			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
 			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
-			metaRepo.EXPECT().Set(ctx, "user", md).Return(nil)
+			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, false)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, false)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -102,10 +102,10 @@ func TestService_Set(t *testing.T) {
 		blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
 		writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 		writer.EXPECT().Close().Return(nil)
-		metaRepo.EXPECT().Set(ctx, "user", md).Return(nil)
+		metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(nil)
 
 		s := entry.New(metaRepo, blobRepo)
-		uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+		uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 		require.NoError(t, err)
 		require.NotNil(t, uploadChan)
 		require.NotNil(t, resultChan)
@@ -135,11 +135,11 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
-			metaRepo.EXPECT().Set(ctx, "user", md).Return(errors.New("query failed"))
+			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(errors.New("query failed"))
 			blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -168,11 +168,11 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Writer("user/key").Return(writer, nil)
 			writer.EXPECT().Write([]byte("chunk")).Return(0, nil)
 			writer.EXPECT().Close().Return(nil)
-			metaRepo.EXPECT().Set(ctx, "user", md).Return(errors.New("query failed"))
+			metaRepo.EXPECT().SetMetadata(ctx, "user", md).Return(errors.New("query failed"))
 			blobRepo.EXPECT().Delete("user/key").Return(errors.New("close fail"))
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -206,7 +206,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -238,7 +238,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(errors.New("delete failed"))
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -267,7 +267,7 @@ func TestService_Set(t *testing.T) {
 		blobRepo.EXPECT().Writer("user/key").Return(nil, errors.New("cant open writer"))
 
 		s := entry.New(metaRepo, blobRepo)
-		uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+		uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 		require.ErrorIs(t, err, entry.ErrInternal)
 		require.Nil(t, uploadChan)
 		require.Nil(t, resultChan)
@@ -293,7 +293,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -323,7 +323,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(errors.New("delete failed"))
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -357,7 +357,7 @@ func TestService_Set(t *testing.T) {
 			cancel()
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(localCtx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(localCtx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -387,7 +387,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -419,7 +419,7 @@ func TestService_Set(t *testing.T) {
 			blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 			s := entry.New(metaRepo, blobRepo)
-			uploadChan, resultChan, err := s.Set(ctx, "user", md, true)
+			uploadChan, resultChan, err := s.SetEntry(ctx, "user", md, true)
 			require.NoError(t, err)
 			require.NotNil(t, uploadChan)
 			require.NotNil(t, resultChan)
@@ -451,11 +451,11 @@ func TestService_Get(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
 		blobRepo.EXPECT().Reader("user/key").Return(reader, true, nil)
 
 		s := entry.New(metaRepo, blobRepo)
-		meta, r, ok, err := s.Get(ctx, "user", "key")
+		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
 		require.NoError(t, err)
 		require.True(t, ok)
 		require.Equal(t, md, meta)
@@ -469,10 +469,10 @@ func TestService_Get(t *testing.T) {
 		metaRepo := NewMockMetadataRepository(ctrl)
 		blobRepo := NewMockRepository(ctrl)
 
-		metaRepo.EXPECT().Get(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
+		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
 
 		s := entry.New(metaRepo, blobRepo)
-		meta, r, ok, err := s.Get(ctx, "user", "key")
+		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
 		require.NoError(t, err)
 		require.False(t, ok)
 		require.Equal(t, entry.Metadata{}, meta)
@@ -492,10 +492,10 @@ func TestService_Get(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, false, errors.New("query failed"))
+		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, false, errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
-		meta, r, ok, err := s.Get(ctx, "user", "key")
+		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
 		require.ErrorIs(t, err, entry.ErrInternal)
 		require.False(t, ok)
 		require.Equal(t, entry.Metadata{}, meta)
@@ -515,11 +515,11 @@ func TestService_Get(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
 		blobRepo.EXPECT().Reader("user/key").Return(nil, false, errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
-		meta, r, ok, err := s.Get(ctx, "user", "key")
+		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
 		require.ErrorIs(t, err, entry.ErrInternal)
 		require.False(t, ok)
 		require.Equal(t, entry.Metadata{}, meta)
@@ -539,11 +539,11 @@ func TestService_Get(t *testing.T) {
 			Notes: []byte("notes"),
 		}
 
-		metaRepo.EXPECT().Get(ctx, "user", "key").Return(md, true, nil)
+		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(md, true, nil)
 		blobRepo.EXPECT().Reader("user/key").Return(nil, false, nil)
 
 		s := entry.New(metaRepo, blobRepo)
-		meta, r, ok, err := s.Get(ctx, "user", "key")
+		meta, r, ok, err := s.GetEntry(ctx, "user", "key")
 		require.ErrorIs(t, err, entry.ErrInternal)
 		require.False(t, ok)
 		require.Equal(t, entry.Metadata{}, meta)
@@ -562,11 +562,11 @@ func TestService_Delete(t *testing.T) {
 		metaRepo := NewMockMetadataRepository(ctrl)
 		blobRepo := NewMockRepository(ctrl)
 
-		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(nil)
+		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
 		blobRepo.EXPECT().Delete("user/key").Return(nil)
 
 		s := entry.New(metaRepo, blobRepo)
-		err := s.Delete(ctx, "user", "key")
+		err := s.DeleteEntry(ctx, "user", "key")
 		require.NoError(t, err)
 	})
 
@@ -577,10 +577,10 @@ func TestService_Delete(t *testing.T) {
 		metaRepo := NewMockMetadataRepository(ctrl)
 		blobRepo := NewMockRepository(ctrl)
 
-		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(errors.New("query failed"))
+		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
-		err := s.Delete(ctx, "user", "key")
+		err := s.DeleteEntry(ctx, "user", "key")
 		require.ErrorIs(t, err, entry.ErrInternal)
 	})
 
@@ -591,11 +591,11 @@ func TestService_Delete(t *testing.T) {
 		metaRepo := NewMockMetadataRepository(ctrl)
 		blobRepo := NewMockRepository(ctrl)
 
-		metaRepo.EXPECT().Delete(ctx, "user", "key").Return(nil)
+		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
 		blobRepo.EXPECT().Delete("user/key").Return(errors.New("query failed"))
 
 		s := entry.New(metaRepo, blobRepo)
-		err := s.Delete(ctx, "user", "key")
+		err := s.DeleteEntry(ctx, "user", "key")
 		require.ErrorIs(t, err, entry.ErrInternal)
 	})
 }

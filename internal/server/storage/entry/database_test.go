@@ -33,7 +33,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 			)
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		md, ok, err := repo.Get(ctx, "user", "key")
+		md, ok, err := repo.GetMetadata(ctx, "user", "key")
 		require.NoError(t, err)
 		assert.True(t, ok)
 		assert.Equal(t, entryService.Metadata{
@@ -59,7 +59,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 			WillReturnError(sql.ErrNoRows)
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		md, ok, err := repo.Get(ctx, "user", "key")
+		md, ok, err := repo.GetMetadata(ctx, "user", "key")
 		require.NoError(t, err)
 		assert.False(t, ok)
 		assert.Equal(t, entryService.Metadata{}, md)
@@ -81,7 +81,7 @@ func TestDatabaseMetadataRepository_Get(t *testing.T) {
 			WillReturnError(errors.New("query error"))
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		md, ok, err := repo.Get(ctx, "user", "key")
+		md, ok, err := repo.GetMetadata(ctx, "user", "key")
 		require.Error(t, err)
 		assert.False(t, ok)
 		assert.Equal(t, entryService.Metadata{}, md)
@@ -105,7 +105,7 @@ func TestDatabaseMetadataRepository_Set(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		err = repo.Set(ctx, "user", entryService.Metadata{
+		err = repo.SetMetadata(ctx, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("notes"),
@@ -126,7 +126,7 @@ func TestDatabaseMetadataRepository_Set(t *testing.T) {
 			WillReturnError(errors.New("query error"))
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		err = repo.Set(ctx, "user", entryService.Metadata{
+		err = repo.SetMetadata(ctx, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("notes"),
@@ -152,7 +152,7 @@ func TestDatabaseMetadataRepository_Delete(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		err = repo.Delete(ctx, "user", "key")
+		err = repo.DeleteMetadata(ctx, "user", "key")
 		require.NoError(t, err)
 	})
 
@@ -169,7 +169,7 @@ func TestDatabaseMetadataRepository_Delete(t *testing.T) {
 			WillReturnError(errors.New("query error"))
 
 		repo := entry.NewDatabaseMetadataRepository(db)
-		err = repo.Delete(ctx, "user", "key")
+		err = repo.DeleteMetadata(ctx, "user", "key")
 		require.Error(t, err)
 	})
 

@@ -27,13 +27,13 @@ var ErrNoUpload = errors.New("upload closed with no data")
 var ErrEntryExists = errors.New("entry already exists")
 
 type Service interface {
-	Set(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error)
-	Get(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error)
-	Delete(ctx context.Context, userID string, key string) error
+	SetEntry(ctx context.Context, userID string, md Metadata, overwrite bool) (chan<- UploadChunk, <-chan SetEntryResult, error)
+	GetEntry(ctx context.Context, userID string, key string) (Metadata, io.ReadCloser, bool, error)
+	DeleteEntry(ctx context.Context, userID string, key string) error
 }
 
 type MetadataRepository interface {
-	Set(ctx context.Context, userID string, md Metadata) error
-	Get(ctx context.Context, userID string, key string) (Metadata, bool, error)
-	Delete(ctx context.Context, userID string, key string) error
+	SetMetadata(ctx context.Context, userID string, md Metadata) error
+	GetMetadata(ctx context.Context, userID string, key string) (Metadata, bool, error)
+	DeleteMetadata(ctx context.Context, userID string, key string) error
 }
