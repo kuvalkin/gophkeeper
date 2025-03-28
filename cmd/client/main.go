@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"log"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
@@ -11,23 +11,19 @@ import (
 func main() {
 	conf, err := cmd.NewConfig()
 	if err != nil {
-		fmt.Println("error reading config:", err)
-
-		os.Exit(1)
+		log.Fatal("error reading config:", err)
 	}
 
 	c, err := container.New(conf)
 	if err != nil {
+		log.Fatal("cant init application service container:", err)
 		fmt.Println("cant init application service container:", err)
-
-		os.Exit(1)
 	}
 
 	defer func() {
 		err = c.Close()
 		if err != nil {
-			fmt.Println("error closing application service container:", err)
-			os.Exit(1)
+			log.Fatal("error closing application service container:", err)
 		}
 	}()
 
