@@ -1,4 +1,4 @@
-generate: generate-auth generate-entry generate-serialize
+generate: generate-auth generate-entry generate-serialize go-generate
 
 generate-auth:
 	protoc \
@@ -23,6 +23,9 @@ generate-serialize:
  		--go_out=. --go_opt=paths=import \
 		--go-grpc_out=. --go-grpc_opt=paths=import \
 		api/proto/serialize/v1/*.proto
+
+go-generate:
+	go generate ./...
 
 lint:
 	golangci-lint run ./...
