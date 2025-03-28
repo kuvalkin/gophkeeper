@@ -18,7 +18,7 @@ import (
 	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
-	auth2 "github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
+	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	authServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
 	entryServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
@@ -37,7 +37,7 @@ func NewServer(services Services, chunkSize int64) (*grpc.Server, error) {
 		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
 	}
 
-	authFunc := auth2.NewAuthFunc(services.User)
+	authFunc := auth.NewAuthFunc(services.User)
 
 	validator, err := protovalidate.New()
 	if err != nil {
