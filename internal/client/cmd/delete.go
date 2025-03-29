@@ -77,6 +77,10 @@ func newDeleteTextCommand(container container.Container) *cobra.Command {
 }
 
 func deleteEntry(cmd *cobra.Command, container container.Container, name string, entryType string) error {
+	if name == "" {
+		return fmt.Errorf("name is empty")
+	}
+
 	prompter, err := container.GetPrompter(cmd.Context())
 	if err != nil {
 		return fmt.Errorf("cant get prompter: %w", err)
