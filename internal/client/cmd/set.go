@@ -102,7 +102,13 @@ func newSetFileCommand(container container.Container) *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return errors.New("name is empty")
+			}
 			path := args[1]
+			if path == "" {
+				return errors.New("path is empty")
+			}
 
 			file, err := os.Open(path)
 			if err != nil {
