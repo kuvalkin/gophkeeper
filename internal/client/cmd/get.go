@@ -36,6 +36,9 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return fmt.Errorf("name is empty")
+			}
 
 			cmd.Println("Getting login...")
 
