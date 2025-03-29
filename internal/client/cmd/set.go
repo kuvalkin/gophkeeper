@@ -144,6 +144,9 @@ func newSetCardCommand(container container.Container) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return errors.New("name is empty")
+			}
 
 			notes, err := cmd.Flags().GetString("notes")
 			if err != nil {
