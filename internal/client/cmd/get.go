@@ -74,11 +74,17 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 	getFile := &cobra.Command{
 		Use:   "file",
 		Short: "Get file",
-		Long:  "Download file from the cloud, decrypts it and stores in a provided path",
+		Long:  "Download file from the cloud, decrypts it and stores in a provided path. If the file in path already exists, it will be overwritten.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return fmt.Errorf("name is empty")
+			}
 			pathToDst := args[1]
+			if pathToDst == "" {
+				return fmt.Errorf("path is empty")
+			}
 
 			cmd.Println("Getting file...")
 			cmd.Println("It may take a while depending on the file size")
@@ -106,7 +112,7 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 				return fmt.Errorf("error creating directory: %w", err)
 			}
 
-			dst, err := os.OpenFile(pathToDst, os.O_CREATE|os.O_WRONLY, 0644)
+			dst, err := os.OpenFile(pathToDst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 			if err != nil {
 				return fmt.Errorf("error opening file: %w", err)
 			}

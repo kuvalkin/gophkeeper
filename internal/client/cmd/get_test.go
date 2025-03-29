@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
@@ -163,6 +164,157 @@ func TestGetLogin(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(nil, errors.New("error"))
 
 		cmd, _ := newTestGetLoginCommand(container, "name")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+}
+
+func TestGetFile(t *testing.T) {
+	ctx, cancel := utils.TestContext(t)
+	defer cancel()
+
+	newTestGetFileCommand := func(container container.Container, name string, path string) (*cobra.Command, *bytes.Buffer) {
+		out := bytes.NewBuffer(nil)
+
+		cmd := newGetCommand(container)
+		// gkeep get file {name} {savePath}
+		cmd.SetArgs([]string{"file", name, path})
+		cmd.SetOut(out)
+		cmd.SetErr(io.Discard)
+		cmd.SetIn(bytes.NewBuffer(nil))
+		cmd.SetContext(ctx)
+
+		return cmd, out
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("file content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
+
+		file, err := os.CreateTemp("", "test-get-file-*")
+		require.NoError(t, err)
+		defer os.Remove(file.Name())
+		require.NoError(t, file.Close())
+
+		cmd, out := newTestGetFileCommand(container, "name", file.Name())
+		err = cmd.Execute()
+		require.NoError(t, err)
+		require.Contains(t, out.String(), "mynotes")
+		require.FileExists(t, file.Name())
+		written, err := os.ReadFile(file.Name())
+		require.NoError(t, err)
+		require.Equal(t, "file content", string(written))
+	})
+
+	t.Run("no name", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		cmd, _ := newTestGetFileCommand(container, "", "")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("no path", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		cmd, _ := newTestGetFileCommand(container, "name", "")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("entry not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("", nil, false, nil)
+
+		file, err := os.CreateTemp("", "test-get-file-*")
+		require.NoError(t, err)
+		defer os.Remove(file.Name())
+		require.NoError(t, file.Close())
+
+		cmd, out := newTestGetFileCommand(container, "name", file.Name())
+		err = cmd.Execute()
+		require.NoError(t, err)
+		outString := out.String()
+		require.Contains(t, outString, "not found")
+	})
+
+	t.Run("get error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("file content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, errors.New("error"))
+
+		file, err := os.CreateTemp("", "test-get-file-*")
+		require.NoError(t, err)
+		defer os.Remove(file.Name())
+		require.NoError(t, file.Close())
+
+		cmd, _ := newTestGetFileCommand(container, "name", file.Name())
+		err = cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("invalid path", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("file content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
+
+		// path is directory
+		cmd, _ := newTestGetFileCommand(container, "name", os.TempDir())
 		err := cmd.Execute()
 		require.Error(t, err)
 	})
