@@ -233,6 +233,14 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return errors.New("name is empty")
+			}
+
+			notes, err := cmd.Flags().GetString("notes")
+			if err != nil {
+				return fmt.Errorf("error getting notes flag: %w", err)
+			}
 
 			prompter, err := container.GetPrompter(cmd.Context())
 			if err != nil {
@@ -253,11 +261,6 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 			}
 
 			content := io.NopCloser(strings.NewReader(text))
-
-			notes, err := cmd.Flags().GetString("notes")
-			if err != nil {
-				return fmt.Errorf("error getting notes flag: %w", err)
-			}
 
 			cmd.Println("Storing text...")
 

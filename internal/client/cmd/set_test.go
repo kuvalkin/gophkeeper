@@ -821,3 +821,154 @@ func TestSetCard(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestSetText(t *testing.T) {
+	ctx, cancel := utils.TestContext(t)
+	defer cancel()
+
+	newTestSetTextCommand := func(container container.Container, name string, notes string) *cobra.Command {
+		cmd := newSetCommand(container)
+		// gkeep set text {name} --notes {notes}
+		cmd.SetArgs([]string{"text", name, "--notes", notes})
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetIn(bytes.NewBuffer(nil))
+		cmd.SetContext(ctx)
+
+		return cmd
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		prompter := NewMockPrompter(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("text", nil)
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.NoError(t, err)
+	})
+
+	t.Run("no name", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		cmd := newTestSetTextCommand(container, "", "notes")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("cant get prompter", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(nil, errors.New("error"))
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("prompt error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		prompter := NewMockPrompter(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("", errors.New("error"))
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("prompt cancel", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		prompter := NewMockPrompter(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("", prompts.ErrCanceled)
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.NoError(t, err)
+	})
+
+	t.Run("store error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		prompter := NewMockPrompter(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("text", nil)
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("empty text", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		prompter := NewMockPrompter(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("", nil)
+
+		cmd := newTestSetTextCommand(container, "name", "notes")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+}
