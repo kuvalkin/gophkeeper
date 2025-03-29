@@ -319,3 +319,140 @@ func TestGetFile(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestGetCard(t *testing.T) {
+	ctx, cancel := utils.TestContext(t)
+	defer cancel()
+
+	newTestGetCardCommand := func(container container.Container, name string) (*cobra.Command, *bytes.Buffer) {
+		out := bytes.NewBuffer(nil)
+
+		cmd := newGetCommand(container)
+		// gkeep get card {name}
+		cmd.SetArgs([]string{"card", name})
+		cmd.SetOut(out)
+		cmd.SetErr(io.Discard)
+		cmd.SetIn(bytes.NewBuffer(nil))
+		cmd.SetContext(ctx)
+
+		return cmd, out
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		card := &entries.BankCard{
+			Number: "4111111111111111",
+			HolderName: "John Doe",
+			ExpirationDate: entries.ExpirationDate{
+				Year: 2030,
+				Month: 12,
+			},
+			CVV: 123,
+		}
+		content, err := card.Marshal()
+		require.NoError(t, err)
+
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
+
+		cmd, out := newTestGetCardCommand(container, "name")
+		err = cmd.Execute()
+		require.NoError(t, err)
+		outString := out.String()
+		require.Contains(t, outString, "4111111111111111")
+		require.Contains(t, outString, "John Doe")
+		require.Contains(t, outString, "2030")
+		require.Contains(t, outString, "12")
+		require.Contains(t, outString, "123")
+		require.Contains(t, outString, "mynotes")
+	})
+
+	t.Run("no name", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		cmd, _ := newTestGetCardCommand(container, "")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("entry not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("", nil, false, nil)
+
+		cmd, out := newTestGetCardCommand(container, "name")
+		err := cmd.Execute()
+		require.NoError(t, err)
+		outString := out.String()
+		require.Contains(t, outString, "not found")
+	})
+
+	t.Run("get error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("file content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, errors.New("error"))
+
+		cmd, _ := newTestGetCardCommand(container, "name")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("service returns invalid data", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("invalid data"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
+
+		cmd, _ := newTestGetCardCommand(container, "name")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+}
