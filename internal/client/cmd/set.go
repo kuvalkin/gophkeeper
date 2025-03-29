@@ -40,6 +40,9 @@ func newSetLoginCommand(container container.Container) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := args[0]
+			if name == "" {
+				return errors.New("name is empty")
+			}
 
 			notes, err := cmd.Flags().GetString("notes")
 			if err != nil {
@@ -264,11 +267,6 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 }
 
 func store(ctx context.Context, container container.Container, entryType string, name string, notes string, content io.ReadCloser) error {
-	service, err := container.GetEntryService(ctx)
-	if err != nil {
-		return fmt.Errorf("error getting entry service: %w", err)
-	}
-
 	tokenService, err := container.GetAuthService(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting token service: %w", err)
@@ -277,6 +275,11 @@ func store(ctx context.Context, container container.Container, entryType string,
 	ctxWithToken, err := tokenService.AddAuthorizationHeader(ctx)
 	if err != nil {
 		return fmt.Errorf("error setting token: %w", err)
+	}
+	
+	service, err := container.GetEntryService(ctx)
+	if err != nil {
+		return fmt.Errorf("error getting entry service: %w", err)
 	}
 
 	err = service.SetEntry(ctxWithToken, utils.GetEntryKey(entryType, name), name, notes, content, func() bool {
