@@ -31,6 +31,8 @@ func NewRootCommand(container container.Container) *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("error initializing logger: %w", err)
 				}
+
+				cmd.Println("Verbose output enabled")
 			}
 
 			return nil
@@ -103,6 +105,11 @@ func NewConfig() (*viper.Viper, error) {
 	}
 
 	if err := conf.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// config file not found, use defaults
+			return conf, nil
+		}
+
 		return nil, fmt.Errorf("cant read config: %w", err)
 	}
 
