@@ -456,3 +456,103 @@ func TestGetCard(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestGetText(t *testing.T) {
+	ctx, cancel := utils.TestContext(t)
+	defer cancel()
+
+	newTestGetTextCommand := func(container container.Container, name string) (*cobra.Command, *bytes.Buffer) {
+		out := bytes.NewBuffer(nil)
+
+		cmd := newGetCommand(container)
+		// gkeep get text {name}
+		cmd.SetArgs([]string{"text", name})
+		cmd.SetOut(out)
+		cmd.SetErr(io.Discard)
+		cmd.SetIn(bytes.NewBuffer(nil))
+		cmd.SetContext(ctx)
+
+		return cmd, out
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("text content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("mynotes", content, true, nil)
+
+		cmd, out := newTestGetTextCommand(container, "name")
+		err := cmd.Execute()
+		require.NoError(t, err)
+		outString := out.String()
+		require.Contains(t, outString, "text content")
+		require.Contains(t, outString, "mynotes")
+	})
+
+	t.Run("no name", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+
+		cmd, _ := newTestGetTextCommand(container, "")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+
+	t.Run("entry not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("", nil, false, nil)
+
+		cmd, out := newTestGetTextCommand(container, "name")
+		err := cmd.Execute()
+		require.NoError(t, err)
+		outString := out.String()
+		require.Contains(t, outString, "not found")
+	})
+
+	t.Run("get error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		container := NewMockContainer(ctrl)
+		entryService := NewMockEntryService(ctrl)
+		authService := NewMockAuthService(ctrl)
+
+		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
+		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
+
+		authCtx := context.WithValue(ctx, "test", "test")
+		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
+
+		content := io.NopCloser(bytes.NewBufferString("file content"))
+		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("mynotes", content, true, errors.New("error"))
+
+		cmd, _ := newTestGetTextCommand(container, "name")
+		err := cmd.Execute()
+		require.Error(t, err)
+	})
+}
