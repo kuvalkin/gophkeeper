@@ -5,11 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestLogout(t *testing.T) {
@@ -26,14 +27,13 @@ func TestLogout(t *testing.T) {
 		return logout
 	}
 
-
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
 		container := NewMockContainer(ctrl)
 		service := NewMockAuthService(ctrl)
-	
+
 		container.EXPECT().GetAuthService(ctx).Return(service, nil).AnyTimes()
 
 		service.EXPECT().Logout(ctx).Return(nil)
@@ -53,7 +53,7 @@ func TestLogout(t *testing.T) {
 
 		cmd := newTestLogoutCommand(container)
 		err := cmd.Execute()
-		require.Error(t, err)	
+		require.Error(t, err)
 	})
 
 	t.Run("cant logout", func(t *testing.T) {

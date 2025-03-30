@@ -7,12 +7,13 @@ import (
 	"io"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
-	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestDeleteLogin(t *testing.T) {
@@ -75,7 +76,6 @@ func TestDeleteLogin(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	
 	t.Run("cant get prompter", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

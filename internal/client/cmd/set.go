@@ -288,7 +288,7 @@ func store(ctx context.Context, container container.Container, entryType string,
 	if err != nil {
 		return fmt.Errorf("error setting token: %w", err)
 	}
-	
+
 	service, err := container.GetEntryService(ctx)
 	if err != nil {
 		return fmt.Errorf("error getting entry service: %w", err)

@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestNewRootCommand(t *testing.T) {

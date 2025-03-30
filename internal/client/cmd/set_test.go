@@ -8,13 +8,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 //go:generate mockgen -destination=./container_mock_test.go -package=cmd github.com/kuvalkin/gophkeeper/internal/client/service/container Container
@@ -193,7 +194,6 @@ func TestSetLogin(t *testing.T) {
 		err := cmd.Execute()
 		require.Error(t, err)
 	})
-
 
 	t.Run("cant get entry service", func(t *testing.T) {
 		ctrl := gomock.NewController(t)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/middleware"
 )
 

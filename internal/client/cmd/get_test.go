@@ -8,13 +8,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
 
 func TestGetLogin(t *testing.T) {
@@ -353,10 +354,10 @@ func TestGetCard(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		card := &entries.BankCard{
-			Number: "4111111111111111",
+			Number:     "4111111111111111",
 			HolderName: "John Doe",
 			ExpirationDate: entries.ExpirationDate{
-				Year: 2030,
+				Year:  2030,
 				Month: 12,
 			},
 			CVV: 123,
