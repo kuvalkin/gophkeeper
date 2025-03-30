@@ -8,12 +8,12 @@ type MW func(CobraRunE) CobraRunE
 
 func Combine(hooks ...CobraRunE) CobraRunE {
 	return func(cmd *cobra.Command, args []string) error {
-		for _, hook := range hooks {
-			if hooks == nil {
+		for _, singleHook := range hooks {
+			if singleHook == nil {
 				continue
 			}
 
-			if err := hook(cmd, args); err != nil {
+			if err := singleHook(cmd, args); err != nil {
 				return err
 			}
 		}
