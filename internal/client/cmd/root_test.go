@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
@@ -51,4 +52,24 @@ func TestNewConfig(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, conf)
 	})
+}
+
+func TestConfigPath(t *testing.T) {
+	ctx, cancel := utils.TestContext(t)
+	defer cancel()
+
+	out := bytes.NewBuffer(nil)
+
+	cmd := newConfigPathCommand()
+	cmd.SetIn(bytes.NewBuffer(nil))
+	cmd.SetOut(out)
+	cmd.SetErr(out)
+	cmd.SetContext(ctx)
+
+	err := cmd.Execute()
+	require.NoError(t, err)
+	outString := out.String()
+	pwd, err := os.Getwd()
+	require.NoError(t, err)
+	require.Contains(t, outString, pwd)
 }
