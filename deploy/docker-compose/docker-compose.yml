@@ -20,7 +20,7 @@ services:
         - action: rebuild
           path: ../../cmd/server
         - action: rebuild
-          path: ../../internal/proto
+          path: ../../internal/pkg
         - action: rebuild
           path: ../../internal/server
         - action: rebuild
