@@ -8,7 +8,7 @@ COPY ./go.sum ./go.sum
 RUN go mod download
 
 COPY ./cmd/server ./cmd/server
-COPY ./internal/proto ./internal/proto
+COPY ./pkg ./pkg
 COPY ./internal/server ./internal/server
 COPY ./internal/storage ./internal/storage
 COPY ./internal/support ./internal/support
