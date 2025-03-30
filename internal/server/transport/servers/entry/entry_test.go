@@ -13,6 +13,7 @@ import (
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	entryService "github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
@@ -30,13 +31,13 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
-		content := NewMockReadCloser(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
+		content := mocks.NewMockReadCloser(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{
 				Key:   "key",
 				Name:  "name",
@@ -73,8 +74,8 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctx).AnyTimes()
 
@@ -90,12 +91,12 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{},
 			nil,
 			false,
@@ -114,12 +115,12 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{},
 			nil,
 			false,
@@ -138,13 +139,13 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
-		content := NewMockReadCloser(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
+		content := mocks.NewMockReadCloser(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{
 				Key:   "key",
 				Name:  "name",
@@ -174,13 +175,13 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
-		content := NewMockReadCloser(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
+		content := mocks.NewMockReadCloser(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{
 				Key:   "key",
 				Name:  "name",
@@ -214,13 +215,13 @@ func TestServer_GetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
-		content := NewMockReadCloser(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
+		content := mocks.NewMockReadCloser(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Get(ctxWithToken, "user", "key").Return(
+		service.EXPECT().GetEntry(ctxWithToken, "user", "key").Return(
 			entryService.Metadata{
 				Key:   "key",
 				Name:  "name",
@@ -266,8 +267,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -283,7 +284,7 @@ func TestServer_SetEntry(t *testing.T) {
 		// start upload
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -317,8 +318,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctx).AnyTimes()
 
@@ -332,8 +333,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -350,8 +351,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -368,8 +369,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -383,7 +384,7 @@ func TestServer_SetEntry(t *testing.T) {
 		}, nil)
 
 		// start upload
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -404,8 +405,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -419,7 +420,7 @@ func TestServer_SetEntry(t *testing.T) {
 		}, nil)
 
 		// start upload
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -433,7 +434,7 @@ func TestServer_SetEntry(t *testing.T) {
 		// start upload again
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -464,8 +465,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -481,7 +482,7 @@ func TestServer_SetEntry(t *testing.T) {
 		// start upload
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -518,8 +519,8 @@ func TestServer_SetEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockBidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
@@ -535,7 +536,7 @@ func TestServer_SetEntry(t *testing.T) {
 		// start upload
 		uploadChan := make(chan entryService.UploadChunk)
 		resultChan := make(chan entryService.SetEntryResult)
-		service.EXPECT().Set(ctxWithToken, "user", entryService.Metadata{
+		service.EXPECT().SetEntry(ctxWithToken, "user", entryService.Metadata{
 			Key:   "key",
 			Name:  "name",
 			Notes: []byte("encrypted notes"),
@@ -576,12 +577,12 @@ func TestServer_DeleteEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Delete(ctxWithToken, "user", "key").Return(nil)
+		service.EXPECT().DeleteEntry(ctxWithToken, "user", "key").Return(nil)
 
 		s := entry.New(service, 1024)
 		_, err := s.DeleteEntry(ctxWithToken, &pb.DeleteEntryRequest{
@@ -594,8 +595,8 @@ func TestServer_DeleteEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctx).AnyTimes()
 
@@ -611,12 +612,12 @@ func TestServer_DeleteEntry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		stream := NewMockServerStreamingServer[pb.Entry](ctrl)
-		service := NewMockService(ctrl)
+		stream := mocks.NewMockServerStreamingServer[pb.Entry](ctrl)
+		service := mocks.NewMockEntryService(ctrl)
 
 		stream.EXPECT().Context().Return(ctxWithToken).AnyTimes()
 
-		service.EXPECT().Delete(ctxWithToken, "user", "key").Return(errors.New("cant delete entry"))
+		service.EXPECT().DeleteEntry(ctxWithToken, "user", "key").Return(errors.New("cant delete entry"))
 
 		s := entry.New(service, 1024)
 		_, err := s.DeleteEntry(ctxWithToken, &pb.DeleteEntryRequest{

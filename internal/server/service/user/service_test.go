@@ -11,6 +11,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
@@ -28,7 +29,7 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().AddUser(ctx, "login", "7a37b85c8918eac19a9089c0fa5a2ab4dce3f90528dcdeec108b23ddf3607b99").Return(nil)
 
@@ -41,7 +42,7 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().AddUser(ctx, gomock.Any(), gomock.Any()).Return(user.ErrLoginNotUnique)
 
@@ -54,7 +55,7 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		s := user.NewService(repo, defaultOptions)
 		err := s.RegisterUser(ctx, "", "password")
@@ -65,7 +66,7 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().AddUser(ctx, gomock.Any(), gomock.Any()).Return(errors.New("query failed"))
 
@@ -83,7 +84,7 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{
 			ID:           uuid.New().String(),
@@ -100,7 +101,7 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{}, false, nil)
 
@@ -114,7 +115,7 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{}, false, errors.New("query failed"))
 
@@ -128,7 +129,7 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockUserRepository(ctrl)
 
 		repo.EXPECT().FindUser(ctx, "login").Return(user.UserInfo{
 			ID:           uuid.New().String(),

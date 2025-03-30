@@ -12,11 +12,8 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
+	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 )
-
-//go:generate mockgen -destination=./meta_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/server/service/entry MetadataRepository
-//go:generate mockgen -destination=./blob_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/storage/blob Repository
-//go:generate mockgen -destination=./write_closer_mock_test.go -package=entry_test io WriteCloser
 
 func TestService_Set(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
@@ -27,8 +24,8 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, true, nil)
 
@@ -43,8 +40,8 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 			metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, errors.New("query error"))
 
@@ -59,9 +56,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -93,9 +90,9 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		writer := NewMockWriteCloser(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		writer := mocks.NewMockWriteCloser(ctrl)
 
 		md := entry.Metadata{
 			Key:   "key",
@@ -126,9 +123,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -159,9 +156,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -194,9 +191,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -226,9 +223,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -259,8 +256,8 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		md := entry.Metadata{
 			Key:   "key",
@@ -282,9 +279,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -312,9 +309,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -342,9 +339,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -376,9 +373,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -407,9 +404,9 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			metaRepo := NewMockMetadataRepository(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			writer := NewMockWriteCloser(ctrl)
+			metaRepo := mocks.NewMockMetadataRepository(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			writer := mocks.NewMockWriteCloser(ctrl)
 
 			md := entry.Metadata{
 				Key:   "key",
@@ -445,8 +442,8 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 		reader := io.NopCloser(bytes.NewBuffer(nil))
 
 		md := entry.Metadata{
@@ -470,8 +467,8 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		metaRepo.EXPECT().GetMetadata(ctx, "user", "key").Return(entry.Metadata{}, false, nil)
 
@@ -487,8 +484,8 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		md := entry.Metadata{
 			Key:   "key",
@@ -510,8 +507,8 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		md := entry.Metadata{
 			Key:   "key",
@@ -534,8 +531,8 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		md := entry.Metadata{
 			Key:   "key",
@@ -563,8 +560,8 @@ func TestService_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
 		blobRepo.EXPECT().DeleteBlob("user/key").Return(nil)
@@ -578,8 +575,8 @@ func TestService_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(errors.New("query failed"))
 
@@ -592,8 +589,8 @@ func TestService_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		metaRepo := NewMockMetadataRepository(ctrl)
-		blobRepo := NewMockRepository(ctrl)
+		metaRepo := mocks.NewMockMetadataRepository(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
 
 		metaRepo.EXPECT().DeleteMetadata(ctx, "user", "key").Return(nil)
 		blobRepo.EXPECT().DeleteBlob("user/key").Return(errors.New("query failed"))

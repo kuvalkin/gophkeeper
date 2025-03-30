@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
@@ -52,7 +53,7 @@ func Test_AuthFunc(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
+		service := mocks.NewMockUserService(ctrl)
 		authFunc := auth.NewAuthFunc(service)
 
 		ctxWithToken := metadata.NewIncomingContext(ctx, metadata.New(map[string]string{
@@ -76,7 +77,7 @@ func Test_AuthFunc(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
+		service := mocks.NewMockUserService(ctrl)
 		authFunc := auth.NewAuthFunc(service)
 
 		ctxWithToken := metadata.NewIncomingContext(ctx, metadata.New(map[string]string{
@@ -95,7 +96,7 @@ func Test_AuthFunc(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
+		service := mocks.NewMockUserService(ctrl)
 		authFunc := auth.NewAuthFunc(service)
 
 		ctxWithToken := metadata.NewIncomingContext(ctx, metadata.New(map[string]string{

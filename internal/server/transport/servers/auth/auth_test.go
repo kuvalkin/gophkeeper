@@ -11,6 +11,7 @@ import (
 
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	userService "github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
@@ -34,9 +35,9 @@ func TestAuth_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Register(ctx, "login", "password").Return(nil)
-		service.EXPECT().Login(ctx, "login", "password").Return("token", nil)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().RegisterUser(ctx, "login", "password").Return(nil)
+		service.EXPECT().LoginUser(ctx, "login", "password").Return("token", nil)
 
 		server := auth.New(service)
 		resp, err := server.Register(ctx, &pb.RegisterRequest{Login: "login", Password: "password"})
@@ -48,8 +49,8 @@ func TestAuth_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Register(ctx, "login", "password").Return(userService.ErrLoginTaken)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().RegisterUser(ctx, "login", "password").Return(userService.ErrLoginTaken)
 
 		server := auth.New(service)
 		_, err := server.Register(ctx, &pb.RegisterRequest{Login: "login", Password: "password"})
@@ -61,8 +62,8 @@ func TestAuth_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Register(ctx, "login", "password").Return(userService.ErrInternal)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().RegisterUser(ctx, "login", "password").Return(userService.ErrInternal)
 
 		server := auth.New(service)
 		_, err := server.Register(ctx, &pb.RegisterRequest{Login: "login", Password: "password"})
@@ -74,8 +75,8 @@ func TestAuth_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Register(ctx, "login", "password").Return(userService.ErrInvalidLogin)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().RegisterUser(ctx, "login", "password").Return(userService.ErrInvalidLogin)
 
 		server := auth.New(service)
 		_, err := server.Register(ctx, &pb.RegisterRequest{Login: "login", Password: "password"})
@@ -87,9 +88,9 @@ func TestAuth_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Register(ctx, "login", "password").Return(nil)
-		service.EXPECT().Login(ctx, "login", "password").Return("", userService.ErrInternal)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().RegisterUser(ctx, "login", "password").Return(nil)
+		service.EXPECT().LoginUser(ctx, "login", "password").Return("", userService.ErrInternal)
 
 		server := auth.New(service)
 		_, err := server.Register(ctx, &pb.RegisterRequest{Login: "login", Password: "password"})
@@ -106,8 +107,8 @@ func TestAuth_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Login(ctx, "login", "password").Return("token", nil)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().LoginUser(ctx, "login", "password").Return("token", nil)
 
 		server := auth.New(service)
 		resp, err := server.Login(ctx, &pb.LoginRequest{Login: "login", Password: "password"})
@@ -119,8 +120,8 @@ func TestAuth_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Login(ctx, "login", "password").Return("", userService.ErrInvalidPair)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().LoginUser(ctx, "login", "password").Return("", userService.ErrInvalidPair)
 
 		server := auth.New(service)
 		_, err := server.Login(ctx, &pb.LoginRequest{Login: "login", Password: "password"})
@@ -132,8 +133,8 @@ func TestAuth_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().Login(ctx, "login", "password").Return("", userService.ErrInternal)
+		service := mocks.NewMockUserService(ctrl)
+		service.EXPECT().LoginUser(ctx, "login", "password").Return("", userService.ErrInternal)
 
 		server := auth.New(service)
 		_, err := server.Login(ctx, &pb.LoginRequest{Login: "login", Password: "password"})
