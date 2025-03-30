@@ -12,6 +12,7 @@ type cancellable interface {
 	Canceled() bool
 }
 
+// ErrCanceled is returned when a prompt is canceled by the user.
 var ErrCanceled = errors.New("cancelled")
 
 func run[T tea.Model](ctx context.Context, initModel T, altScreen bool) (T, error) {
