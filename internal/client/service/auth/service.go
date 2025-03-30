@@ -11,6 +11,7 @@ import (
 	pbAuth "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
 )
 
+// New creates a new instance of the authentication service.
 func New(client pbAuth.AuthServiceClient, repo Repository) Service {
 	return &service{
 		client: client,
@@ -23,6 +24,8 @@ type service struct {
 	repo   Repository
 }
 
+// Register registers a new user with the given login and password.
+// It saves the authentication token in the repository upon successful registration.
 func (s *service) Register(ctx context.Context, login string, password string) error {
 	response, err := s.client.Register(ctx, &pbAuth.RegisterRequest{Login: login, Password: password})
 
@@ -42,6 +45,8 @@ func (s *service) Register(ctx context.Context, login string, password string) e
 	return nil
 }
 
+// Login authenticates a user with the given login and password.
+// It saves the authentication token in the repository upon successful login.
 func (s *service) Login(ctx context.Context, login string, password string) error {
 	response, err := s.client.Login(ctx, &pbAuth.LoginRequest{Login: login, Password: password})
 
@@ -61,6 +66,7 @@ func (s *service) Login(ctx context.Context, login string, password string) erro
 	return nil
 }
 
+// IsLoggedIn checks if the user is currently logged in by verifying the existence of a stored token.
 func (s *service) IsLoggedIn(ctx context.Context) (bool, error) {
 	_, ok, err := s.repo.GetToken(ctx)
 	if err != nil {
@@ -70,6 +76,7 @@ func (s *service) IsLoggedIn(ctx context.Context) (bool, error) {
 	return ok, nil
 }
 
+// Logout logs the user out by deleting the stored token from the repository.
 func (s *service) Logout(ctx context.Context) error {
 	err := s.repo.DeleteToken(ctx)
 	if err != nil {
@@ -79,6 +86,8 @@ func (s *service) Logout(ctx context.Context) error {
 	return nil
 }
 
+// AddAuthorizationHeader adds an authorization header to the context using the stored token.
+// Returns an updated context with the authorization header or an error if the token is not found.
 func (s *service) AddAuthorizationHeader(ctx context.Context) (context.Context, error) {
 	token, ok, err := s.repo.GetToken(ctx)
 	if err != nil {

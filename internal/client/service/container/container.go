@@ -1,3 +1,8 @@
+// Package container provides a service container implementation for the GophKeeper client.
+// It manages the initialization and lifecycle of various services such as authentication,
+// secret management, and data entry handling. The container ensures that resources are
+// properly initialized and cleaned up, and provides a unified interface for accessing
+// these services.
 package container
 
 import (
@@ -24,14 +29,22 @@ import (
 	entypb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
+// Container defines the interface for the application's service container.
+// It provides methods to retrieve various services and resources.
 type Container interface {
 	io.Closer
+	// GetSecretService retrieves the secret service, which manages secrets.
 	GetSecretService(ctx context.Context) (secret.Service, error)
+	// GetAuthService retrieves the authentication service, which handles user authentication.
 	GetAuthService(ctx context.Context) (auth.Service, error)
+	// GetEntryService retrieves the entry service, which manages data entries.
 	GetEntryService(ctx context.Context) (entry.Service, error)
+	// GetPrompter retrieves the prompter, which handles user interactions via the terminal.
 	GetPrompter(ctx context.Context) (prompts.Prompter, error)
 }
 
+// New creates a new instance of the service container.
+// It takes a viper configuration object as input and returns a Container instance or an error.
 func New(conf *viper.Viper) (Container, error) {
 	c := &container{
 		conf: conf,
@@ -64,7 +77,8 @@ type container struct {
 	tempDir string
 }
 
-// not goroutine safe!
+// Close releases all resources held by the container, such as temporary directories
+// and gRPC connections. It is not goroutine-safe.
 func (c *container) Close() error {
 	errs := make([]error, 0)
 
@@ -85,6 +99,7 @@ func (c *container) Close() error {
 	return errors.Join(errs...)
 }
 
+// GetPrompter initializes and retrieves the terminal prompter for user interactions.
 func (c *container) GetPrompter(ctx context.Context) (prompts.Prompter, error) {
 	c.initPrompter.Do(func() {
 		c.prompter = prompts.NewTerminalPrompter()
@@ -93,6 +108,8 @@ func (c *container) GetPrompter(ctx context.Context) (prompts.Prompter, error) {
 	return c.prompter, nil
 }
 
+// GetSecretService initializes and retrieves the secret service, which manages secrets
+// using a keyring-based storage repository.
 func (c *container) GetSecretService(_ context.Context) (secret.Service, error) {
 	c.initSecretService.Do(func() {
 		c.secretService = secret.New(
@@ -103,6 +120,8 @@ func (c *container) GetSecretService(_ context.Context) (secret.Service, error) 
 	return c.secretService, nil
 }
 
+// GetEntryService initializes and retrieves the entry service, which manages data entries.
+// It sets up a gRPC connection, a crypter for encryption, and a temporary directory for file storage.
 func (c *container) GetEntryService(ctx context.Context) (entry.Service, error) {
 	var outErr error //todo will there be error on second pass?
 
@@ -136,6 +155,8 @@ func (c *container) GetEntryService(ctx context.Context) (entry.Service, error) 
 	return c.entryService, outErr
 }
 
+// GetAuthService initializes and retrieves the authentication service, which handles user authentication
+// using a gRPC connection and a keyring-based storage repository.
 func (c *container) GetAuthService(_ context.Context) (auth.Service, error) {
 	var outErr error
 

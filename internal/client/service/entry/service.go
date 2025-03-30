@@ -18,6 +18,9 @@ import (
 	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
+// New creates a new instance of the entry service, which encapsulates the core business logic
+// for handling entries. This includes encryption, decryption, and interaction with the server
+// and local storage for managing entry data.
 func New(
 	crypt Crypt,
 	client pb.EntryServiceClient,
@@ -41,6 +44,9 @@ type service struct {
 	log       *zap.SugaredLogger
 }
 
+// SetEntry creates or updates an entry with the given key, name, notes, and content.
+// It encrypts the content and uploads it to the server. If the entry already exists,
+// the onOverwrite callback determines whether to overwrite it.
 func (s *service) SetEntry(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) error {
 	llog := s.log.WithLazy("key", key, "name", name)
 
@@ -241,6 +247,8 @@ func (s *service) uploadBlob(
 	}
 }
 
+// GetEntry retrieves an entry by its key. It decrypts the notes and content and returns them.
+// The boolean indicates whether the entry exists, and an error is returned if any issues occur.
 func (s *service) GetEntry(ctx context.Context, key string) (string, io.ReadCloser, bool, error) {
 	stream, err := s.client.GetEntry(ctx, &pb.GetEntryRequest{Key: key})
 	if err != nil {
@@ -335,6 +343,7 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.
 	return reader, nil
 }
 
+// DeleteEntry removes an entry by its key. Returns an error if the deletion fails.
 func (s *service) DeleteEntry(ctx context.Context, name string) error {
 	_, err := s.client.DeleteEntry(ctx, &pb.DeleteEntryRequest{Key: name})
 	if err != nil {
