@@ -6,12 +6,13 @@ import (
 	"io"
 	"testing"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/cmd/middleware"
-	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
-	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kuvalkin/gophkeeper/internal/client/cmd/middleware"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestEnsureLoggedIn(t *testing.T) {

@@ -11,8 +11,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
-	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func TestService_Set(t *testing.T) {
