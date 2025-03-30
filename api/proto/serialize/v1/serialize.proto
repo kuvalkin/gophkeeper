@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package com.kuvalkin.gophkeeper.proto.serialize.v1;
-option go_package = "internal/proto/serialize/v1;v1";
+option go_package = "pkg/proto/serialize/v1;v1";
 
 import "buf/validate/validate.proto";
 

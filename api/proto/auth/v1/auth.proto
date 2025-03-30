@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package com.kuvalkin.gophkeeper.proto.auth.v1;
-option go_package = "internal/proto/auth/v1;v1";
+option go_package = "pkg/proto/auth/v1;v1";
 
 import "buf/validate/validate.proto";
 

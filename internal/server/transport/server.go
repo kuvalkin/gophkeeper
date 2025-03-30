@@ -14,14 +14,14 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	authServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
 	entryServer "github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	authpb "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
+	entypb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 type Services struct {

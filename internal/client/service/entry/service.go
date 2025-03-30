@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 func New(

@@ -12,8 +12,8 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 const chunkSize = 1024

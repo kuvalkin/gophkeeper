@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	entryService "github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/entry"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 func TestServer_GetEntry(t *testing.T) {

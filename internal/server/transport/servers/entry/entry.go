@@ -12,10 +12,10 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 func New(service entry.Service, chunkSize int64) pb.EntryServiceServer {

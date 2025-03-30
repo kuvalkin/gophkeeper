@@ -19,9 +19,9 @@ import (
 	keyringStorage "github.com/kuvalkin/gophkeeper/internal/client/storage/keyring"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/crypt"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
-	authpb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
-	entypb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
+	authpb "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
+	entypb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
 type Container interface {

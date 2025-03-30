@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	"github.com/kuvalkin/gophkeeper/internal/server/service/user"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
 )
 
 func New(userService user.Service) pb.AuthServiceServer {

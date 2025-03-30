@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
+	pbAuth "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
 )
 
 func New(client pbAuth.AuthServiceClient, repo Repository) Service {

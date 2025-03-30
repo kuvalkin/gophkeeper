@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	userService "github.com/kuvalkin/gophkeeper/internal/server/service/user"
 	"github.com/kuvalkin/gophkeeper/internal/server/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/servers/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/auth/v1"
 )
 
 func TestAuth_AuthFuncOverride(t *testing.T) {

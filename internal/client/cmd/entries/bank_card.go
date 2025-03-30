@@ -10,7 +10,7 @@ import (
 	"github.com/bufbuild/protovalidate-go"
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/kuvalkin/gophkeeper/internal/proto/serialize/v1"
+	pb "github.com/kuvalkin/gophkeeper/pkg/proto/serialize/v1"
 )
 
 type BankCard struct {
