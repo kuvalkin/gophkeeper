@@ -11,7 +11,7 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func newGetCommand(container container.Container) *cobra.Command {
@@ -53,7 +53,7 @@ func newGetLoginCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			defer content.Close()
+			defer utils.CloseAndLogError(content, nil)
 
 			entry := &entries.LoginPasswordPair{}
 			err = entry.Unmarshal(content)
@@ -100,7 +100,7 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			defer content.Close()
+			defer utils.CloseAndLogError(content, nil)
 
 			cmd.Println("Downloaded entry from server")
 			cmd.Println("Your notes:", notes)
@@ -155,7 +155,7 @@ func newGetCardCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			defer content.Close()
+			defer utils.CloseAndLogError(content, nil)
 
 			entry := &entries.BankCard{}
 			err = entry.Unmarshal(content)
@@ -202,7 +202,7 @@ func newGetTextCommand(container container.Container) *cobra.Command {
 				return nil
 			}
 
-			defer content.Close()
+			defer utils.CloseAndLogError(content, nil)
 
 			text, err := io.ReadAll(content)
 			if err != nil {

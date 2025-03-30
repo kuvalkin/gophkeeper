@@ -13,7 +13,6 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
-	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
@@ -52,7 +51,7 @@ func TestDeleteLogin(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return(nil)
+		entryService.EXPECT().DeleteEntry(authCtx, utils.GetEntryKey("login", "name")).Return(nil)
 
 		cmd := newTestDeleteLoginCommand(container, "name")
 		err := cmd.Execute()
@@ -179,7 +178,7 @@ func TestDeleteLogin(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return(errors.New("err"))
+		entryService.EXPECT().DeleteEntry(authCtx, utils.GetEntryKey("login", "name")).Return(errors.New("err"))
 
 		cmd := newTestDeleteLoginCommand(container, "name")
 		err := cmd.Execute()
@@ -220,7 +219,7 @@ func TestDeleteFile(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return(nil)
+		entryService.EXPECT().DeleteEntry(authCtx, utils.GetEntryKey("file", "name")).Return(nil)
 
 		cmd := newTestDeleteFileCommand(container, "name")
 		err := cmd.Execute()
@@ -261,7 +260,7 @@ func TestDeleteCard(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return(nil)
+		entryService.EXPECT().DeleteEntry(authCtx, utils.GetEntryKey("card", "name")).Return(nil)
 
 		cmd := newTestDeleteCardCommand(container, "name")
 		err := cmd.Execute()
@@ -302,7 +301,7 @@ func TestDeleteText(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return(nil)
+		entryService.EXPECT().DeleteEntry(authCtx, utils.GetEntryKey("text", "name")).Return(nil)
 
 		cmd := newTestDeleteTextCommand(container, "name")
 		err := cmd.Execute()

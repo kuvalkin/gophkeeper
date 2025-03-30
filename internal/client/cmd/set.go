@@ -12,8 +12,8 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func newSetCommand(container container.Container) *cobra.Command {

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func newDeleteCommand(container container.Container) *cobra.Command {

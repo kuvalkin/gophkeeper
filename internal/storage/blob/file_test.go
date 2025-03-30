@@ -12,7 +12,9 @@ import (
 func TestFile_Writer(t *testing.T) {
 	path, err := os.MkdirTemp("", "test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(path)
+	defer func() {
+		require.NoError(t, os.RemoveAll(path))
+	}()
 
 	repo := blob.NewFileBlobRepository(path)
 
@@ -44,7 +46,9 @@ func TestFile_Writer(t *testing.T) {
 func TestFile_Reader(t *testing.T) {
 	path, err := os.MkdirTemp("", "test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(path)
+	defer func() {
+		require.NoError(t, os.RemoveAll(path))
+	}()
 
 	repo := blob.NewFileBlobRepository(path)
 
@@ -69,7 +73,9 @@ func TestFile_Reader(t *testing.T) {
 func TestFile_Delete(t *testing.T) {
 	path, err := os.MkdirTemp("", "test-*")
 	require.NoError(t, err)
-	defer os.RemoveAll(path)
+	defer func() {
+		require.NoError(t, os.RemoveAll(path))
+	}()
 
 	repo := blob.NewFileBlobRepository(path)
 

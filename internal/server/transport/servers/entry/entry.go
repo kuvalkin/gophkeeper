@@ -15,6 +15,7 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 	"github.com/kuvalkin/gophkeeper/internal/server/transport/auth"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
@@ -60,7 +61,7 @@ func (s *server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 		return status.Error(codes.Internal, "cant send metadata")
 	}
 
-	defer reader.Close()
+	defer utils.CloseAndLogError(reader, llog)
 
 	buf := make([]byte, s.chunkSize)
 	for {

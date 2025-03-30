@@ -15,7 +15,6 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/cmd/entries"
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
-	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
@@ -58,7 +57,7 @@ func TestGetLogin(t *testing.T) {
 		content, err := pair.Marshal()
 		require.NoError(t, err)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("login", "name")).Return("mynotes", content, true, nil)
 
 		cmd, out := newTestGetLoginCommand(container, "name")
 		err = cmd.Execute()
@@ -94,7 +93,7 @@ func TestGetLogin(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return("", nil, false, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("login", "name")).Return("", nil, false, nil)
 
 		cmd, out := newTestGetLoginCommand(container, "name")
 		err := cmd.Execute()
@@ -118,7 +117,7 @@ func TestGetLogin(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("invalid data"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("login", "name")).Return("mynotes", content, true, nil)
 
 		cmd, _ := newTestGetLoginCommand(container, "name")
 		err := cmd.Execute()
@@ -204,11 +203,13 @@ func TestGetFile(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
 
 		file, err := os.CreateTemp("", "test-get-file-*")
 		require.NoError(t, err)
-		defer os.Remove(file.Name())
+		defer func() {
+			require.NoError(t, os.Remove(file.Name()))
+		}()
 		require.NoError(t, file.Close())
 
 		cmd, out := newTestGetFileCommand(container, "name", file.Name())
@@ -257,11 +258,13 @@ func TestGetFile(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("", nil, false, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("file", "name")).Return("", nil, false, nil)
 
 		file, err := os.CreateTemp("", "test-get-file-*")
 		require.NoError(t, err)
-		defer os.Remove(file.Name())
+		defer func() {
+			require.NoError(t, os.Remove(file.Name()))
+		}()
 		require.NoError(t, file.Close())
 
 		cmd, out := newTestGetFileCommand(container, "name", file.Name())
@@ -286,11 +289,13 @@ func TestGetFile(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, errors.New("error"))
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("file", "name")).Return("mynotes", content, true, errors.New("error"))
 
 		file, err := os.CreateTemp("", "test-get-file-*")
 		require.NoError(t, err)
-		defer os.Remove(file.Name())
+		defer func() {
+			require.NoError(t, os.Remove(file.Name()))
+		}()
 		require.NoError(t, file.Close())
 
 		cmd, _ := newTestGetFileCommand(container, "name", file.Name())
@@ -313,7 +318,7 @@ func TestGetFile(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("file", "name")).Return("mynotes", content, true, nil)
 
 		// path is directory
 		cmd, _ := newTestGetFileCommand(container, "name", os.TempDir())
@@ -366,7 +371,7 @@ func TestGetCard(t *testing.T) {
 		content, err := card.Marshal()
 		require.NoError(t, err)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
 
 		cmd, out := newTestGetCardCommand(container, "name")
 		err = cmd.Execute()
@@ -405,7 +410,7 @@ func TestGetCard(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("", nil, false, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("card", "name")).Return("", nil, false, nil)
 
 		cmd, out := newTestGetCardCommand(container, "name")
 		err := cmd.Execute()
@@ -429,7 +434,7 @@ func TestGetCard(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, errors.New("error"))
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("card", "name")).Return("mynotes", content, true, errors.New("error"))
 
 		cmd, _ := newTestGetCardCommand(container, "name")
 		err := cmd.Execute()
@@ -451,7 +456,7 @@ func TestGetCard(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("invalid data"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("card", "name")).Return("mynotes", content, true, nil)
 
 		cmd, _ := newTestGetCardCommand(container, "name")
 		err := cmd.Execute()
@@ -492,7 +497,7 @@ func TestGetText(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("text content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("mynotes", content, true, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("text", "name")).Return("mynotes", content, true, nil)
 
 		cmd, out := newTestGetTextCommand(container, "name")
 		err := cmd.Execute()
@@ -527,7 +532,7 @@ func TestGetText(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("", nil, false, nil)
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("text", "name")).Return("", nil, false, nil)
 
 		cmd, out := newTestGetTextCommand(container, "name")
 		err := cmd.Execute()
@@ -551,7 +556,7 @@ func TestGetText(t *testing.T) {
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
-		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("mynotes", content, true, errors.New("error"))
+		entryService.EXPECT().GetEntry(authCtx, utils.GetEntryKey("text", "name")).Return("mynotes", content, true, errors.New("error"))
 
 		cmd, _ := newTestGetTextCommand(container, "name")
 		err := cmd.Execute()

@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/storage/blob"
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
@@ -66,7 +66,7 @@ func (s *service) SetEntry(ctx context.Context, key string, name string, notes s
 	if !ok {
 		return errors.New("encrypted blob that we've just written wasn't found")
 	}
-	defer reader.Close()
+	defer utils.CloseAndLogError(reader, llog)
 
 	llog.Debug("opening grpc steam")
 	stream, err := s.client.SetEntry(ctx)
@@ -302,7 +302,7 @@ func (s *service) downloadBlob(key string, stream grpc.ServerStreamingClient[pb.
 	if err != nil {
 		return nil, fmt.Errorf("cant create blob to temporary store entry: %w", err)
 	}
-	defer dst.Close()
+	defer utils.CloseAndLogError(dst, s.log)
 
 	for {
 		response, err := stream.Recv()

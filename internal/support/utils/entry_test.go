@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/kuvalkin/gophkeeper/internal/client/support/utils"
+	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
 func Test_GetEntryKey(t *testing.T) {

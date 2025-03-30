@@ -14,7 +14,6 @@ import (
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
-	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
@@ -54,7 +53,7 @@ func TestSetLogin(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
 
 		cmd := newTestSetLoginCommand(container, "name", "notes")
 		err := cmd.Execute()
@@ -232,7 +231,7 @@ func TestSetLogin(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
 
 		cmd := newTestSetLoginCommand(container, "name", "notes")
 		err := cmd.Execute()
@@ -259,7 +258,7 @@ func TestSetLogin(t *testing.T) {
 			authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 			authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-			entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
+			entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
 				func(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) {
 					require.NotNil(t, onOverwrite)
 					require.True(t, onOverwrite())
@@ -291,7 +290,7 @@ func TestSetLogin(t *testing.T) {
 			authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 			authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-			entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
+			entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
 				func(ctx context.Context, key string, name string, notes string, content io.ReadCloser, onOverwrite func() bool) {
 					require.NotNil(t, onOverwrite)
 					require.False(t, onOverwrite())
@@ -378,11 +377,13 @@ func TestSetFile(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
 
 		file, err := os.CreateTemp("", "set-file-test-*")
 		require.NoError(t, err)
-		defer os.Remove(file.Name())
+		defer func() {
+			require.NoError(t, os.Remove(file.Name()))
+		}()
 		_, err = io.WriteString(file, "text")
 		require.NoError(t, err)
 		require.NoError(t, file.Close())
@@ -439,11 +440,13 @@ func TestSetFile(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
 
 		file, err := os.CreateTemp("", "set-file-test-*")
 		require.NoError(t, err)
-		defer os.Remove(file.Name())
+		defer func() {
+			require.NoError(t, os.Remove(file.Name()))
+		}()
 		_, err = io.WriteString(file, "text")
 		require.NoError(t, err)
 		require.NoError(t, file.Close())
@@ -492,7 +495,7 @@ func TestSetCard(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
 
 		cmd := newTestSetCardCommand(container, "name", "notes")
 		err := cmd.Execute()
@@ -762,7 +765,7 @@ func TestSetCard(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
 
 		cmd := newTestSetCardCommand(container, "name", "notes")
 		err := cmd.Execute()
@@ -852,7 +855,7 @@ func TestSetText(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
 
 		cmd := newTestSetTextCommand(container, "name", "notes")
 		err := cmd.Execute()
@@ -941,7 +944,7 @@ func TestSetText(t *testing.T) {
 		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
-		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
+		entryService.EXPECT().SetEntry(authCtx, utils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
 
 		cmd := newTestSetTextCommand(container, "name", "notes")
 		err := cmd.Execute()
