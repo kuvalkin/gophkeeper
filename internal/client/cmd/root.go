@@ -15,6 +15,8 @@ import (
 
 var buildDate string
 
+// NewRootCommand creates the root command for the CLI application.
+// It initializes all subcommands and middleware.
 func NewRootCommand(container container.Container) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
@@ -87,6 +89,8 @@ func NewRootCommand(container container.Container) *cobra.Command {
 	return rootCmd
 }
 
+// NewConfig initializes and returns a new Viper configuration instance.
+// It reads configuration from standard OS paths and the current working directory.
 func NewConfig() (*viper.Viper, error) {
 	conf := viper.New()
 

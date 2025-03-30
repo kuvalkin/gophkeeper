@@ -76,6 +76,8 @@ func newDeleteTextCommand(container container.Container) *cobra.Command {
 	return deleteText
 }
 
+// deleteEntry handles the deletion of an entry by interacting with the container's services.
+// It confirms the action with the user before proceeding.
 func deleteEntry(cmd *cobra.Command, container container.Container, name string, entryType string) error {
 	if name == "" {
 		return fmt.Errorf("name is empty")

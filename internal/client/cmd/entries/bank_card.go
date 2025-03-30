@@ -13,18 +13,22 @@ import (
 	pb "github.com/kuvalkin/gophkeeper/pkg/proto/serialize/v1"
 )
 
+// BankCard represents a bank card with its details such as number, holder name, CVV, and expiration date.
 type BankCard struct {
-	Number         string
-	HolderName     string
-	CVV            int
-	ExpirationDate ExpirationDate
+	Number         string         // The card number.
+	HolderName     string         // The name of the cardholder.
+	CVV            int            // The card's CVV (Card Verification Value).
+	ExpirationDate ExpirationDate // The expiration date of the card.
 }
 
+// ExpirationDate represents the expiration date of a bank card.
 type ExpirationDate struct {
-	Year  int
-	Month int
+	Year  int // The expiration year.
+	Month int // The expiration month.
 }
 
+// Marshal serializes the BankCard into a protobuf format and returns it as an io.ReadCloser.
+// It validates the BankCard before serialization.
 func (b *BankCard) Marshal() (io.ReadCloser, error) {
 	m := &pb.BankCard{
 		Number:     b.Number,
@@ -70,6 +74,7 @@ func validate(m *pb.BankCard) error {
 	return errors.Join(validationErrors...)
 }
 
+// Unmarshal deserializes the content from an io.Reader into the BankCard struct.
 func (b *BankCard) Unmarshal(content io.Reader) error {
 	bts, err := io.ReadAll(content)
 	if err != nil {

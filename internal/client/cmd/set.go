@@ -278,6 +278,8 @@ func newSetTextCommand(container container.Container) *cobra.Command {
 	return setText
 }
 
+// store handles the storage of an entry by interacting with the container's services.
+// It ensures the entry is encrypted and synced to the cloud.
 func store(ctx context.Context, container container.Container, entryType string, name string, notes string, content io.ReadCloser) error {
 	tokenService, err := container.GetAuthService(ctx)
 	if err != nil {

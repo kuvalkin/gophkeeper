@@ -9,6 +9,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 )
 
+// EnsureLoggedIn ensures that the user is logged in before executing the provided CobraRunE function.
+// If the user is not logged in, it returns an error prompting the user to log in or register first.
 func EnsureLoggedIn(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {
@@ -35,6 +37,8 @@ func EnsureLoggedIn(container container.Container) MW {
 	}
 }
 
+// EnsureNotLoggedIn ensures that the user is not logged in before executing the provided CobraRunE function.
+// If the user is already logged in, it returns an error prompting the user to log out first.
 func EnsureNotLoggedIn(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {

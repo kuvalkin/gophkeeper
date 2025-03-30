@@ -221,6 +221,8 @@ func newGetTextCommand(container container.Container) *cobra.Command {
 	return getLogin
 }
 
+// get retrieves an entry from the cloud by its key.
+// It returns the entry's notes, content, and existence status.
 func get(ctx context.Context, container container.Container, key string) (string, io.ReadCloser, bool, error) {
 	service, err := container.GetEntryService(ctx)
 	if err != nil {

@@ -9,6 +9,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
 )
 
+// EnsureSecretSet ensures that a secret is set before executing the provided CobraRunE function.
+// If no secret is set, it returns an error prompting the user to set a secret first.
 func EnsureSecretSet(container container.Container) MW {
 	return func(f CobraRunE) CobraRunE {
 		return func(cmd *cobra.Command, args []string) error {
