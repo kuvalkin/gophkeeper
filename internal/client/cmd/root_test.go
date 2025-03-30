@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	gomock "go.uber.org/mock/gomock"
 
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
@@ -16,7 +17,7 @@ func TestNewRootCommand(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		cmd := NewRootCommand(container)
 		require.NotNil(t, cmd)
@@ -29,7 +30,7 @@ func TestNewRootCommand(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		out := bytes.NewBuffer(nil)
 

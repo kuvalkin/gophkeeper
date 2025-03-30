@@ -12,6 +12,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	clientUtils "github.com/kuvalkin/gophkeeper/internal/client/support/utils"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
@@ -35,10 +36,10 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
@@ -60,10 +61,10 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
@@ -80,7 +81,7 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(nil, errors.New("err")).AnyTimes()
 
@@ -93,7 +94,7 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		cmd := newTestDeleteLoginCommand(container, "")
 		err := cmd.Execute()
@@ -104,8 +105,8 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetEntryService(ctx).Return(nil, errors.New("err")).AnyTimes()
@@ -121,9 +122,9 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		entryService := NewMockEntryService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
@@ -140,10 +141,10 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
@@ -162,10 +163,10 @@ func TestDeleteLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
@@ -203,10 +204,10 @@ func TestDeleteFile(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
@@ -244,10 +245,10 @@ func TestDeleteCard(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
@@ -285,10 +286,10 @@ func TestDeleteText(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		entryService := NewMockEntryService(ctrl)
-		authService := NewMockAuthService(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		entryService := mocks.NewMockEntryService(ctrl)
+		authService := mocks.NewMockAuthService(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()

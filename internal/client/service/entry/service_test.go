@@ -11,16 +11,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/entry"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	pb "github.com/kuvalkin/gophkeeper/internal/proto/entry/v1"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
-
-//go:generate mockgen -destination=./bidi_stream_mock_test.go -package=entry_test google.golang.org/grpc BidiStreamingClient
-//go:generate mockgen -destination=./blob_repository_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/storage/blob Repository
-//go:generate mockgen -destination=./client_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/proto/entry/v1 EntryServiceClient
-//go:generate mockgen -destination=./read_closer_mock_test.go -package=entry_test io ReadCloser
-//go:generate mockgen -destination=./server_stream_mock_test.go -package=entry_test google.golang.org/grpc ServerStreamingClient
-//go:generate mockgen -destination=./crypt_mock_test.go -package=entry_test github.com/kuvalkin/gophkeeper/internal/client/service/entry Crypt
 
 const chunkSize = 1024
 
@@ -32,11 +26,11 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		encryptWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		encryptWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
 
 		// encrypt blob
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -48,14 +42,14 @@ func TestService_Set(t *testing.T) {
 		blobWriter.EXPECT().Close().Return(nil)
 
 		// encrypt notes
-		notesEncrypter := NewMockWriteCloser(ctrl)
+		notesEncrypter := mocks.NewMockWriteCloser(ctrl)
 		crypt.EXPECT().Encrypt(gomock.Any()).Return(notesEncrypter, nil)
 		notesEncrypter.EXPECT().Write([]byte("notes")).Return(5, nil)
 		notesEncrypter.EXPECT().Close().Return(nil)
 
-		encryptedContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
-		stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		encryptedContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
+		stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 		// send metadata
 		blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -91,10 +85,10 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(nil, errors.New("error"))
 		rawContent.EXPECT().Close().Return(nil)
@@ -108,11 +102,11 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(nil, errors.New("error"))
@@ -128,12 +122,12 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		encryptWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		encryptWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
@@ -151,12 +145,12 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		encryptWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		encryptWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		crypt.EXPECT().Encrypt(blobWriter).Return(encryptWriter, nil)
@@ -176,11 +170,11 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			crypt := NewMockCrypt(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			blobWriter := NewMockWriteCloser(ctrl)
-			encryptWriter := NewMockWriteCloser(ctrl)
-			rawContent := NewMockReadCloser(ctrl)
+			crypt := mocks.NewMockCrypt(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			blobWriter := mocks.NewMockWriteCloser(ctrl)
+			encryptWriter := mocks.NewMockWriteCloser(ctrl)
+			rawContent := mocks.NewMockReadCloser(ctrl)
 
 			// encrypt blob
 			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -191,9 +185,9 @@ func TestService_Set(t *testing.T) {
 			encryptWriter.EXPECT().Close().Return(nil)
 			blobWriter.EXPECT().Close().Return(nil)
 
-			encryptedContent := NewMockReadCloser(ctrl)
-			client := NewMockEntryServiceClient(ctrl)
-			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+			encryptedContent := mocks.NewMockReadCloser(ctrl)
+			client := mocks.NewMockEntryServiceClient(ctrl)
+			stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
 			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -221,11 +215,11 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			crypt := NewMockCrypt(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			blobWriter := NewMockWriteCloser(ctrl)
-			encryptWriter := NewMockWriteCloser(ctrl)
-			rawContent := NewMockReadCloser(ctrl)
+			crypt := mocks.NewMockCrypt(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			blobWriter := mocks.NewMockWriteCloser(ctrl)
+			encryptWriter := mocks.NewMockWriteCloser(ctrl)
+			rawContent := mocks.NewMockReadCloser(ctrl)
 
 			// encrypt blob
 			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -236,9 +230,9 @@ func TestService_Set(t *testing.T) {
 			encryptWriter.EXPECT().Close().Return(nil)
 			blobWriter.EXPECT().Close().Return(nil)
 
-			encryptedContent := NewMockReadCloser(ctrl)
-			client := NewMockEntryServiceClient(ctrl)
-			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+			encryptedContent := mocks.NewMockReadCloser(ctrl)
+			client := mocks.NewMockEntryServiceClient(ctrl)
+			stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
 			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -268,11 +262,11 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			crypt := NewMockCrypt(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			blobWriter := NewMockWriteCloser(ctrl)
-			encryptWriter := NewMockWriteCloser(ctrl)
-			rawContent := NewMockReadCloser(ctrl)
+			crypt := mocks.NewMockCrypt(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			blobWriter := mocks.NewMockWriteCloser(ctrl)
+			encryptWriter := mocks.NewMockWriteCloser(ctrl)
+			rawContent := mocks.NewMockReadCloser(ctrl)
 
 			// encrypt blob
 			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -284,14 +278,14 @@ func TestService_Set(t *testing.T) {
 			blobWriter.EXPECT().Close().Return(nil)
 
 			// encrypt notes
-			notesEncrypter := NewMockWriteCloser(ctrl)
+			notesEncrypter := mocks.NewMockWriteCloser(ctrl)
 			crypt.EXPECT().Encrypt(gomock.Any()).Return(notesEncrypter, nil)
 			notesEncrypter.EXPECT().Write([]byte("notes")).Return(5, nil)
 			notesEncrypter.EXPECT().Close().Return(nil)
 
-			encryptedContent := NewMockReadCloser(ctrl)
-			client := NewMockEntryServiceClient(ctrl)
-			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+			encryptedContent := mocks.NewMockReadCloser(ctrl)
+			client := mocks.NewMockEntryServiceClient(ctrl)
+			stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
 			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -336,11 +330,11 @@ func TestService_Set(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			crypt := NewMockCrypt(ctrl)
-			blobRepo := NewMockRepository(ctrl)
-			blobWriter := NewMockWriteCloser(ctrl)
-			encryptWriter := NewMockWriteCloser(ctrl)
-			rawContent := NewMockReadCloser(ctrl)
+			crypt := mocks.NewMockCrypt(ctrl)
+			blobRepo := mocks.NewMockBlobRepository(ctrl)
+			blobWriter := mocks.NewMockWriteCloser(ctrl)
+			encryptWriter := mocks.NewMockWriteCloser(ctrl)
+			rawContent := mocks.NewMockReadCloser(ctrl)
 
 			// encrypt blob
 			blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -352,14 +346,14 @@ func TestService_Set(t *testing.T) {
 			blobWriter.EXPECT().Close().Return(nil)
 
 			// encrypt notes
-			notesEncrypter := NewMockWriteCloser(ctrl)
+			notesEncrypter := mocks.NewMockWriteCloser(ctrl)
 			crypt.EXPECT().Encrypt(gomock.Any()).Return(notesEncrypter, nil)
 			notesEncrypter.EXPECT().Write([]byte("notes")).Return(5, nil)
 			notesEncrypter.EXPECT().Close().Return(nil)
 
-			encryptedContent := NewMockReadCloser(ctrl)
-			client := NewMockEntryServiceClient(ctrl)
-			stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+			encryptedContent := mocks.NewMockReadCloser(ctrl)
+			client := mocks.NewMockEntryServiceClient(ctrl)
+			stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 			// send metadata
 			blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -396,11 +390,11 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		encryptWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		encryptWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
 
 		// encrypt blob
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -411,9 +405,9 @@ func TestService_Set(t *testing.T) {
 		encryptWriter.EXPECT().Close().Return(nil)
 		blobWriter.EXPECT().Close().Return(nil)
 
-		encryptedContent := NewMockReadCloser(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
-		stream := NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
+		encryptedContent := mocks.NewMockReadCloser(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
+		stream := mocks.NewMockBidiStreamingClient[pb.SetEntryRequest, pb.SetEntryResponse](ctrl)
 
 		// send metadata
 		blobRepo.EXPECT().OpenBlobReader("key").Return(encryptedContent, true, nil)
@@ -448,11 +442,11 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		blobWriter := NewMockWriteCloser(ctrl)
-		encryptWriter := NewMockWriteCloser(ctrl)
-		rawContent := NewMockReadCloser(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
+		encryptWriter := mocks.NewMockWriteCloser(ctrl)
+		rawContent := mocks.NewMockReadCloser(ctrl)
 
 		// encrypt blob
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
@@ -466,7 +460,7 @@ func TestService_Set(t *testing.T) {
 		// encrypt notes
 		crypt.EXPECT().Encrypt(gomock.Any()).Return(nil, errors.New("error"))
 
-		service := entry.New(crypt, NewMockEntryServiceClient(ctrl), blobRepo, chunkSize)
+		service := entry.New(crypt, mocks.NewMockEntryServiceClient(ctrl), blobRepo, chunkSize)
 		err := service.SetEntry(ctx, "key", "name", "notes", rawContent, nil)
 		require.Error(t, err)
 	})
@@ -480,10 +474,10 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
-		stream := NewMockServerStreamingClient[pb.Entry](ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
+		stream := mocks.NewMockServerStreamingClient[pb.Entry](ctrl)
 
 		// send request
 		client.EXPECT().GetEntry(ctx, &pb.GetEntryRequest{
@@ -499,13 +493,13 @@ func TestService_Get(t *testing.T) {
 		}, nil)
 
 		// decrypt notes
-		notesReader := NewMockReadCloser(ctrl)
+		notesReader := mocks.NewMockReadCloser(ctrl)
 		crypt.EXPECT().Decrypt(gomock.Any()).Return(notesReader, nil)
 		notesReader.EXPECT().Read(gomock.Any()).SetArg(0, []byte("notes")).Return(5, nil)
 		notesReader.EXPECT().Read(gomock.Any()).SetArg(0, []byte{}).Return(0, io.EOF)
 
 		// receive content
-		blobWriter := NewMockWriteCloser(ctrl)
+		blobWriter := mocks.NewMockWriteCloser(ctrl)
 		blobRepo.EXPECT().OpenBlobWriter("key").Return(blobWriter, nil)
 		stream.EXPECT().Recv().Return(&pb.Entry{
 			Content: []byte("encrypted content"),
@@ -515,9 +509,9 @@ func TestService_Get(t *testing.T) {
 		blobWriter.EXPECT().Close().Return(nil).MinTimes(1)
 
 		// wrap in decrypt
-		blobReader := NewMockReadCloser(ctrl)
+		blobReader := mocks.NewMockReadCloser(ctrl)
 		blobRepo.EXPECT().OpenBlobReader("key").Return(blobReader, true, nil)
-		decryptReader := NewMockReadCloser(ctrl)
+		decryptReader := mocks.NewMockReadCloser(ctrl)
 		crypt.EXPECT().Decrypt(blobReader).Return(decryptReader, nil)
 
 		// close stream
@@ -546,10 +540,10 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
-		stream := NewMockServerStreamingClient[pb.Entry](ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
+		stream := mocks.NewMockServerStreamingClient[pb.Entry](ctrl)
 
 		// send request
 		client.EXPECT().GetEntry(ctx, &pb.GetEntryRequest{
@@ -578,9 +572,9 @@ func TestService_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		client.EXPECT().DeleteEntry(ctx, &pb.DeleteEntryRequest{
 			Key: "key",
@@ -595,9 +589,9 @@ func TestService_Delete(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		crypt := NewMockCrypt(ctrl)
-		blobRepo := NewMockRepository(ctrl)
-		client := NewMockEntryServiceClient(ctrl)
+		crypt := mocks.NewMockCrypt(ctrl)
+		blobRepo := mocks.NewMockBlobRepository(ctrl)
+		client := mocks.NewMockEntryServiceClient(ctrl)
 
 		client.EXPECT().DeleteEntry(ctx, &pb.DeleteEntryRequest{
 			Key: "key",

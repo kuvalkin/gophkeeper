@@ -10,12 +10,10 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/auth"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	pbAuth "github.com/kuvalkin/gophkeeper/internal/proto/auth/v1"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
-
-//go:generate mockgen -destination=./repository_mock_test.go -package=auth_test github.com/kuvalkin/gophkeeper/internal/client/service/auth Repository
-//go:generate mockgen -destination=./client_mock_test.go -package=auth_test github.com/kuvalkin/gophkeeper/internal/proto/auth/v1 AuthServiceClient
 
 func TestService_Register(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
@@ -25,8 +23,8 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -41,8 +39,8 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -56,8 +54,8 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -71,8 +69,8 @@ func TestService_Register(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -92,8 +90,8 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -108,8 +106,8 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -123,8 +121,8 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -138,8 +136,8 @@ func TestService_Login(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -159,8 +157,8 @@ func TestService_IsLoggedIn(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -175,8 +173,8 @@ func TestService_IsLoggedIn(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -196,8 +194,8 @@ func TestService_Logout(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -211,8 +209,8 @@ func TestService_Logout(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -231,8 +229,8 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -247,8 +245,8 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 
@@ -263,8 +261,8 @@ func TestService_AddAuthorizationHeader(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		client := NewMockAuthServiceClient(ctrl)
-		repo := NewMockRepository(ctrl)
+		client := mocks.NewMockAuthServiceClient(ctrl)
+		repo := mocks.NewMockAuthRepository(ctrl)
 
 		service := auth.New(client, repo)
 

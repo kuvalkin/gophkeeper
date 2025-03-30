@@ -10,11 +10,10 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
-
-//go:generate mockgen -destination=./secret_service_mock_test.go -package=cmd -mock_names Service=MockSecretService github.com/kuvalkin/gophkeeper/internal/client/service/secret Service
 
 func TestSecret(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
@@ -33,9 +32,9 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -54,9 +53,9 @@ func TestSecret(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
-			service := NewMockSecretService(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
+			service := mocks.NewMockSecretService(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 			container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -73,9 +72,9 @@ func TestSecret(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
-			service := NewMockSecretService(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
+			service := mocks.NewMockSecretService(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 			container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -95,9 +94,9 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -114,7 +113,7 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		container.EXPECT().GetSecretService(ctx).Return(nil, errors.New("err"))
 
@@ -127,8 +126,8 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(nil, errors.New("error")).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -142,9 +141,9 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -160,9 +159,9 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()
@@ -180,9 +179,9 @@ func TestSecret(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockSecretService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockSecretService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetSecretService(ctx).Return(service, nil).AnyTimes()

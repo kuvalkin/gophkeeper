@@ -10,6 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
@@ -31,8 +32,8 @@ func TestLogout(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		service := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		service := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetAuthService(ctx).Return(service, nil).AnyTimes()
 
@@ -47,7 +48,7 @@ func TestLogout(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		container.EXPECT().GetAuthService(ctx).Return(nil, errors.New("test error")).AnyTimes()
 
@@ -60,8 +61,8 @@ func TestLogout(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		service := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		service := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetAuthService(ctx).Return(service, nil).AnyTimes()
 

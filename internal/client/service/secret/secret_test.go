@@ -8,10 +8,9 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/secret"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
-
-//go:generate mockgen -destination=./repository_mock_test.go -package=secret_test github.com/kuvalkin/gophkeeper/internal/client/service/secret Repository
 
 func TestService_Set(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
@@ -21,7 +20,7 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -36,7 +35,7 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -50,7 +49,7 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -64,7 +63,7 @@ func TestService_Set(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -84,7 +83,7 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -100,7 +99,7 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 
@@ -116,7 +115,7 @@ func TestService_Get(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := NewMockRepository(ctrl)
+		repo := mocks.NewMockSecretRepository(ctrl)
 
 		service := secret.New(repo)
 

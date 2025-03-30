@@ -10,6 +10,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/kuvalkin/gophkeeper/internal/client/service/container"
+	"github.com/kuvalkin/gophkeeper/internal/client/support/mocks"
 	prompts "github.com/kuvalkin/gophkeeper/internal/client/tui/prompts"
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
@@ -33,9 +34,9 @@ func TestLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(service, nil).AnyTimes()
@@ -56,8 +57,8 @@ func TestLogin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 
@@ -73,8 +74,8 @@ func TestLogin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 
@@ -92,7 +93,7 @@ func TestLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
+		container := mocks.NewMockContainer(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(nil, errors.New("error")).AnyTimes()
 
@@ -106,8 +107,8 @@ func TestLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(nil, errors.New("error")).AnyTimes()
@@ -125,9 +126,9 @@ func TestLogin(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		container := NewMockContainer(ctrl)
-		prompter := NewMockPrompter(ctrl)
-		service := NewMockAuthService(ctrl)
+		container := mocks.NewMockContainer(ctrl)
+		prompter := mocks.NewMockPrompter(ctrl)
+		service := mocks.NewMockAuthService(ctrl)
 
 		container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(service, nil).AnyTimes()
@@ -148,8 +149,8 @@ func TestLogin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 
@@ -165,8 +166,8 @@ func TestLogin(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			container := NewMockContainer(ctrl)
-			prompter := NewMockPrompter(ctrl)
+			container := mocks.NewMockContainer(ctrl)
+			prompter := mocks.NewMockPrompter(ctrl)
 
 			container.EXPECT().GetPrompter(ctx).Return(prompter, nil).AnyTimes()
 
