@@ -48,7 +48,7 @@ func TestGetLogin(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		pair := &entries.LoginPasswordPair{
@@ -91,7 +91,7 @@ func TestGetLogin(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return("", nil, false, nil)
@@ -114,7 +114,7 @@ func TestGetLogin(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("invalid data"))
@@ -200,7 +200,7 @@ func TestGetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
@@ -254,7 +254,7 @@ func TestGetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return("", nil, false, nil)
@@ -282,7 +282,7 @@ func TestGetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
@@ -309,7 +309,7 @@ func TestGetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
@@ -351,7 +351,7 @@ func TestGetCard(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		card := &entries.BankCard{
@@ -402,7 +402,7 @@ func TestGetCard(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return("", nil, false, nil)
@@ -425,7 +425,7 @@ func TestGetCard(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))
@@ -447,7 +447,7 @@ func TestGetCard(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("invalid data"))
@@ -488,7 +488,7 @@ func TestGetText(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("text content"))
@@ -524,7 +524,7 @@ func TestGetText(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().GetEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return("", nil, false, nil)
@@ -547,7 +547,7 @@ func TestGetText(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		content := io.NopCloser(bytes.NewBufferString("file content"))

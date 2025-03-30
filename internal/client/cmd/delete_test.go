@@ -17,6 +17,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/utils"
 )
 
+type testCtxKey string
+
 func TestDeleteLogin(t *testing.T) {
 	ctx, cancel := utils.TestContext(t)
 	defer cancel()
@@ -47,7 +49,7 @@ func TestDeleteLogin(t *testing.T) {
 
 		prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return(nil)
@@ -174,7 +176,7 @@ func TestDeleteLogin(t *testing.T) {
 
 		prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("login", "name")).Return(errors.New("err"))
@@ -215,7 +217,7 @@ func TestDeleteFile(t *testing.T) {
 
 		prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("file", "name")).Return(nil)
@@ -256,7 +258,7 @@ func TestDeleteCard(t *testing.T) {
 
 		prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("card", "name")).Return(nil)
@@ -297,7 +299,7 @@ func TestDeleteText(t *testing.T) {
 
 		prompter.EXPECT().Confirm(ctx, gomock.Any()).Return(true)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().DeleteEntry(authCtx, clientUtils.GetEntryKey("text", "name")).Return(nil)

@@ -51,7 +51,7 @@ func TestSetLogin(t *testing.T) {
 		prompter.EXPECT().AskString(ctx, gomock.Any(), gomock.Any()).Return("login", nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("password", nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
@@ -205,7 +205,7 @@ func TestSetLogin(t *testing.T) {
 
 		prompter.EXPECT().AskString(ctx, gomock.Any(), gomock.Any()).Return("login", nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("password", nil)
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		cmd := newTestSetLoginCommand(container, "name", "notes")
@@ -229,7 +229,7 @@ func TestSetLogin(t *testing.T) {
 		prompter.EXPECT().AskString(ctx, gomock.Any(), gomock.Any()).Return("login", nil)
 		prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("password", nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
@@ -256,7 +256,7 @@ func TestSetLogin(t *testing.T) {
 			prompter.EXPECT().AskString(ctx, gomock.Any(), gomock.Any()).Return("login", nil)
 			prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("password", nil)
 
-			authCtx := context.WithValue(ctx, "test", "test")
+			authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 			authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 			entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
@@ -288,7 +288,7 @@ func TestSetLogin(t *testing.T) {
 			prompter.EXPECT().AskString(ctx, gomock.Any(), gomock.Any()).Return("login", nil)
 			prompter.EXPECT().AskPassword(ctx, gomock.Any(), gomock.Any()).Return("password", nil)
 
-			authCtx := context.WithValue(ctx, "test", "test")
+			authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 			authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 			entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("login", "name"), "name", "notes", gomock.Any(), gomock.Any()).Do(
@@ -375,7 +375,7 @@ func TestSetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
@@ -436,7 +436,7 @@ func TestSetFile(t *testing.T) {
 		container.EXPECT().GetEntryService(ctx).Return(entryService, nil).AnyTimes()
 		container.EXPECT().GetAuthService(ctx).Return(authService, nil).AnyTimes()
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("file", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
@@ -489,7 +489,7 @@ func TestSetCard(t *testing.T) {
 		prompter.EXPECT().AskInt(ctx, gomock.Any(), gomock.Any()).Return(11, nil)
 		prompter.EXPECT().AskInt(ctx, gomock.Any(), gomock.Any()).Return(111, nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
@@ -759,7 +759,7 @@ func TestSetCard(t *testing.T) {
 		prompter.EXPECT().AskInt(ctx, gomock.Any(), gomock.Any()).Return(11, nil)
 		prompter.EXPECT().AskInt(ctx, gomock.Any(), gomock.Any()).Return(111, nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("card", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
@@ -849,7 +849,7 @@ func TestSetText(t *testing.T) {
 
 		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("text", nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(nil)
@@ -938,7 +938,7 @@ func TestSetText(t *testing.T) {
 
 		prompter.EXPECT().AskText(ctx, gomock.Any(), gomock.Any()).Return("text", nil)
 
-		authCtx := context.WithValue(ctx, "test", "test")
+		authCtx := context.WithValue(ctx, testCtxKey("test"), "test")
 		authService.EXPECT().AddAuthorizationHeader(ctx).Return(authCtx, nil)
 
 		entryService.EXPECT().SetEntry(authCtx, clientUtils.GetEntryKey("text", "name"), "name", "notes", gomock.Any(), gomock.Any()).Return(errors.New("error"))
