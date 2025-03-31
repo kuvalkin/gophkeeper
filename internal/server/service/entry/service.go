@@ -11,6 +11,9 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
+// New creates a new instance of the Service implementation.
+// This service encapsulates the core business logic for handling entries,
+// including metadata and blob storage management.
 func New(metaRepo MetadataRepository, blobRepo blob.Repository) Service {
 	return &service{
 		metaRepo: metaRepo,
