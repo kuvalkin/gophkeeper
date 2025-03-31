@@ -16,6 +16,7 @@ import (
 
 var signingMethod = jwt.SigningMethodHS256
 
+// NewService creates a new instance of the user service with the given repository and options.
 func NewService(repo Repository, options Options) Service {
 	return &service{
 		repo:    repo,
