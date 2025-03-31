@@ -1,3 +1,5 @@
+// Package transport provides the gRPC server setup and configuration for the Gophkeeper application.
+// It includes the initialization of services, middleware, and server interceptors.
 package transport
 
 import (
@@ -24,11 +26,22 @@ import (
 	entypb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
+// Services encapsulates the user and entry services required by the gRPC server.
 type Services struct {
-	User  user.Service
-	Entry entry.Service
+	User  user.Service  // User service for handling user-related operations.
+	Entry entry.Service // Entry service for handling entry-related operations.
 }
 
+// NewServer initializes and returns a new gRPC server configured with the provided services and chunk size.
+// It sets up middleware for logging, authentication, validation, and recovery.
+//
+// Parameters:
+//   - services: The Services struct containing the user and entry services.
+//   - chunkSize: The size of chunks for entry service operations.
+//
+// Returns:
+//   - A pointer to the configured gRPC server.
+//   - An error if the server initialization fails.
 func NewServer(services Services, chunkSize int64) (*grpc.Server, error) {
 	grpcLog := log.Logger().Named("grpc")
 

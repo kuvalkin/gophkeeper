@@ -1,3 +1,6 @@
+// Package entry provides the gRPC server implementation for managing entries.
+// It includes methods for retrieving, setting, and deleting entries, as well as handling
+// streaming data for large content uploads and downloads.
 package entry
 
 import (
@@ -19,21 +22,27 @@ import (
 	pb "github.com/kuvalkin/gophkeeper/pkg/proto/entry/v1"
 )
 
+// New creates a new instance of the EntryServiceServer.
+// It takes an entry.Service implementation and a chunk size for streaming data.
+// Returns an implementation of pb.EntryServiceServer.
 func New(service entry.Service, chunkSize int64) pb.EntryServiceServer {
 	return &server{
 		service:   service,
 		chunkSize: chunkSize,
-		log:       log.Logger().Named("server.sync"),
+		log:       log.Logger().Named("server.entry"),
 	}
 }
 
 type server struct {
 	pb.UnsafeEntryServiceServer
 	service   entry.Service
-	chunkSize int64
+	chunkSize int64 // Size of chunks for streaming data.
 	log       *zap.SugaredLogger
 }
 
+// GetEntry streams an entry's metadata and content to the client.
+// It retrieves the entry by key and streams the data in chunks.
+// Returns an error if the operation fails.
 func (s *server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreamingServer[pb.Entry]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
@@ -89,6 +98,9 @@ func (s *server) GetEntry(request *pb.GetEntryRequest, stream grpc.ServerStreami
 	return nil
 }
 
+// SetEntry handles bidirectional streaming for uploading an entry's content.
+// It receives metadata and content chunks from the client and stores them.
+// Returns an error if the operation fails.
 func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse]) error {
 	tokenInfo, ok := auth.GetTokenInfo(stream.Context())
 	if !ok {
@@ -202,6 +214,23 @@ func (s *server) SetEntry(stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb
 	}
 }
 
+// DeleteEntry deletes an entry identified by its key.
+// It requires authentication and returns an error if the operation fails.
+func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*emptypb.Empty, error) {
+	tokenInfo, ok := auth.GetTokenInfo(ctx)
+	if !ok {
+		return nil, status.Error(codes.Unauthenticated, "no token info")
+	}
+
+	err := s.service.DeleteEntry(ctx, tokenInfo.UserID, request.Key)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "cant delete entry")
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// downloadContentChunks reads content chunks from the client and sends them to the upload channel.
 func (s *server) downloadContentChunks(ctx context.Context, stream grpc.BidiStreamingServer[pb.SetEntryRequest, pb.SetEntryResponse], uploadChan chan<- entry.UploadChunk, llog *zap.SugaredLogger) {
 	defer close(uploadChan)
 
@@ -238,18 +267,4 @@ func (s *server) downloadContentChunks(ctx context.Context, stream grpc.BidiStre
 			llog.Debug("chunk uploaded")
 		}
 	}
-}
-
-func (s *server) DeleteEntry(ctx context.Context, request *pb.DeleteEntryRequest) (*emptypb.Empty, error) {
-	tokenInfo, ok := auth.GetTokenInfo(ctx)
-	if !ok {
-		return nil, status.Error(codes.Unauthenticated, "no token info")
-	}
-
-	err := s.service.DeleteEntry(ctx, tokenInfo.UserID, request.Key)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "cant delete entry")
-	}
-
-	return &emptypb.Empty{}, nil
 }
