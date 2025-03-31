@@ -11,6 +11,8 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
+// NewFileBlobRepository creates a new instance of FileBlobRepository.
+// The `path` parameter specifies the root directory where blobs will be stored.
 func NewFileBlobRepository(path string) *FileBlobRepository {
 	return &FileBlobRepository{
 		path: path,
@@ -18,6 +20,8 @@ func NewFileBlobRepository(path string) *FileBlobRepository {
 	}
 }
 
+// FileBlobRepository is a file-based implementation of the blob.Repository interface.
+// It manages blob storage operations such as writing, reading, and deleting files.
 type FileBlobRepository struct {
 	path string
 	log  *zap.SugaredLogger
@@ -26,6 +30,9 @@ type FileBlobRepository struct {
 const dirPerms = os.FileMode(0700)
 const filePerms = os.FileMode(0600)
 
+// OpenBlobWriter opens a writer for the blob identified by the given key.
+// If the blob does not exist, it will be created. If it exists, it will be truncated.
+// Returns an io.WriteCloser for writing to the blob or an error if the operation fails.
 func (f *FileBlobRepository) OpenBlobWriter(key string) (io.WriteCloser, error) {
 	fullPath := path.Join(f.path, key)
 
@@ -44,6 +51,9 @@ func (f *FileBlobRepository) OpenBlobWriter(key string) (io.WriteCloser, error) 
 	return file, nil
 }
 
+// OpenBlobReader opens a reader for the blob identified by the given key.
+// Returns an io.ReadCloser for reading the blob, a boolean indicating if the blob exists,
+// and an error if the operation fails.
 func (f *FileBlobRepository) OpenBlobReader(key string) (io.ReadCloser, bool, error) {
 	fullPath := path.Join(f.path, key)
 	f.log.Debugw("opening for read", "path", fullPath)
@@ -59,6 +69,8 @@ func (f *FileBlobRepository) OpenBlobReader(key string) (io.ReadCloser, bool, er
 	return file, true, nil
 }
 
+// DeleteBlob deletes the blob identified by the given key.
+// Returns an error if the operation fails.
 func (f *FileBlobRepository) DeleteBlob(key string) error {
 	fullPath := path.Join(f.path, key)
 	f.log.Debugw("deleting", "path", fullPath)
