@@ -1,3 +1,5 @@
+// Package database provides utilities for initializing and managing the database connection,
+// as well as handling database migrations.
 package database
 
 import (
@@ -16,6 +18,8 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
+// InitDB initializes a database connection using the provided DSN (Data Source Name).
+// It returns a *sql.DB instance or an error if the connection fails.
 func InitDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
@@ -30,6 +34,8 @@ func InitDB(ctx context.Context, dsn string) (*sql.DB, error) {
 	return db, nil
 }
 
+// Migrate applies database migrations using the embedded migration files.
+// It ensures the database schema is up-to-date.
 func Migrate(ctx context.Context, db *sql.DB) error {
 	goose.SetBaseFS(embedMigrations)
 
@@ -48,6 +54,7 @@ func Migrate(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
+// gooseLogger is a custom logger implementation for the goose migration tool.
 type gooseLogger struct {
 	log *zap.SugaredLogger
 }
