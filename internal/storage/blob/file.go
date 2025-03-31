@@ -88,13 +88,13 @@ func (f *FileBlobRepository) DeleteBlob(key string) error {
 	if err != nil {
 		return fmt.Errorf("cant get full path: %w", err)
 	}
-	
+
 	f.log.Debugw("deleting", "path", fullPath)
 
 	return os.Remove(fullPath)
 }
 
-func (f *FileBlobRepository) getFullPath(key string) (string, error)  {
+func (f *FileBlobRepository) getFullPath(key string) (string, error) {
 	full := filepath.Join(f.path, key)
 
 	rel, err := filepath.Rel(f.path, full)
