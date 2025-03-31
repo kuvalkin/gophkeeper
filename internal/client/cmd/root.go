@@ -13,13 +13,14 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/support/log"
 )
 
+var version string
 var buildDate string
 
 // NewRootCommand creates the root command for the CLI application.
 // It initializes all subcommands and middleware.
 func NewRootCommand(container container.Container) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Version: fmt.Sprintf("v0.0.1 (Build Date %s)", buildDate),
+		Version: fmt.Sprintf("%s (Build Date %s)", version, buildDate),
 		Use:     "gkeep",
 		Long:    "Gophkeeper (gkeep) is a CLI password and secret manager. Store your stuff securely in the cloud",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
