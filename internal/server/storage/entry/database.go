@@ -1,3 +1,5 @@
+// Package entry provides functionality for managing metadata storage in a database.
+// It includes a repository implementation for interacting with metadata entries.
 package entry
 
 import (
@@ -9,16 +11,21 @@ import (
 	"github.com/kuvalkin/gophkeeper/internal/server/service/entry"
 )
 
+// NewDatabaseMetadataRepository creates a new instance of DatabaseMetadataRepository.
+// It requires a database connection as input.
 func NewDatabaseMetadataRepository(db *sql.DB) *DatabaseMetadataRepository {
 	return &DatabaseMetadataRepository{
 		db: db,
 	}
 }
 
+// DatabaseMetadataRepository is a repository for managing metadata entries in a database.
 type DatabaseMetadataRepository struct {
 	db *sql.DB
 }
 
+// GetMetadata retrieves metadata for a given user and key from the database.
+// It returns the metadata, a boolean indicating if the metadata was found, and an error if any occurred.
 func (d *DatabaseMetadataRepository) GetMetadata(ctx context.Context, userID string, key string) (entry.Metadata, bool, error) {
 	row := d.db.QueryRowContext(
 		ctx,
@@ -40,6 +47,8 @@ func (d *DatabaseMetadataRepository) GetMetadata(ctx context.Context, userID str
 	return md, true, nil
 }
 
+// SetMetadata inserts or updates metadata for a given user and key in the database.
+// If the key already exists, the metadata is updated.
 func (d *DatabaseMetadataRepository) SetMetadata(ctx context.Context, userID string, md entry.Metadata) error {
 	_, err := d.db.ExecContext(
 		ctx,
@@ -51,6 +60,8 @@ func (d *DatabaseMetadataRepository) SetMetadata(ctx context.Context, userID str
 	return nil
 }
 
+// DeleteMetadata removes metadata for a given user and key from the database.
+// It returns an error if the operation fails.
 func (d *DatabaseMetadataRepository) DeleteMetadata(ctx context.Context, userID string, key string) error {
 	_, err := d.db.ExecContext(
 		ctx,
