@@ -144,10 +144,16 @@ func (c *container) GetEntryService(ctx context.Context) (entry.Service, error) 
 			return
 		}
 
+		br, err := blob.NewFileBlobRepository(c.tempDir)
+		if err != nil {
+			outErr = fmt.Errorf("cant create blob repository: %w", err)
+			return
+		}
+
 		c.entryService = entry.New(
 			crypter,
 			entypb.NewEntryServiceClient(conn),
-			blob.NewFileBlobRepository(c.tempDir),
+			br,
 			c.conf.GetInt64("stream.chunk_size"),
 		)
 	})

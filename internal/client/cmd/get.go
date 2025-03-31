@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -107,7 +107,7 @@ func newGetFileCommand(container container.Container) *cobra.Command {
 
 			cmd.Println("Storing file...")
 
-			err = os.MkdirAll(path.Dir(pathToDst), 0755)
+			err = os.MkdirAll(filepath.Dir(pathToDst), 0755)
 			if err != nil {
 				return fmt.Errorf("error creating directory: %w", err)
 			}

@@ -99,6 +99,11 @@ func initDB(ctx context.Context, config *viper.Viper) (*sql.DB, error) {
 }
 
 func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport.Services, error) {
+	br, err := blob.NewFileBlobRepository(config.GetString("blob.path"))
+	if err != nil {
+		return transport.Services{}, fmt.Errorf("failed to create blob repository: %w", err)
+	}
+
 	return transport.Services{
 		User: user.NewService(
 			userStorage.NewDatabaseRepository(db),
@@ -110,7 +115,7 @@ func initServices(_ context.Context, config *viper.Viper, db *sql.DB) (transport
 		),
 		Entry: entry.New(
 			entryStorage.NewDatabaseMetadataRepository(db),
-			blob.NewFileBlobRepository(config.GetString("blob.path")),
+			br,
 		),
 	}, nil
 }
