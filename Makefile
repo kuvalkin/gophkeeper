@@ -42,7 +42,7 @@ fmt:
 test:
 	go test ./...
 
-build-client: lint test
+build-client: 
 	go mod tidy
 	
 	rm -rf bin/client/*

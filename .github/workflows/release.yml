@@ -24,6 +24,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.0
+
+      - name: test
+        run: |
+          make test
+
       - name: Compile client
         run: |
           make build-client
