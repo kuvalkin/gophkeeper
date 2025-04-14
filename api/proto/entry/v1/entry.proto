@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package com.kuvalkin.gophkeeper.proto.entry.v1;
+option go_package = "pkg/proto/entry/v1;v1";
+
+import "google/protobuf/empty.proto";
+import "buf/validate/validate.proto";
+
+service EntryService {
+  rpc GetEntry(GetEntryRequest) returns (stream Entry);
+  rpc SetEntry(stream SetEntryRequest) returns (stream SetEntryResponse);
+  rpc DeleteEntry(DeleteEntryRequest) returns (google.protobuf.Empty);
+}
+
+message GetEntryRequest {
+  string key = 1 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
+}
+
+message SetEntryRequest {
+  Entry entry = 1;
+  bool overwrite = 2;
+}
+
+message SetEntryResponse {
+  bool already_exists = 1;
+}
+
+message Entry {
+  string key = 1;
+  string name = 2;
+  bytes notes = 3;
+  bytes content = 4;
+}
+
+message DeleteEntryRequest {
+  string key = 1 [(buf.validate.field).required = true, (buf.validate.field).string.min_len = 1];
+}

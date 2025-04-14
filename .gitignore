@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+bin/
 
 # Test binary, built with `go test -c`
 *.test
@@ -17,8 +18,10 @@ cmd/client/client
 cmd/server/main
 cmd/server/server
 
-# Dependency directories (remove the comment below to include it)
-vendor/
+# Config files
+config.yaml
+
+/api/proto/vendor/**/.git
 
 # IDEs directories
 .idea
